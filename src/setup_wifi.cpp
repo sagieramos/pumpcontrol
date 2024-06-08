@@ -21,7 +21,7 @@ void WiFiEvent(WiFiEvent_t event) {
     Serial.println("SoftAP started");
     break;
 
-  case 11: // SYSTEM_EVENT_AP_STOP
+  case 11: // SYSTEM_EVENT_AP_STOP:
     if (dnsTaskHandle != NULL) {
       vTaskDelete(dnsTaskHandle);
       dnsTaskHandle = NULL;
@@ -33,30 +33,8 @@ void WiFiEvent(WiFiEvent_t event) {
     Serial.println("SoftAP stopped");
     break;
 
-  case 12: // SYSTEM_EVENT_AP_STACONNECTED
-    numStations = WiFi.softAPgetStationNum();
-    Serial.printf("Number of stations connected to the AP: %d\n", numStations);
-    digitalWrite(LED_PIN, numStations > 0 ? HIGH : LOW);
-    if (numStations > 0) {
-      Serial.println("Station connected");
-      if (blinkTaskHandle != NULL) {
-        vTaskResume(blinkTaskHandle);
-      }
-      if (dnsTaskHandle != NULL) {
-        vTaskResume(dnsTaskHandle);
-      }
-    } else {
-      Serial.println("Station disconnected");
-      if (blinkTaskHandle != NULL) {
-        vTaskSuspend(blinkTaskHandle);
-      }
-      if (dnsTaskHandle != NULL) {
-        vTaskSuspend(dnsTaskHandle);
-      }
-    }
-    break;
-  
-  case 13: // SYSTEM_EVENT_AP_STADISCONNECTED
+  case 12: // SYSTEM_EVENT_AP_STACONNECTED:
+  case 13: // SYSTEM_EVENT_AP_STADISCONNECTED:
     numStations = WiFi.softAPgetStationNum();
     Serial.printf("Number of stations connected to the AP: %d\n", numStations);
     digitalWrite(LED_PIN, numStations > 0 ? HIGH : LOW);

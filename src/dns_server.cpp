@@ -1,6 +1,6 @@
 #include "main.h"
 
-DNSServer dnsServer; 
+DNSServer dnsServer;
 // print the size of dnsServer
 
 TaskHandle_t dnsTaskHandle = NULL;
@@ -14,5 +14,7 @@ void dnsTask(void *pvParameters) {
         Serial.println(uxHighWaterMark); */
     dnsServer.processNextRequest();
     vTaskDelay(pdMS_TO_TICKS(10));
+    // Check for suspension
+    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
   }
 }

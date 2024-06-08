@@ -36,9 +36,8 @@ void setup() {
 
   // xTaskCreate(taskRun, "Task Run", 2048, NULL, 1, NULL);
   // xTaskCreate(dnsTask, "DNS Task", 10000, NULL, 1, &dnsTaskHandle);
-  xTaskCreatePinnedToCore(taskBlink, "Blink Task", 2048, NULL, 1,
-                          &blinkTaskHandle, 1);
-  xTaskCreate(dnsTask, "DNS Task", 10000, NULL, 1, &dnsTaskHandle);
+  // xTaskCreate(taskBlink, "Blink Task", 2048, NULL, 1, &blinkTaskHandle);
+  // xTaskCreate(dnsTask, "DNS Task", 10000, NULL, 1, &dnsTaskHandle);
 
   // Set up the access point
   setupWifiAP();
