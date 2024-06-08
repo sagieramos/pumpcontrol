@@ -1,5 +1,7 @@
 #include "main.h"
 
+TaskHandle_t blinkTaskHandle = NULL;
+
 void blink(unsigned int timeOn, unsigned int timeOff) {
   vTaskDelay(pdMS_TO_TICKS(timeOff));
   digitalWrite(LED_BUILTIN, HIGH);
@@ -13,5 +15,6 @@ void taskBlink(void *pvParameters) {
 
   for (;;) {
     blink(500, 500);
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }

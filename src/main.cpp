@@ -1,31 +1,67 @@
 #include "main.h"
+#include <ESPAsyncWebServer.h>
+
+const char htmlForm[] PROGMEM = R"rawliteral(
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>ESP32 Form</title>
+    </head>
+    <body>
+      <h1>ESP32 Form</h1>
+      <form action="/submit" method="GET">
+        <label for="input1">Input 1:</label>
+        <input type="text" id="input1" name="input1"><br><br>
+        <label for="input2">Input 2:</label>
+        <input type="text" id="input2" name="input2"><br><br>
+        <input type="submit" value="Submit">
+      </form>
+    </body>
+    </html>
+  )rawliteral";
+
+AsyncWebServer server(80);
 
 void setup() {
   Serial.begin(115200);
+  // delete old config
+
+  delay(1000);
+
+  // Examples of different ways to register wifi events;
+  // these handlers will be called from another thread.
   pinMode(LED_BUILTIN, OUTPUT);
 
-  dnsServer.start(53, "Imuwahen.com", WiFi.localIP());
-
   // Create the blink task
-  xTaskCreatePinnedToCore(taskBlink,    // Function pointer to the task function
-                          "Blink Task", // Name of the task (for debugging)
-                          2048,         // Stack size (in words, not bytes)
-                          NULL,         // Task parameters (not used here)
-                          0, // Priority of the task (1 is highest priority)
-                          &blinkTaskHandle, // Task handle (not used here)
-                          1                 // Core to run the task on (0 or 1)
-  );
 
-  xTaskCreate(taskRun,    // Function name of the task
-              "Task Run", // Name of the task (e.g. for debugging)
-              2048,       // Stack size (bytes)
-              NULL,       // Parameter to pass
-              1,          // Task priority
-              NULL        // Task handle
-  );
+  // xTaskCreate(taskRun, "Task Run", 2048, NULL, 1, NULL);
+  // xTaskCreate(dnsTask, "DNS Task", 10000, NULL, 1, &dnsTaskHandle);
+  xTaskCreatePinnedToCore(taskBlink, "Blink Task", 2048, NULL, 1,
+                          &blinkTaskHandle, 1);
+  xTaskCreate(dnsTask, "DNS Task", 10000, NULL, 1, &dnsTaskHandle);
+
+  // Set up the access point
+  setupWifiAP();
+
+  dnsServer.start(DNS_PORT, "akowe.org", WiFi.softAPIP());
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send_P(200, "text/html", htmlForm);
+  });
+
+  server.on("/submit", HTTP_GET, [](AsyncWebServerRequest *request) {
+    String input1, input2;
+    if (request->hasParam("input1")) {
+      input1 = request->getParam("input1")->value();
+    }
+    if (request->hasParam("input2")) {
+      input2 = request->getParam("input2")->value();
+    }
+    String response = "Input 1: " + input1 + "<br>Input 2: " + input2;
+    request->send(200, "text/html", response);
+  });
+
+  server.begin();
 }
 
-void loop() {
-  // Nothing to do here as main tasks are handled by FreeRTOS tasks
-  vTaskDelay(portMAX_DELAY);
-}
+void loop() { vTaskDelay(portMAX_DELAY); }
