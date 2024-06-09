@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-
+#include <esp_system.h>
 #include <DNSServer.h>
 
 const byte DNS_PORT = 53;
