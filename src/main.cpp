@@ -23,10 +23,24 @@ const char htmlForm[] PROGMEM = R"rawliteral(
 AsyncWebServer server(80);
 
 void setup() {
-  Serial.begin(115200);
+  DEBUG_SERIAL_BEGIN(115200);
+  // Serial.begin(115200);
   // delete old config
 
-  delay(1000);
+  int count = 5;
+
+  DEBUG_SERIAL_PRINTLN("Starting in 5 seconds... ");
+
+  while (count >= 0) {
+    DEBUG_SERIAL_PRINT("\r");
+    DEBUG_SERIAL_PRINT(count);
+    DEBUG_SERIAL_PRINT(" ");
+    delay(1000);
+
+    count--;
+  }
+
+  DEBUG_SERIAL_PRINTLN();
 
   // Examples of different ways to register wifi events;
   // these handlers will be called from another thread.

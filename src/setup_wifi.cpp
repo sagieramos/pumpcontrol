@@ -1,62 +1,88 @@
 #include "main.h"
+#include <WiFi.h>
 
 uint8_t numStations = 0;
 
-enum WiFiEvent_t {
-  SYSTEM_EVENT_AP_START = 10,
-  SYSTEM_EVENT_AP_STOP,
-  SYSTEM_EVENT_AP_STACONNECTED,
-  SYSTEM_EVENT_AP_STADISCONNECTED
-};
+void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+  DEBUG_SERIAL_PRINTLN("............................................");
 
-void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
-  case SYSTEM_EVENT_AP_START:
-    if (xTaskCreate(dnsTask, "DNS Task", 2048, NULL, 1, &dnsTaskHandle) != pdPASS) {
-      Serial.println("Failed to create DNS Task");
+  case ARDUINO_EVENT_WIFI_AP_START:
+    DEBUG_SERIAL_PRINTLN("SoftAP started");
+    if (xTaskCreate(dnsTask, "DNS Task", 2048, NULL, 1, &dnsTaskHandle) !=
+        pdPASS) {
+      DEBUG_SERIAL_PRINTLN("Failed to create DNS Task");
     } else {
+      DEBUG_SERIAL_PRINTLN("DNS Task created");
       vTaskSuspend(dnsTaskHandle); // Suspend task initially
+      DEBUG_SERIAL_PRINTLN("DNS Task suspended initially");
     }
-    if (xTaskCreatePinnedToCore(taskBlink, "Blink Task", 2048, NULL, 1, &blinkTaskHandle, 1) != pdPASS) {
-      Serial.println("Failed to create Blink Task");
+    if (xTaskCreatePinnedToCore(taskBlink, "Blink Task", 2048, NULL, 1,
+                                &blinkTaskHandle, 1) != pdPASS) {
+      DEBUG_SERIAL_PRINTLN("Failed to create Blink Task");
     } else {
-      vTaskSuspend(blinkTaskHandle); // Suspend task initially
-      digitalWrite(LED_PIN, LOW);
+      // vTaskSuspend(blinkTaskHandle); // Suspend task initially
+      DEBUG_SERIAL_PRINTLN("Blink Task created on core 1");
     }
-    Serial.println("SoftAP started");
     break;
 
-  case SYSTEM_EVENT_AP_STOP:
-    Serial.println("SoftAP stopped");
-    esp_restart();
+  case ARDUINO_EVENT_WIFI_AP_STOP:
+    DEBUG_SERIAL_PRINTLN("SoftAP stopped");
+    // esp_restart();
+    digitalWrite(LED_PIN, LOW);
     break;
 
-  case SYSTEM_EVENT_AP_STACONNECTED:
-  case SYSTEM_EVENT_AP_STADISCONNECTED:
+  case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
     numStations = WiFi.softAPgetStationNum();
-    Serial.printf("Number of stations connected to the AP: %d\n", numStations);
-    digitalWrite(LED_PIN, HIGH);
+    DEBUG_SERIAL_PRINTF("Stations connected - AP: %d\n", numStations);
     if (numStations > 0) {
-      Serial.println("Station connected");
       if (blinkTaskHandle != NULL) {
         vTaskSuspend(blinkTaskHandle);
+        DEBUG_SERIAL_PRINTLN("Blink Task suspended");
+      }
+      if (dnsTaskHandle != NULL) {
+        vTaskResume(dnsTaskHandle);
+        DEBUG_SERIAL_PRINTLN("DNS Task resumed");
+      }
+      digitalWrite(LED_BUILTIN, HIGH);
+    } else {
+      if (blinkTaskHandle != NULL) {
+        vTaskResume(blinkTaskHandle);
+        DEBUG_SERIAL_PRINTLN("Blink Task resumed");
+      }
+      if (dnsTaskHandle != NULL) {
+        vTaskSuspend(dnsTaskHandle);
+        DEBUG_SERIAL_PRINTLN("DNS Task suspended");
+      }
+    }
+    break;
+
+  case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
+    numStations = WiFi.softAPgetStationNum();
+    DEBUG_SERIAL_PRINTF("Stations disconnected - AP: %d\n", numStations);
+    if (numStations > 0) {
+      if (blinkTaskHandle != NULL) {
+        vTaskSuspend(blinkTaskHandle);
+        DEBUG_SERIAL_PRINTLN("Blink Task suspended");
       }
       if (dnsTaskHandle != NULL) {
         vTaskResume(dnsTaskHandle);
       }
+      digitalWrite(LED_BUILTIN, HIGH);
     } else {
-      Serial.println("Station disconnected");
       if (blinkTaskHandle != NULL) {
         vTaskResume(blinkTaskHandle);
+        DEBUG_SERIAL_PRINTLN("Blink Task resumed");
       }
       if (dnsTaskHandle != NULL) {
         vTaskSuspend(dnsTaskHandle);
+        DEBUG_SERIAL_PRINTLN("DNS Task suspended");
       }
     }
     break;
 
   default:
-    Serial.printf("[WiFi-event] event: %d\n", event);
+    DEBUG_SERIAL_PRINTF("[WiFi-event] event: %d\n", event);
     break;
   }
 }
@@ -68,5 +94,5 @@ void setupWifiAP() {
   // Set up the access point
   WiFi.mode(WIFI_AP);
   WiFi.softAP("Akowe_Fountain", "okosodo88");
-  Serial.println("Access Point started");
+  DEBUG_SERIAL_PRINTLN("Access Point started");
 }
