@@ -18,7 +18,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
       DEBUG_SERIAL_PRINTLN("DNS Task suspended initially");
     }
     if (xTaskCreatePinnedToCore(taskBlink, "Blink Task", 2048, NULL, 1,
-                                &blinkTaskHandle, 1) != pdPASS) {
+                                &blinkTaskHandle, 0) != pdPASS) {
       DEBUG_SERIAL_PRINTLN("Failed to create Blink Task");
     } else {
       // vTaskSuspend(blinkTaskHandle); // Suspend task initially

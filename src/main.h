@@ -3,8 +3,12 @@
 
 #include <Arduino.h>
 #include <DNSServer.h>
+#include <ESPAsyncWebServer.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <esp_system.h>
+
+#define MAX_CLIENTS 4
 
 #define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle serial
                              // output
@@ -39,6 +43,19 @@ extern const byte DNS_PORT;
 extern DNSServer dnsServer;
 
 String getTaskInfo(TaskHandle_t taskHandle);
+
+const size_t TOKEN_LENGTH = 9;
+void generateSessionToken(char *buffer, size_t length);
+
+struct ClientSession {
+  char token[TOKEN_LENGTH]; // Session token
+  unsigned long startTime;  // Start time of the session
+  unsigned long lastActive; // Last active time of the session
+};
+
+ClientSession *getSessionFromRequest(AsyncWebServerRequest *request);
+ClientSession *findClientSession(const char *token);
+bool isClientSessionActive(ClientSession &session);
 
 // Constants
 /* const char *ssid = "YourSSID";

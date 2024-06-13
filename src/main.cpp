@@ -20,7 +20,7 @@ const char htmlForm[] PROGMEM = R"rawliteral(
     </html>
   )rawliteral";
 
-AsyncWebServer server(80);
+AsyncWebServer server1(80);
 
 void setup() {
   DEBUG_SERIAL_BEGIN(115200);
@@ -58,11 +58,11 @@ void setup() {
 
   dnsServer.start(DNS_PORT, "akowe.org", WiFi.softAPIP());
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server1.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send_P(200, "text/html", htmlForm);
   });
 
-  server.on("/submit", HTTP_GET, [](AsyncWebServerRequest *request) {
+  server1.on("/submit", HTTP_GET, [](AsyncWebServerRequest *request) {
     String input1, input2;
     if (request->hasParam("input1")) {
       input1 = request->getParam("input1")->value();
@@ -74,7 +74,7 @@ void setup() {
     request->send(200, "text/html", response);
   });
 
-  server.begin();
+  server1.begin();
 }
 
 void loop() { vTaskDelay(portMAX_DELAY); }
