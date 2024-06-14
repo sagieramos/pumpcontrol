@@ -3,60 +3,65 @@
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
-AsyncEventSource events("/events");
+// AsyncEventSource events("/events");
 
 bool shouldReboot = false;
 
 ClientSession authenticatedClients[MAX_CLIENTS];
 
-void login() {
-  server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {
-    ClientSession *session = getSessionFromRequest(request);
-    if (session) {
-      session->lastActive = millis(); // Update last active time
+void loginPage() {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(200, "text/plain", "Hello, world");
+  });
+
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    // Check if the client is already authenticated
+    ClientSession *session =
+        getSessionFromRequest(request, authenticatedClients);
+    if (session && isClientSessionActive(session)) {
       request->send(200, "text/plain", "Already logged in");
       return;
     }
 
+    // If not authenticated, send the login form
+    request->send(200, "text/html",
+                  "<form method='POST' action='/login'>"
+                  "<input type='password' name='pin' placeholder='PIN'>"
+                  "<input type='submit' value='Login'>"
+                  "</form>");
+  });
+
+  server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {
     if (request->hasParam("pin", true)) {
-      AsyncWebParameter *pin = request->getParam("pin", true);
-      if (strcmp(pin->value().c_str(), "0000") == 0) {
-        char token[TOKEN_LENGTH];
+      String pin = request->getParam("pin", true)->value();
 
-        generateSessionToken(token, TOKEN_LENGTH);
+      // Authenticate the client (this is just a placeholder for your
+      // authentication logic)
+      if (pin == "1234") { // Replace this with your actual PIN checking logic
+        // Find an empty session slot
+        for (int i = 0; i < MAX_CLIENTS; i++) {
+          if (authenticatedClients[i].token[0] == '\0' ||
+              isClientSessionActive(&authenticatedClients[i])) {
+            generateSessionToken(authenticatedClients[i].token, TOKEN_LENGTH);
+            updateClientSession(&authenticatedClients[i]);
 
-        if (findClientSession(token) == NULL) {
-          // Store the new client session
-          unsigned long currentTime = millis();
-          for (int i = 0; i < MAX_CLIENTS + 1; i++) {
-            if (MAX_CLIENTS == i) {
-              request->send(500, "text/plain",
-                            "Server Error: Maximum clients reached");
-              return;
-            }
-            if (authenticatedClients[i].token[0] ==
-                '\0') { // Find an empty slot
-              strncpy(authenticatedClients[i].token, token, TOKEN_LENGTH);
-              authenticatedClients[i].startTime = currentTime;
-              authenticatedClients[i].lastActive = currentTime;
-              break;
-            }
+            // Send the token to the client as a cookie
+            String cookie =
+                "_imuwahen=" + String(authenticatedClients[i].token) +
+                "; Path=/";
+            AsyncWebServerResponse *response =
+                request->beginResponse(200, "text/plain", "Login successful");
+            response->addHeader("Set-Cookie", cookie);
+            request->send(response);
+            return;
           }
-
-          // Set token as a cookie
-          AsyncWebServerResponse *response =
-              request->beginResponse(200, "text/plain", token);
-          response->addHeader("Set-Cookie", String("imuwahen=") + token);
-          request->send(response);
-        } else {
-          request->send(500, "text/plain",
-                        "Server Error: Unable to generate unique token");
         }
+        request->send(500, "text/plain", "Session is full");
       } else {
-        request->send(401, "text/plain", "Unauthorized");
+        request->send(401, "text/plain", "Invalid PIN");
       }
     } else {
-      request->send(400, "text/plain", "Bad Request");
+      request->send(400, "text/plain", "No PIN provided");
     }
   });
 }

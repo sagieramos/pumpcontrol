@@ -1,12 +1,5 @@
 #include "main.h"
 #include <map>
-#define SESSION_TIMEOUT 600000
-
-struct ClientSession {
-  char token[TOKEN_LENGTH]; // Session token
-  unsigned long startTime;  // Start time of the session
-  unsigned long lastActive; // Last active time of the session
-};
 
 void generateSessionToken(char *token, size_t length) {
   for (size_t i = 0; i < length - 1; i++) {
@@ -41,9 +34,9 @@ ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
                                      ClientSession *authenticatedClients) {
   if (request->hasHeader("Cookie")) {
     String cookie = request->header("Cookie");
-    int start = cookie.indexOf("session_token=");
+    int start = cookie.indexOf("_imuwahen=");
     if (start != -1) {
-      start += String("session_token=").length();
+      start += String("_imuwahen=").length();
       int end = cookie.indexOf(';', start);
       if (end == -1)
         end = cookie.length();
@@ -64,42 +57,81 @@ void removeClientSession(ClientSession *authenticatedClients,
   }
 }
 
-void updateClientSession(ClientSession &session) {
-  session.lastActive = millis();
-}
-
-void updateClientSession(ClientSession *authenticatedClients,
-                         const char *token) {
-  ClientSession *session = findClientSession(authenticatedClients, token);
-  if (session != NULL) {
-    updateClientSession(*session);
+bool updateClientSession(ClientSession *session) {
+  if (session != nullptr) {
+    session->lastActive = millis();
+    return true;
   }
+  return false;
 }
 
-bool isClientSessionActive(ClientSession &session) {
-  return millis() - session.lastActive < SESSION_TIMEOUT;
+bool updateClientSessionByToken(ClientSession *authenticatedClients,
+                                const char *token) {
+  ClientSession *session = findClientSession(authenticatedClients, token);
+  return updateClientSession(session);
+}
+
+bool isClientSessionActive(ClientSession *session) {
+  if (session == NULL) {
+    return false;
+  }
+  return millis() - session->lastActive < SESSION_TIMEOUT;
 }
 
 bool isClientSessionActive(ClientSession *authenticatedClients,
                            const char *token) {
   ClientSession *session = findClientSession(authenticatedClients, token);
-  return session != NULL && isClientSessionActive(*session);
+  return session != NULL && isClientSessionActive(session);
 }
 
-void authenticateClientSession(ClientSession *authenticatedClients,
-                               const char *token) {
+AuthStatus authenticateClientSession(ClientSession *authenticatedClients,
+                                     const char *token) {
   ClientSession *session = findClientSession(authenticatedClients, token);
-  if (session != NULL) {
-    updateClientSession(*session);
-  } else {
-    for (int i = 0; i < MAX_CLIENTS; i++) {
-      if (authenticatedClients[i].lastActive == 0) {
-        strcpy(authenticatedClients[i].token, token);
-        updateClientSession(authenticatedClients[i]);
-        break;
-      }
+  if (isClientSessionActive(session)) {
+    return alreadyActive;
+  }
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    if (authenticatedClients[i].lastActive > SESSION_TIMEOUT ||
+        authenticatedClients[i].token[0] == '\0') {
+      strcpy(authenticatedClients[i].token, token);
+      updateClientSession(&authenticatedClients[i]);
+      return authenticated;
     }
   }
+  return sessionIsFull;
+}
+
+AuthStatus authenticateClientSession(AsyncWebServerRequest *request,
+                                     ClientSession *authenticatedClients) {
+  ClientSession *session = getSessionFromRequest(request, authenticatedClients);
+
+  if (session) {
+    if (isClientSessionActive(session)) {
+      return alreadyActive;
+    }
+  } else {
+    return noTokenProvided;
+  }
+
+  const char *token = session->token;
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    if (authenticatedClients[i].lastActive > SESSION_TIMEOUT ||
+        authenticatedClients[i].token[0] == '\0') {
+      strcpy(authenticatedClients[i].token, token);
+      updateClientSession(&authenticatedClients[i]);
+      return authenticated;
+    }
+  }
+  return sessionIsFull;
+}
+
+AuthStatus checkAuthorization(AsyncWebServerRequest *request,
+                              ClientSession *authenticatedClients) {
+  ClientSession *session = getSessionFromRequest(request, authenticatedClients);
+  if (session && isClientSessionActive(session)) {
+    return alreadyActive;
+  }
+  return unauthorized;
 }
 
 void deauthenticateClientSession(ClientSession *authenticatedClients,

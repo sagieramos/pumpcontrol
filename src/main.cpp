@@ -1,33 +1,12 @@
 #include "main.h"
 #include <ESPAsyncWebServer.h>
 
-const char htmlForm[] PROGMEM = R"rawliteral(
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>ESP32 Form</title>
-    </head>
-    <body>
-      <h1>ESP32 Form</h1>
-      <form action="/submit" method="GET">
-        <label for="input1">Input 1:</label>
-        <input type="text" id="input1" name="input1"><br><br>
-        <label for="input2">Input 2:</label>
-        <input type="text" id="input2" name="input2"><br><br>
-        <input type="submit" value="Submit">
-      </form>
-    </body>
-    </html>
-  )rawliteral";
-
-AsyncWebServer server1(80);
-
 void setup() {
   DEBUG_SERIAL_BEGIN(115200);
   // Serial.begin(115200);
   // delete old config
 
-  int count = 5;
+  int8_t count = 5;
 
   DEBUG_SERIAL_PRINTLN("Starting in 5 seconds... ");
 
@@ -58,23 +37,84 @@ void setup() {
 
   dnsServer.start(DNS_PORT, "akowe.org", WiFi.softAPIP());
 
-  server1.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send_P(200, "text/html", htmlForm);
+  server.on("*", HTTP_ANY, [](AsyncWebServerRequest *request) {
+    char urlPath[100];
+    request->url().toCharArray(urlPath, sizeof(urlPath));
+    int method = request->method();
+    // get the request info IP
+    DEBUG_SERIAL_PRINTF("Request from: %s:%d\n",
+                        request->client()->remoteIP().toString().c_str(),
+                        request->client()->remotePort());
+    DEBUG_SERIAL_PRINTF("%s => Method: %d\n", urlPath, method);
+
+    if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
+      ClientSession *session =
+          getSessionFromRequest(request, authenticatedClients);
+      if (session && isClientSessionActive(session)) {
+        request->send(200, "text/plain", "Already logged in");
+        DEBUG_SERIAL_PRINTLN("Already logged in");
+        return;
+      }
+
+      // If not authenticated, send the login form
+      DEBUG_SERIAL_PRINTLN("Sending login form");
+      request->send(200, "text/html",
+                    "<form method='POST' action='/login'>"
+                    "<input type='password' name='pin' placeholder='PIN'>"
+                    "</br>"
+                    "<input type='submit' value='Login'>"
+                    "</form>");
+      return;
+    } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
+      if (request->hasParam("pin", true)) {
+        String pin = request->getParam("pin", true)->value();
+        if (pin == PIN) { // Replace this with your actual PIN checking logic
+          // Find an empty session slot
+          DEBUG_SERIAL_PRINTLN("Finding an available session slot");
+          for (int i = 0; i < MAX_CLIENTS; i++) {
+            if (authenticatedClients[i].token[0] == '\0' ||
+                isClientSessionActive(&authenticatedClients[i])) {
+              generateSessionToken(authenticatedClients[i].token, TOKEN_LENGTH);
+              updateClientSession(&authenticatedClients[i]);
+              DEBUG_SERIAL_PRINTLN("Session updated");
+
+              // Send the token to the client as a cookie
+              String cookie =
+                  "_imuwahen=" + String(authenticatedClients[i].token) +
+                  "; Path=/" + "; Max-Age=3600";
+              +"; Secure";
+              +"; HttpOnly";
+              +"; SameSite=Strict";
+              +"; Domain=akowe.org";
+              AsyncWebServerResponse *response =
+                  request->beginResponse(200, "text/plain", "Login successful");
+              response->addHeader("Set-Cookie", cookie);
+              request->send(response);
+              DEBUG_SERIAL_PRINTLN("Login successful");
+              return;
+            }
+          }
+          request->send(500, "text/plain", "Session is full");
+          DEBUG_SERIAL_PRINTLN("Session is full");
+        } else {
+          request->send(401, "text/plain", "Invalid PIN");
+          DEBUG_SERIAL_PRINTLN("Invalid PIN");
+          return;
+        }
+      } else {
+        request->send(400, "text/plain", "No PIN provided");
+        DEBUG_SERIAL_PRINTLN("No PIN provided");
+        return;
+      }
+    }
+
+    else {
+      request->send(404, "text/plain", "Not found");
+      DEBUG_SERIAL_PRINTLN("Not found");
+    }
   });
 
-  server1.on("/submit", HTTP_GET, [](AsyncWebServerRequest *request) {
-    String input1, input2;
-    if (request->hasParam("input1")) {
-      input1 = request->getParam("input1")->value();
-    }
-    if (request->hasParam("input2")) {
-      input2 = request->getParam("input2")->value();
-    }
-    String response = "Input 1: " + input1 + "<br>Input 2: " + input2;
-    request->send(200, "text/html", response);
-  });
-
-  server1.begin();
+  server.begin();
 }
 
 void loop() { vTaskDelay(portMAX_DELAY); }
