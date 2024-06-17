@@ -1,6 +1,9 @@
 #include "main.h"
 #include <ESPAsyncWebServer.h>
 
+ClientSession authenticatedClients[MAX_CLIENTS];
+AsyncWebServer server(80);
+
 void setup() {
   DEBUG_SERIAL_BEGIN(115200);
   // Serial.begin(115200);
@@ -41,74 +44,85 @@ void setup() {
     char urlPath[100];
     request->url().toCharArray(urlPath, sizeof(urlPath));
     int method = request->method();
-    // get the request info IP
+
+    // Get the request info IP
     DEBUG_SERIAL_PRINTF("Request from: %s:%d\n",
                         request->client()->remoteIP().toString().c_str(),
                         request->client()->remotePort());
     DEBUG_SERIAL_PRINTF("%s => Method: %d\n", urlPath, method);
 
     if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
-      ClientSession *session =
-          getSessionFromRequest(request, authenticatedClients);
-      if (session && isClientSessionActive(session)) {
+      int auth = authSession(authenticatedClients, request, check);
+      DEBUG_SERIAL_PRINTF("auth status: %d\n", auth);
+      if (auth == active) {
         request->send(200, "text/plain", "Already logged in");
         DEBUG_SERIAL_PRINTLN("Already logged in");
-        return;
+      } else {
+        // If not authenticated, send the login form
+        DEBUG_SERIAL_PRINTLN("Sending login form");
+        request->send(200, "text/html",
+                      "<form method='POST' action='/login'>"
+                      "<input type='password' name='pin' placeholder='PIN'>"
+                      "<br>"
+                      "<input type='submit' value='Login'>"
+                      "</form>");
       }
-
-      // If not authenticated, send the login form
-      DEBUG_SERIAL_PRINTLN("Sending login form");
-      request->send(200, "text/html",
-                    "<form method='POST' action='/login'>"
-                    "<input type='password' name='pin' placeholder='PIN'>"
-                    "</br>"
-                    "<input type='submit' value='Login'>"
-                    "</form>");
-      return;
     } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
       if (request->hasParam("pin", true)) {
         String pin = request->getParam("pin", true)->value();
         if (pin == PIN) { // Replace this with your actual PIN checking logic
-          // Find an empty session slot
-          DEBUG_SERIAL_PRINTLN("Finding an available session slot");
-          for (int i = 0; i < MAX_CLIENTS; i++) {
-            if (authenticatedClients[i].token[0] == '\0' ||
-                isClientSessionActive(&authenticatedClients[i])) {
-              generateSessionToken(authenticatedClients[i].token, TOKEN_LENGTH);
-              updateClientSession(&authenticatedClients[i]);
-              DEBUG_SERIAL_PRINTLN("Session updated");
+          ClientSession session;
+          // int auth = authSession(authenticatedClients, session);
+          int auth = authSession(authenticatedClients, request, login, session);
 
-              // Send the token to the client as a cookie
-              String cookie =
-                  "_imuwahen=" + String(authenticatedClients[i].token) +
-                  "; Path=/" + "; Max-Age=3600";
-              +"; Secure";
-              +"; HttpOnly";
-              +"; SameSite=Strict";
-              +"; Domain=akowe.org";
-              AsyncWebServerResponse *response =
-                  request->beginResponse(200, "text/plain", "Login successful");
-              response->addHeader("Set-Cookie", cookie);
-              request->send(response);
-              DEBUG_SERIAL_PRINTLN("Login successful");
-              return;
-            }
+          DEBUG_SERIAL_PRINTF("Login status: %d\n", auth);
+          DEBUG_SERIAL_PRINTF("Session index: %d\n", session.index);
+          DEBUG_SERIAL_PRINTF("Session token: %s\n", session.token);
+          DEBUG_SERIAL_PRINTF("Session start time: %lu\n", session.startTime);
+          DEBUG_SERIAL_PRINTF("Session last active: %lu\n", session.lastActive);
+          DEBUG_SERIAL_PRINTF("Session token: %s\n", session.token);
+          if (auth == authenticated) {
+            String cookie1 = "_imuwahen=" + String(session.token) +
+                             "; Path=/; Max-Age=3600; HttpOnly; "
+                             "SameSite=Strict; Domain=akowe.org";
+
+            String cookie2 = "_index=" + String(session.index) +
+                             "; Path=/; Max-Age=3600; HttpOnly; "
+                             "SameSite=Strict; Domain=akowe.org";
+
+            AsyncWebServerResponse *response =
+                request->beginResponse(200, "text/plain", "Login successful");
+            response->addHeader("Set-Cookie", cookie1);
+            response->addHeader("Set-Cookie", cookie2);
+            request->send(response);
+
+            DEBUG_SERIAL_PRINTLN("Login successful");
+          } else if (auth == sessionIsFull) {
+            request->send(500, "text/plain", "Session is full");
+            DEBUG_SERIAL_PRINTLN("Session is full");
+          } else {
+            request->send(401, "text/plain", "Invalid PIN");
+            DEBUG_SERIAL_PRINTLN("Invalid PIN");
           }
-          request->send(500, "text/plain", "Session is full");
-          DEBUG_SERIAL_PRINTLN("Session is full");
         } else {
           request->send(401, "text/plain", "Invalid PIN");
           DEBUG_SERIAL_PRINTLN("Invalid PIN");
-          return;
         }
       } else {
         request->send(400, "text/plain", "No PIN provided");
         DEBUG_SERIAL_PRINTLN("No PIN provided");
-        return;
       }
-    }
-
-    else {
+    } else if (strcmp(urlPath, "/logout") == 0 && method == HTTP_GET) {
+      int auth = authSession(authenticatedClients, request, logout);
+      DEBUG_SERIAL_PRINTF("Logout status: %d\n", auth);
+      if (auth == deauthenticated) {
+        request->send(200, "text/plain", "Logged out");
+        DEBUG_SERIAL_PRINTLN("Logged out");
+      } else {
+        request->send(401, "text/plain", "Unauthorized");
+        DEBUG_SERIAL_PRINTLN("Unauthorized");
+      }
+    } else {
       request->send(404, "text/plain", "Not found");
       DEBUG_SERIAL_PRINTLN("Not found");
     }

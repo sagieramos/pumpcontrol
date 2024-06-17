@@ -6,9 +6,11 @@
 #include <ESPAsyncWebServer.h>
 #include <WiFi.h>
 
-#define MAX_CLIENTS 4
-#define SESSION_TIMEOUT 60000
 #define PIN "1234"
+const byte DNS_PORT = 53;
+const byte MAX_CLIENTS = 4;
+const size_t TOKEN_LENGTH = 9;
+const size_t SESSION_TIMEOUT = 60000;
 
 #define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
 // serial output
@@ -25,9 +27,6 @@
 #define DEBUG_SERIAL_PRINTF(...) ((void)0)
 #endif
 
-const byte DNS_PORT = 53;
-const size_t TOKEN_LENGTH = 9;
-
 // Function prototypes
 void setupWifiAP();
 // void mqtt_callback(char* topic, byte* payload, unsigned int length);
@@ -41,6 +40,7 @@ struct ClientSession {
   char token[TOKEN_LENGTH]; // Session token
   unsigned long startTime;  // Start time of the session
   unsigned long lastActive; // Last active time of the session
+  unsigned int index;       // Index of the session in the session array
 };
 
 // Task handle for the blink task
@@ -48,31 +48,36 @@ extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
 extern const byte DNS_PORT;
 extern DNSServer dnsServer;
-extern AsyncWebServer server;
-extern ClientSession authenticatedClients[MAX_CLIENTS];
+// extern AsyncWebServer server;
+// extern ClientSession authenticatedClients[MAX_CLIENTS];
 
 String getTaskInfo(TaskHandle_t taskHandle);
 
 void generateSessionToken(char *buffer, size_t length);
 
 enum AuthStatus {
-  alreadyActive,
+  active,
+  notActive,
   authenticated,
   sessionIsFull,
   noTokenProvided,
-  unauthorized
+  unauthorized,
+  deauthenticated
 };
+
+enum authAction { login, logout, check };
 
 ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
                                      ClientSession *authenticatedClients);
 ClientSession *findClientSession(ClientSession *authenticatedClients,
                                  const char *token);
-bool isClientSessionActive(ClientSession *session);
-bool updateClientSessionByToken(ClientSession *authenticatedClients,
-                                const char *token);
-bool updateClientSession(ClientSession *session);
-
-void loginPage();
+ClientSession *findClientSession(ClientSession *authenticatedClients,
+                                 int index);
+AuthStatus authSession(ClientSession *authenticatedClients,
+                       AsyncWebServerRequest *request, authAction action,
+                       ClientSession &session);
+AuthStatus authSession(ClientSession *authenticatedClients,
+                       AsyncWebServerRequest *request, authAction action);
 
 // Constants
 /* const char *ssid = "YourSSID";

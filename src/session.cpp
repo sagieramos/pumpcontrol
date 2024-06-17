@@ -1,23 +1,21 @@
 #include "main.h"
-#include <map>
+
+const char CHARSET[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 void generateSessionToken(char *token, size_t length) {
+  size_t charset_size = sizeof(CHARSET) - 1;
+
+  static int seeded = 0;
+  if (!seeded) {
+    srand(time(NULL));
+    seeded = 1;
+  }
+
   for (size_t i = 0; i < length - 1; i++) {
-    token[i] = 'A' + rand() % 26;
+    token[i] = CHARSET[rand() % charset_size];
   }
   token[length - 1] = '\0';
-}
-
-void initializeClientSession(ClientSession &session) {
-  generateSessionToken(session.token, TOKEN_LENGTH);
-  session.startTime = millis();
-  session.lastActive = session.startTime;
-}
-
-void initializeClientSessions(ClientSession *authenticatedClients) {
-  for (int i = 0; i < MAX_CLIENTS; i++) {
-    initializeClientSession(authenticatedClients[i]);
-  }
 }
 
 ClientSession *findClientSession(ClientSession *authenticatedClients,
@@ -30,114 +28,168 @@ ClientSession *findClientSession(ClientSession *authenticatedClients,
   return NULL;
 }
 
+bool extractCookieAttribute(const char *cookie, const char *attribute,
+                            char *value, size_t value_size) {
+  const char *attribute_start = strstr(cookie, attribute);
+  if (!attribute_start) {
+    return false;
+  }
+
+  attribute_start += strlen(attribute);
+  const char *attribute_end = strchr(attribute_start, ';');
+  if (!attribute_end) {
+    attribute_end = cookie + strlen(cookie);
+  }
+
+  size_t attribute_length = attribute_end - attribute_start;
+  if (attribute_length >= value_size) {
+    return false;
+  }
+
+  strncpy(value, attribute_start, attribute_length);
+  value[attribute_length] = '\0';
+
+  return true;
+}
+
 ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
                                      ClientSession *authenticatedClients) {
-  if (request->hasHeader("Cookie")) {
-    String cookie = request->header("Cookie");
-    int start = cookie.indexOf("_imuwahen=");
-    if (start != -1) {
-      start += String("_imuwahen=").length();
-      int end = cookie.indexOf(';', start);
-      if (end == -1)
-        end = cookie.length();
-      String token = cookie.substring(start, end);
-      return findClientSession(authenticatedClients, token.c_str());
+  DEBUG_SERIAL_PRINTLN(".................getSession2");
+
+  if (!request->hasHeader("Cookie")) {
+    return NULL;
+  }
+
+  DEBUG_SERIAL_PRINTLN(".................getSession3");
+  String cookieHeader = request->header("Cookie");
+  const char *cookie = cookieHeader.c_str();
+
+  DEBUG_SERIAL_PRINTF("Cookies: %s\n", cookie);
+
+  char token[TOKEN_LENGTH];
+  char index_str[11]; // 11 characters to fit any integer, including null
+                      // terminator.
+  size_t index;
+
+  if (extractCookieAttribute(cookie, "_imuwahen=", token, TOKEN_LENGTH) &&
+      extractCookieAttribute(cookie, "_index=", index_str, sizeof(index_str))) {
+    index = atoi(index_str);
+
+    if (index >= 0 && index < MAX_CLIENTS) {
+      if (strcmp(authenticatedClients[index].token, token) == 0) {
+        return &authenticatedClients[index];
+      }
     }
   }
+
   return NULL;
 }
 
-void removeClientSession(ClientSession *authenticatedClients,
+AuthStatus removeSession(ClientSession *authenticatedClients,
                          ClientSession &session) {
-  for (int i = 0; i < MAX_CLIENTS; i++) {
-    if (strcmp(authenticatedClients[i].token, session.token) == 0) {
-      initializeClientSession(authenticatedClients[i]);
-      break;
-    }
-  }
-}
-
-bool updateClientSession(ClientSession *session) {
-  if (session != nullptr) {
-    session->lastActive = millis();
-    return true;
-  }
-  return false;
-}
-
-bool updateClientSessionByToken(ClientSession *authenticatedClients,
-                                const char *token) {
-  ClientSession *session = findClientSession(authenticatedClients, token);
-  return updateClientSession(session);
-}
-
-bool isClientSessionActive(ClientSession *session) {
-  if (session == NULL) {
-    return false;
-  }
-  return millis() - session->lastActive < SESSION_TIMEOUT;
-}
-
-bool isClientSessionActive(ClientSession *authenticatedClients,
-                           const char *token) {
-  ClientSession *session = findClientSession(authenticatedClients, token);
-  return session != NULL && isClientSessionActive(session);
-}
-
-AuthStatus authenticateClientSession(ClientSession *authenticatedClients,
-                                     const char *token) {
-  ClientSession *session = findClientSession(authenticatedClients, token);
-  if (isClientSessionActive(session)) {
-    return alreadyActive;
-  }
-  for (int i = 0; i < MAX_CLIENTS; i++) {
-    if (authenticatedClients[i].lastActive > SESSION_TIMEOUT ||
-        authenticatedClients[i].token[0] == '\0') {
-      strcpy(authenticatedClients[i].token, token);
-      updateClientSession(&authenticatedClients[i]);
-      return authenticated;
-    }
-  }
-  return sessionIsFull;
-}
-
-AuthStatus authenticateClientSession(AsyncWebServerRequest *request,
-                                     ClientSession *authenticatedClients) {
-  ClientSession *session = getSessionFromRequest(request, authenticatedClients);
-
-  if (session) {
-    if (isClientSessionActive(session)) {
-      return alreadyActive;
-    }
-  } else {
+  if (session.token[0] == '\0') {
     return noTokenProvided;
   }
+  unsigned long now = millis();
+  if (now - session.lastActive < SESSION_TIMEOUT) {
+    size_t index = session.index;
+    authenticatedClients[index].token[0] = '\0';
+    authenticatedClients[index].startTime = 0;
+    authenticatedClients[index].lastActive = 0;
+    return deauthenticated;
+  }
 
-  const char *token = session->token;
+  return unauthorized;
+}
+
+AuthStatus createSession(ClientSession *authenticatedClients,
+                         ClientSession &session) {
+  unsigned long now = millis();
+
   for (int i = 0; i < MAX_CLIENTS; i++) {
-    if (authenticatedClients[i].lastActive > SESSION_TIMEOUT ||
-        authenticatedClients[i].token[0] == '\0') {
-      strcpy(authenticatedClients[i].token, token);
-      updateClientSession(&authenticatedClients[i]);
+    if (authenticatedClients[i].lastActive == 0 ||
+        (now - authenticatedClients[i].lastActive > SESSION_TIMEOUT)) {
+
+      char token[TOKEN_LENGTH];
+      generateSessionToken(token, TOKEN_LENGTH);
+
+      authenticatedClients[i].startTime = now;
+      authenticatedClients[i].lastActive = now;
+      authenticatedClients[i].index = i;
+      strncpy(authenticatedClients[i].token, token, TOKEN_LENGTH);
+
+      session = authenticatedClients[i];
       return authenticated;
     }
   }
+
   return sessionIsFull;
 }
 
-AuthStatus checkAuthorization(AsyncWebServerRequest *request,
-                              ClientSession *authenticatedClients) {
-  ClientSession *session = getSessionFromRequest(request, authenticatedClients);
-  if (session && isClientSessionActive(session)) {
-    return alreadyActive;
+AuthStatus checkAuth(ClientSession &session) {
+  if (&session == NULL) {
+    return notActive;
+  }
+  if (session.token[0] == '\0') {
+    return noTokenProvided;
+  }
+  unsigned long now = millis();
+  if (now - session.lastActive < SESSION_TIMEOUT) {
+    session.lastActive = now;
+    return active;
+  }
+  if (now - session.startTime >= SESSION_TIMEOUT) {
+    return notActive;
   }
   return unauthorized;
 }
 
-void deauthenticateClientSession(ClientSession *authenticatedClients,
-                                 const char *token) {
-  ClientSession *session = findClientSession(authenticatedClients, token);
-  if (session != NULL) {
-    removeClientSession(authenticatedClients, *session);
+AuthStatus authSession(ClientSession *authenticatedClients,
+                       AsyncWebServerRequest *request, authAction action,
+                       ClientSession &session) {
+  ClientSession *getSession =
+      getSessionFromRequest(request, authenticatedClients);
+  unsigned long now = millis();
+
+  if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
+      action == login) {
+    return unauthorized;
+  } else if (!getSession && action != login) {
+    return unauthorized;
+  }
+
+  if (action == check) {
+    return checkAuth(*getSession);
+  } else if (action == login) {
+    return createSession(authenticatedClients, session);
+  } else if (action == logout) {
+    return removeSession(authenticatedClients, *getSession);
+  }
+
+  return unauthorized;
+}
+
+AuthStatus authSession(ClientSession *authenticatedClients,
+                       AsyncWebServerRequest *request, authAction action) {
+  ClientSession *getSession =
+      getSessionFromRequest(request, authenticatedClients);
+  unsigned long now = millis();
+
+  if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
+      action == login) {
+    return unauthorized;
+  } else if (!getSession && action != login) {
+    return unauthorized;
+  }
+
+  switch (action) {
+  case check:
+    return checkAuth(*getSession);
+  case login:
+    return createSession(authenticatedClients, *getSession);
+  case logout:
+    return removeSession(authenticatedClients, *getSession);
+  default:
+    return unauthorized;
   }
 }
