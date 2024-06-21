@@ -1,0 +1,130 @@
+:root {
+  --max-width: 512px;
+}
+
+*,
+*::after,
+*::before {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto', sans-serif;
+  outline: none;
+  user-select: none;
+  text-decoration: none;
+  z-index: auto;
+
+  /* white-space: nowrap; */
+  vertical-align: middle;
+  line-height: normal;
+  list-style: none;
+  letter-spacing: inherit;
+  word-break: break-word;
+  overflow-x: hidden;
+  touch-action: manipulation;
+}
+
+html {
+  height: 100%;
+}
+
+.body {
+  background: linear-gradient(#141e30, #243b55);
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-image: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+}
+
+.login-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 84%;
+  max-width: 400px;
+  min-width: 350px;
+  padding: 40px;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+}
+
+.login-box h2 {
+  margin: 0 0 30px;
+  padding: 0;
+  color: #fff;
+  text-align: center;
+}
+
+.login-box .user-box {
+  position: relative;
+}
+
+.login-box .user-box input {
+  width: 100%;
+  padding: 10px 0;
+  font-size: 16px;
+  color: #fff;
+  margin-bottom: 40px;
+  border: none;
+  border-bottom: 1px solid #03e9f4;
+  outline: none;
+  background: transparent;
+  text-align: center;
+}
+
+.login-box .user-box label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 10px 0;
+  font-size: 16px;
+  color: #03e9f4;
+  pointer-events: none;
+  transition: 0.5s;
+}
+
+.login-box .user-box input:focus ~ label,
+.login-box .user-box input:valid ~ label {
+  top: 40px;
+  left: 0;
+  color: #03e9f4;
+  font-size: 12px;
+  margin-bottom: 100px;
+}
+
+.login-box form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.login-box form button {
+background: none;
+  padding: 5px 10px;
+  color: #03e9f4;
+  font-weight: bolder;
+  font-size: 12px;
+  border: solid 1px #03e9f4;
+  text-transform: uppercase;
+  overflow: hidden;
+  margin-top: 40px;
+  letter-spacing: 4px;
+  cursor: default;
+  align-self: center;
+}
+.login-box button:active {
+  background: #03e9f4;
+  color: #fff;
+  border-radius: 5px;
+  box-shadow: 0 0 5px #03e9f4,
+              0 0 25px #03e9f4,
+              0 0 50px #03e9f4,
+              0 0 100px #03e9f4;
+}

@@ -1,8 +1,8 @@
 #include "main.h"
-#include <ESPAsyncWebServer.h>
 
 ClientSession authenticatedClients[MAX_CLIENTS];
 AsyncWebServer server(80);
+
 
 void setup() {
   DEBUG_SERIAL_BEGIN(115200);
@@ -109,14 +109,21 @@ void setup() {
           DEBUG_SERIAL_PRINTLN("Invalid PIN");
         }
       } else {
-        request->send(400, "text/plain", "No PIN provided");
+        request->send(400, "text/html", "<h1>No PIN provided,</h1>"
+                                         "<h2>Please provide a PIN</h2>"
+                                         "<form method='POST' action='/login'>"
+                                         "<input type='password' name='pin' "
+                                         "placeholder='PIN'>"
+                                         "<br>"
+                                         "<input type='submit' value='Login'>"
+                                         "</form>");
         DEBUG_SERIAL_PRINTLN("No PIN provided");
       }
     } else if (strcmp(urlPath, "/logout") == 0 && method == HTTP_GET) {
       int auth = authSession(authenticatedClients, request, logout);
       DEBUG_SERIAL_PRINTF("Logout status: %d\n", auth);
       if (auth == deauthenticated) {
-        request->send(200, "text/plain", "Logged out");
+        request->redirect("/");
         DEBUG_SERIAL_PRINTLN("Logged out");
       } else {
         request->send(401, "text/plain", "Unauthorized");
