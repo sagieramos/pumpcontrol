@@ -6,7 +6,8 @@ module.exports = {
   entry: './public/index.js',
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'data')
+    path: path.resolve(__dirname, 'data'),
+    assetModuleFilename: '[name][ext]'
   },
   module: {
     rules: [
@@ -27,16 +28,23 @@ module.exports = {
       {
         test: /\.html$/,
         use: ['html-loader']
+      },
+      {
+        test: /\.(png|jpe?g|gif|svg)$/i, // Include image file types
+        type: 'asset/resource', // Use asset/resource to handle images
+        generator: {
+          filename: '[name][ext]' // Keep original file names and extensions
+        }
       }
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
-      filename: 'index.html'
+      filename: 'index.html',
     }),
     new MiniCssExtractPlugin({
-      filename: 'css/[name].[contenthash].css'
+      filename: '[name].[contenthash].css'
     }),
   ],
   mode: 'production'

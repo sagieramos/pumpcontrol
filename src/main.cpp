@@ -1,4 +1,6 @@
 #include "main.h"
+#include "FS.h"
+#include <SPIFFS.h>
 
 ClientSession authenticatedClients[MAX_CLIENTS];
 AsyncWebServer server(80);
@@ -8,6 +10,14 @@ void setup() {
   DEBUG_SERIAL_BEGIN(115200);
   // Serial.begin(115200);
   // delete old config
+
+    if (!SPIFFS.begin()) {
+        DEBUG_SERIAL_PRINTLN("Failed to mount SPIFFS");
+        return;
+    }
+
+    DEBUG_SERIAL_PRINTLN("SPIFFS mounted successfully");
+
 
   int8_t count = 5;
 
@@ -40,6 +50,30 @@ void setup() {
 
   dnsServer.start(DNS_PORT, "akowe.org", WiFi.softAPIP());
 
+/*   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.html", "text/html");
+  }); */
+
+  server.on("/bundle.js", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/bundle.js", "application/javascript");
+  });
+
+    server.on("/bundle.js", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/index.js", "application/javascript");
+  });
+
+  server.on("/styles_a.css", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(SPIFFS, "/styles_a.css", "text/css");
+  });
+
+  server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(SPIFFS, "/favicon.ico", "image/x-icon");
+  });
+
+  server.on("/logo.svg", HTTP_GET, [](AsyncWebServerRequest *request){
+      request->send(SPIFFS, "/logo.svg", "image/svg+xml");
+  });
+
   server.on("*", HTTP_ANY, [](AsyncWebServerRequest *request) {
     char urlPath[100];
     request->url().toCharArray(urlPath, sizeof(urlPath));
@@ -60,19 +94,13 @@ void setup() {
       } else {
         // If not authenticated, send the login form
         DEBUG_SERIAL_PRINTLN("Sending login form");
-        request->send(200, "text/html",
-                      "<form method='POST' action='/login'>"
-                      "<input type='password' name='pin' placeholder='PIN'>"
-                      "<br>"
-                      "<input type='submit' value='Login'>"
-                      "</form>");
+        request->send(SPIFFS, "/index.html", "text/html");
       }
     } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
       if (request->hasParam("pin", true)) {
         String pin = request->getParam("pin", true)->value();
-        if (pin == PIN) { // Replace this with your actual PIN checking logic
+        if (pin == PIN) {
           ClientSession session;
-          // int auth = authSession(authenticatedClients, session);
           int auth = authSession(authenticatedClients, request, login, session);
 
           DEBUG_SERIAL_PRINTF("Login status: %d\n", auth);

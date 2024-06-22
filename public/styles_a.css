@@ -15,29 +15,45 @@
   z-index: auto;
 
   /* white-space: nowrap; */
-  vertical-align: middle;
+/*   vertical-align: middle;
   line-height: normal;
   list-style: none;
   letter-spacing: inherit;
   word-break: break-word;
   overflow-x: hidden;
-  touch-action: manipulation;
+  touch-action: manipulation; */
 }
 
 html {
   height: 100%;
 }
 
-.body {
+body {
   background: linear-gradient(#141e30, #243b55);
   font-size: 16px;
   margin: 0;
   padding: 0;
 }
 
-body {
-  font-family: 'Inter', sans-serif;
-  background-image: linear-gradient(to bottom, #f5f5f5, #e8e8e8);
+nav {
+  width: 100%;
+  min-width: 350px;
+}
+
+#logo {
+  display: flex;
+  justify-content:flex-start;
+  gap: 12px;
+  align-items: center;
+}
+
+span#logo-text {
+  color: #F28C28;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  font-size: 1rem;
+  text-align: end;
 }
 
 .login-box {
@@ -49,10 +65,22 @@ body {
   min-width: 350px;
   padding: 40px;
   transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.5);
+  background: #00000080;
   box-sizing: border-box;
   box-shadow: 0 15px 25px rgba(0, 0, 0, 0.6);
   border-radius: 10px;
+}
+
+header {
+  position: absolute;
+  width: 100%;
+  padding: 8px 24px;
+  border-bottom: 1px solid #03e8f42d;
+  /* background: linear-gradient(#141e30, #243b55); */
+  background-color: #141e30;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .login-box h2 {
@@ -90,13 +118,18 @@ body {
   transition: 0.5s;
 }
 
-.login-box .user-box input:focus ~ label,
+.login-box .user-box input:focus ~ label {
+  top: 40px;
+  left: 0;
+  color: #F28C28;
+  font-size: 12px;
+}
+
 .login-box .user-box input:valid ~ label {
   top: 40px;
   left: 0;
-  color: #03e9f4;
+  color: #66FF00;
   font-size: 12px;
-  margin-bottom: 100px;
 }
 
 .login-box form {
@@ -105,7 +138,7 @@ body {
     justify-content: center;
 }
 
-.login-box form button {
+.login-box button {
 background: none;
   padding: 5px 10px;
   color: #03e9f4;
@@ -118,7 +151,9 @@ background: none;
   letter-spacing: 4px;
   cursor: default;
   align-self: center;
+  transition: background-color 0.3s, color 0.3s;
 }
+
 .login-box button:active {
   background: #03e9f4;
   color: #fff;
@@ -127,4 +162,12 @@ background: none;
               0 0 25px #03e9f4,
               0 0 50px #03e9f4,
               0 0 100px #03e9f4;
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
 }
