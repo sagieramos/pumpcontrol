@@ -138,8 +138,10 @@ header {
     justify-content: center;
 }
 
-.login-box button {
-background: none;
+.login-box form button {
+  position: relative;
+  display: inline-block;
+  background: none;
   padding: 5px 10px;
   color: #03e9f4;
   font-weight: bolder;
@@ -170,4 +172,147 @@ background: none;
   50% { transform: translateX(5px); }
   75% { transform: translateX(-5px); }
   100% { transform: translateX(0); }
+}
+
+.login-box button span {
+  position: absolute;
+  display: block;
+}
+
+.loading-anim span:nth-child(1) {
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #03e9f4);
+  animation: btn-anim1 1s linear infinite;
+}
+
+@keyframes btn-anim1 {
+  0% {
+    left: -100%;
+  }
+
+  50%,
+  100% {
+    left: 100%;
+  }
+}
+
+.loading-anim span:nth-child(2) {
+  top: -100%;
+  right: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #03e9f4);
+  animation: btn-anim2 1s linear infinite;
+  animation-delay: 0.25s;
+}
+
+@keyframes btn-anim2 {
+  0% {
+    top: -100%;
+  }
+
+  50%,
+  100% {
+    top: 100%;
+  }
+}
+
+.loading-anim span:nth-child(3) {
+  bottom: 0;
+  right: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(270deg, transparent, #03e9f4);
+  animation: btn-anim3 1s linear infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes btn-anim3 {
+  0% {
+    right: -100%;
+  }
+
+  50%,
+  100% {
+    right: 100%;
+  }
+}
+
+.loading-anim span:nth-child(4) {
+  bottom: -100%;
+  left: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(360deg, transparent, #03e9f4);
+  animation: btn-anim4 1s linear infinite;
+  animation-delay: 0.75s;
+}
+
+@keyframes btn-anim4 {
+  0% {
+    bottom: -100%;
+  }
+
+  50%,
+  100% {
+    bottom: 100%;
+  }
+}
+
+.pass-label {
+  color: #c1aba6;
+}
+
+.flash-message {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 400px;
+  min-width: 350px;
+  padding: 8px 24px;
+  color: #FA5F55;
+  text-align: center;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flash-message img {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
+
+.flash-message span {
+  font-size: 0.8rem;
+}
+
+.footer-content {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 8px 24px;
+  border-top: 1px solid #03e8f42d;
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-content img {
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .footer-content {
+    font-size: 0.8rem;
+  }
 }
