@@ -1,4 +1,6 @@
-import './styles_a.css';
+import './_lstyles.css';
+
+const APname = 'Akowe_Fountain';
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
@@ -10,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const warningIcon = document.getElementById('warning-icon');
 
     const displayError = (message) => {
-        flashText.innerText = message;
+        flashText.innerHTML = message;
         flashMessage.style.display = 'flex';
         warningIcon.style.animation = 'shake 0.5s';
         warningIcon.addEventListener('animationend', () => {
@@ -72,6 +74,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 302:
                     displayError(typeof result === 'string' ? result : result.message || 'Server Unavailable.');
+                    break;
+                case 500:
+                    displayError(typeof result === 'string' ? result : result.message || 
+                        `Connect your device WiFi to Access Point: <span style="font-style: italic;">${APname}</span> and try again.`
+                    );
                     break;
                 default:
                     displayError('Faulty Request. Please try again.');

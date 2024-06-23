@@ -3,9 +3,9 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  entry: './public/index.js',
+  entry: './public/login/_lindex.js',
   output: {
-    filename: 'bundle.js',
+    filename: '_lbundle.js',
     path: path.resolve(__dirname, 'data'),
     assetModuleFilename: '[name][ext]'
   },
@@ -40,8 +40,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/index.html',
-      filename: 'index.html',
+      template: './public/login/_lindex.html',
+      filename: '_lindex.html',
     }),
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css'

@@ -4,7 +4,8 @@
 
 void handleLogin(AsyncWebServerRequest *request);
 void handleLogout(AsyncWebServerRequest *request);
-void serveStaticFile(AsyncWebServerRequest *request, String path, String contentType);
+void serveStaticFile(AsyncWebServerRequest *request, String path,
+                     String contentType);
 void handleRequest(AsyncWebServerRequest *request);
 
 ClientSession authenticatedClients[MAX_CLIENTS];
@@ -19,7 +20,7 @@ void setup() {
   }
   DEBUG_SERIAL_PRINTLN("SPIFFS mounted successfully");
 
-    int8_t count = 5;
+  int8_t count = 5;
 
   DEBUG_SERIAL_PRINTLN("Starting in 5 seconds... ");
 
@@ -34,8 +35,6 @@ void setup() {
 
   DEBUG_SERIAL_PRINTLN();
 
-  // Examples of different ways to register wifi events;
-  // these handlers will be called from another thread.
   pinMode(LED_BUILTIN, OUTPUT);
 
   // Setup WiFi AP and DNS
@@ -43,16 +42,16 @@ void setup() {
   dnsServer.start(DNS_PORT, "akowe.org", WiFi.softAPIP());
 
   // Serve static files with appropriate MIME types and CORS headers
-  server.on("/bundle.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    serveStaticFile(request, "/bundle.js", "application/javascript");
+  server.on("/_lbundle.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    serveStaticFile(request, "/_lbundle.js", "application/javascript");
   });
 
-  server.on("/index.js", HTTP_GET, [](AsyncWebServerRequest *request) {
-    serveStaticFile(request, "/index.js", "application/javascript");
+  server.on("/_lindex.js", HTTP_GET, [](AsyncWebServerRequest *request) {
+    serveStaticFile(request, "/_lindex.js", "application/javascript");
   });
 
-  server.on("/styles_a.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-    serveStaticFile(request, "/styles_a.css", "text/css");
+  server.on("/_lstyles.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+    serveStaticFile(request, "/_lstyles.css", "text/css");
   });
 
   server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -68,20 +67,22 @@ void setup() {
   });
 
   // Handle other requests including login, logout, and default routes
-  server.on("*", HTTP_ANY, [](AsyncWebServerRequest *request) {
-    handleRequest(request);
-  });
+  server.on("*", HTTP_ANY,
+            [](AsyncWebServerRequest *request) { handleRequest(request); });
 
   server.begin();
 }
 
 void loop() { vTaskDelay(portMAX_DELAY); }
 
-void serveStaticFile(AsyncWebServerRequest *request, String path, String contentType) {
-  AsyncWebServerResponse *response = request->beginResponse(SPIFFS, path, contentType);
+void serveStaticFile(AsyncWebServerRequest *request, String path,
+                     String contentType) {
+  AsyncWebServerResponse *response =
+      request->beginResponse(SPIFFS, path, contentType);
   response->addHeader("Access-Control-Allow-Origin", "*");
   response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  response->addHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+  response->addHeader("Access-Control-Allow-Headers",
+                      "Content-Type, Authorization, X-Requested-With");
   request->send(response);
 }
 
@@ -103,7 +104,7 @@ void handleRequest(AsyncWebServerRequest *request) {
       request->send(200, "text/plain", "Already logged in");
       DEBUG_SERIAL_PRINTLN("Already logged in");
     } else {
-      request->send(SPIFFS, "/index.html", "text/html");
+      request->send(SPIFFS, "/_lindex.html", "text/html");
     }
   } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
     // Handle login route
@@ -127,9 +128,14 @@ void handleLogin(AsyncWebServerRequest *request) {
       int auth = authSession(authenticatedClients, request, login, session);
       if (auth == authenticated) {
         // Generate cookies and send response
-        String cookie1 = "_imuwahen=" + String(session.token) + "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; Domain=akowe.org";
-        String cookie2 = "_index=" + String(session.index) + "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; Domain=akowe.org";
-        AsyncWebServerResponse *response = request->beginResponse(200, "text/plain", "Login successful");
+        String cookie1 = "_imuwahen=" + String(session.token) +
+                         "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; "
+                         "Domain=akowe.org";
+        String cookie2 = "_index=" + String(session.index) +
+                         "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; "
+                         "Domain=akowe.org";
+        AsyncWebServerResponse *response =
+            request->beginResponse(200, "text/plain", "Login successful");
         response->addHeader("Set-Cookie", cookie1);
         response->addHeader("Set-Cookie", cookie2);
         request->send(response);
@@ -138,12 +144,12 @@ void handleLogin(AsyncWebServerRequest *request) {
         request->send(500, "text/plain", "Session is full");
         DEBUG_SERIAL_PRINTLN("Session is full");
       } else {
-        request->send(401, "text/plain", "Invalid PIN");
-        DEBUG_SERIAL_PRINTLN("Invalid PIN");
+        request->send(401, "text/plain", "PIN is incorrect");
+        DEBUG_SERIAL_PRINTLN("PIN is incorrect");
       }
     } else {
-      request->send(401, "text/plain", "Invalid PIN");
-      DEBUG_SERIAL_PRINTLN("Invalid PIN");
+      request->send(401, "text/plain", "You provided a wrong PIN");
+      DEBUG_SERIAL_PRINTLN("Invalid PIN format. Must be 4 digits long");
     }
   } else {
     request->send(400, "text/html", "No PIN provided");
