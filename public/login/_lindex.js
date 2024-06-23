@@ -71,9 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 401:
                     displayError(typeof result === 'string' ? result : result.message || 'Unauthorized');
+                    passcodeInput.value = '';
                     break;
                 case 302:
                     displayError(typeof result === 'string' ? result : result.message || 'Server Unavailable.');
+                    passcodeInput.value = '';
                     break;
                 case 500:
                     displayError(typeof result === 'string' ? result : result.message || 
