@@ -148,8 +148,9 @@ void handleLogin(AsyncWebServerRequest *request) {
         DEBUG_SERIAL_PRINTLN("PIN is incorrect");
       }
     } else {
-      request->send(401, "text/plain", "You provided a wrong PIN");
-      DEBUG_SERIAL_PRINTLN("Invalid PIN format. Must be 4 digits long");
+      request->send(401, "text/plain",
+                    "The PIN that you've entered is incorrect.");
+      DEBUG_SERIAL_PRINTLN("Invalid PIN format");
     }
   } else {
     request->send(400, "text/html", "No PIN provided");
