@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     displayError(typeof result === 'string' ? result : result.message || 'Server Unavailable.');
                     break;
                 default:
-                    displayError(typeof result === 'string' ? result : result.message || 'Faulty Request. Please try again.');
+                    displayError('Faulty Request. Please try again.');
                     passcodeInput.value = '';
                     break;
             }
@@ -87,8 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     form.addEventListener('submit', (event) => {
+        if (!loadingAnim.classList.contains('loading-anim')) {
+            event.preventDefault();
+            validateAndSubmit();
+        }
+    });
+
+    loadingAnim.addEventListener('click', (event) => {
         event.preventDefault();
-        validateAndSubmit();
+        if (!loadingAnim.classList.contains('loading-anim')) {
+            validateAndSubmit();
+        }
     });
 
     passcodeInput.addEventListener('input', () => {
@@ -97,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     passcodeInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
+        if (event.key === 'Enter' && !loadingAnim.classList.contains('loading-anim')) {
             event.preventDefault();
             validateAndSubmit();
         }
