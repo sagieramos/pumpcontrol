@@ -7,6 +7,11 @@
     <link rel="stylesheet" type="text/css" href="./_lstyles.css">
     <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
     <title>Akowe | Provide a valid PIN</title>
+    <style>
+        body {
+          display: none;
+        }
+      </style>
 </head>
 <body>
     <header class="header-defaut">
@@ -49,5 +54,10 @@
     </footer>
 
     <script src="./_lindex.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+          document.body.style.display = 'block';
+        });
+    </script>
 </body>
 </html>

@@ -36,14 +36,16 @@ void setup() {
   dnsServer.start(DNS_PORT, "akowe.org", apIP);
   dnsServer.start(DNS_PORT, "www.akowe.org", apIP);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
-   dnsServer.setTTL(604800);
+  dnsServer.setTTL(604800);
 
   // Serve static files with appropriate MIME types and CORS headers
   // And routes
   for (int i = 0; i < numPaths; ++i) {
-    server.on(paths[i], HTTP_GET, [path = paths[i], contentType = contentTypes[i]](AsyncWebServerRequest *request) {
-      serveStaticFile(request, path, contentType);
-    });
+    server.on(paths[i], HTTP_GET,
+              [path = paths[i],
+               contentType = contentTypes[i]](AsyncWebServerRequest *request) {
+                serveStaticFile(request, path, contentType);
+              });
   }
 
   // Handle other requests including login, logout, and default routes
