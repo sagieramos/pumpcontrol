@@ -1,6 +1,11 @@
 #include "main.h"
 #include <WiFi.h>
 
+// Define the custom IP configuration
+IPAddress local_IP(192, 168, 10, 1);   // Desired IP address
+IPAddress gateway(192, 168, 10, 1);    // Gateway, typically the same as local_IP for AP mode
+IPAddress subnet(255, 255, 255, 0);   // Subnet mask
+
 uint8_t numStations = 0;
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
@@ -91,8 +96,17 @@ void setupWifiAP() {
   WiFi.disconnect(true);
   // Attach WiFi event handler
   WiFi.onEvent(WiFiEvent);
+  // Set up the access point IP settings
+  if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
+    DEBUG_SERIAL_PRINTLN("Failed to configure SoftAP IP");
+    return;
+  }
   // Set up the access point
-  WiFi.mode(WIFI_AP);
-  WiFi.softAP("Akowe_Fountain", "okosodo88");
+  if (!WiFi.softAP("Akowe_Fountain", "okosodo88")) {
+    DEBUG_SERIAL_PRINTLN("Failed to start AP");
+    return;
+  }
   DEBUG_SERIAL_PRINTLN("Access Point started");
+  DEBUG_SERIAL_PRINT("AP IP address: ");
+  DEBUG_SERIAL_PRINTLN(WiFi.softAPIP());
 }

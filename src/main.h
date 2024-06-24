@@ -1,18 +1,21 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include "FS.h"
 #include <Arduino.h>
 #include <DNSServer.h>
 #include <ESPAsyncWebServer.h>
+#include <SPIFFS.h>
 #include <WiFi.h>
 
 #define PIN "1234"
-const byte DNS_PORT = 53;
-const byte MAX_CLIENTS = 4;
-const size_t TOKEN_LENGTH = 9;
-const size_t SESSION_TIMEOUT = 60000;
+const byte DNS_PORT = 53; // DNS server port
+const byte MAX_CLIENTS =
+    4; // Maximum number of clients that can be authenticated
+const size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
+const size_t SESSION_TIMEOUT = 60000; // 1 minute
 
-#define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
+// #define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
 // serial output
 
 #ifdef DEBUG_SERIAL_ENABLED
@@ -78,6 +81,12 @@ AuthStatus authSession(ClientSession *authenticatedClients,
                        ClientSession &session);
 AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, authAction action);
+
+void handleLogin(AsyncWebServerRequest *request);
+void handleLogout(AsyncWebServerRequest *request);
+void serveStaticFile(AsyncWebServerRequest *request, const char *path,
+                     const char *contentType);
+void handleRequest(AsyncWebServerRequest *request);
 
 // Constants
 /* const char *ssid = "YourSSID";
