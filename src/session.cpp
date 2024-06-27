@@ -18,11 +18,11 @@ void generateSessionToken(char *token, size_t length) {
   token[length - 1] = '\0';
 }
 
-ClientSession *findClientSession(ClientSession *authenticatedClients,
+ClientSession *findClientSession(ClientSession *sessions,
                                  const char *token) {
   for (int i = 0; i < MAX_CLIENTS; i++) {
-    if (strcmp(authenticatedClients[i].token, token) == 0) {
-      return &authenticatedClients[i];
+    if (strcmp(sessions[i].token, token) == 0) {
+      return &sessions[i];
     }
   }
   return NULL;
@@ -53,7 +53,7 @@ bool extractCookieAttribute(const char *cookie, const char *attribute,
 }
 
 ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
-                                     ClientSession *authenticatedClients) {
+                                     ClientSession *sessions) {
   DEBUG_SERIAL_PRINTLN(".................getSession2");
 
   if (!request->hasHeader("Cookie")) {
@@ -76,8 +76,8 @@ ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
     index = atoi(index_str);
 
     if (index >= 0 && index < MAX_CLIENTS) {
-      if (strcmp(authenticatedClients[index].token, token) == 0) {
-        return &authenticatedClients[index];
+      if (strcmp(sessions[index].token, token) == 0) {
+        return &sessions[index];
       }
     }
   }
@@ -85,111 +85,111 @@ ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
   return NULL;
 }
 
-AuthStatus removeSession(ClientSession *authenticatedClients,
+AuthStatus removeSession(ClientSession *sessions,
                          ClientSession &session) {
   if (session.token[0] == '\0') {
-    return noTokenProvided;
+    return NO_TOKEN_PROVIDED;
   }
   unsigned long now = millis();
   if (now - session.lastActive < SESSION_TIMEOUT) {
     size_t index = session.index;
-    authenticatedClients[index].token[0] = '\0';
-    authenticatedClients[index].startTime = 0;
-    authenticatedClients[index].lastActive = 0;
-    return deauthenticated;
+    sessions[index].token[0] = '\0';
+    sessions[index].startTime = 0;
+    sessions[index].lastActive = 0;
+    return AUTH_DEAUTHENTICATED;
   }
 
-  return unauthorized;
+  return AUTH_UNAUTHORIZED;
 }
 
-AuthStatus createSession(ClientSession *authenticatedClients,
+AuthStatus createSession(ClientSession *sessions,
                          ClientSession &session) {
   unsigned long now = millis();
 
   for (int i = 0; i < MAX_CLIENTS; i++) {
-    if (authenticatedClients[i].lastActive == 0 ||
-        (now - authenticatedClients[i].lastActive > SESSION_TIMEOUT)) {
+    if (sessions[i].lastActive == 0 ||
+        (now - sessions[i].lastActive > SESSION_TIMEOUT)) {
 
       char token[TOKEN_LENGTH];
       generateSessionToken(token, TOKEN_LENGTH);
 
-      authenticatedClients[i].startTime = now;
-      authenticatedClients[i].lastActive = now;
-      authenticatedClients[i].index = i;
-      strncpy(authenticatedClients[i].token, token, TOKEN_LENGTH);
+      sessions[i].startTime = now;
+      sessions[i].lastActive = now;
+      sessions[i].index = i;
+      strncpy(sessions[i].token, token, TOKEN_LENGTH);
 
-      session = authenticatedClients[i];
-      return authenticated;
+      session = sessions[i];
+      return AUTH_AUTHENTICATED;
     }
   }
 
-  return sessionIsFull;
+  return AUTH_SESSION_FULL;
 }
 
 AuthStatus checkAuth(ClientSession &session) {
   if (&session == NULL) {
-    return notActive;
+    return AUTH_NOT_ACTIVE;
   }
   if (session.token[0] == '\0') {
-    return noTokenProvided;
+    return NO_TOKEN_PROVIDED;
   }
   unsigned long now = millis();
   if (now - session.lastActive < SESSION_TIMEOUT) {
     session.lastActive = now;
-    return active;
+    return AUTH_ACTIVE;
   }
   if (now - session.startTime >= SESSION_TIMEOUT) {
-    return notActive;
+    return AUTH_NOT_ACTIVE;
   }
-  return unauthorized;
+  return AUTH_UNAUTHORIZED;
 }
 
-AuthStatus authSession(ClientSession *authenticatedClients,
+AuthStatus authSession(ClientSession *sessions,
                        AsyncWebServerRequest *request, authAction action,
                        ClientSession &session) {
   ClientSession *getSession =
-      getSessionFromRequest(request, authenticatedClients);
+      getSessionFromRequest(request, sessions);
   unsigned long now = millis();
 
   if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == login) {
-    return unauthorized;
-  } else if (!getSession && action != login) {
-    return unauthorized;
+      action == LOGIN_ACTION) {
+    return AUTH_UNAUTHORIZED;
+  } else if (!getSession && action != LOGIN_ACTION) {
+    return AUTH_UNAUTHORIZED;
   }
 
-  if (action == check) {
+  if (action == CHECK_ACTION) {
     return checkAuth(*getSession);
-  } else if (action == login) {
-    return createSession(authenticatedClients, session);
-  } else if (action == logout) {
-    return removeSession(authenticatedClients, *getSession);
+  } else if (action == LOGIN_ACTION) {
+    return createSession(sessions, session);
+  } else if (action == LOGOUT_ACTION) {
+    return removeSession(sessions, *getSession);
   }
 
-  return unauthorized;
+  return AUTH_UNAUTHORIZED;
 }
 
-AuthStatus authSession(ClientSession *authenticatedClients,
+AuthStatus authSession(ClientSession *sessions,
                        AsyncWebServerRequest *request, authAction action) {
   ClientSession *getSession =
-      getSessionFromRequest(request, authenticatedClients);
+      getSessionFromRequest(request, sessions);
   unsigned long now = millis();
 
   if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == login) {
-    return unauthorized;
-  } else if (!getSession && action != login) {
-    return unauthorized;
+      action == LOGIN_ACTION) {
+    return AUTH_UNAUTHORIZED;
+  } else if (!getSession && action != LOGIN_ACTION) {
+    return AUTH_UNAUTHORIZED;
   }
 
   switch (action) {
-  case check:
+  case CHECK_ACTION:
     return checkAuth(*getSession);
-  case login:
-    return createSession(authenticatedClients, *getSession);
-  case logout:
-    return removeSession(authenticatedClients, *getSession);
+  case LOGIN_ACTION:
+    return createSession(sessions, *getSession);
+  case LOGOUT_ACTION:
+    return removeSession(sessions, *getSession);
   default:
-    return unauthorized;
+    return AUTH_UNAUTHORIZED;
   }
 }

@@ -48,7 +48,7 @@ void setup() {
               });
   }
 
-  // Handle other requests including login, logout, and default routes
+  // Handle other requests including LOGIN_ACTION, LOGOUT_ACTION, and default routes
   server.on("*", HTTP_ANY,
             [](AsyncWebServerRequest *request) { handleRequest(request); });
 

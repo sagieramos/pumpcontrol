@@ -11,7 +11,7 @@
 #define PIN "1234"
 const byte DNS_PORT = 53; // DNS server port
 const byte MAX_CLIENTS =
-    4; // Maximum number of clients that can be authenticated
+    4; // Maximum number of clients that can be AUTH_AUTHENTICATED
 const size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
 const size_t SESSION_TIMEOUT = 60000; // 1 minute
 
@@ -42,7 +42,7 @@ void taskRun(void *pvParameters);
 struct ClientSession {
   char token[TOKEN_LENGTH]; // Session token
   unsigned long startTime;  // Start time of the session
-  unsigned long lastActive; // Last active time of the session
+  unsigned long lastActive; // Last AUTH_ACTIVE time of the session
   unsigned int index;       // Index of the session in the session array
 };
 
@@ -52,34 +52,34 @@ extern TaskHandle_t dnsTaskHandle;
 extern const byte DNS_PORT;
 extern DNSServer dnsServer;
 // extern AsyncWebServer server;
-// extern ClientSession authenticatedClients[MAX_CLIENTS];
+// extern ClientSession sessions[MAX_CLIENTS];
 
 String getTaskInfo(TaskHandle_t taskHandle);
 
 void generateSessionToken(char *buffer, size_t length);
 
 enum AuthStatus {
-  active,
-  notActive,
-  authenticated,
-  sessionIsFull,
-  noTokenProvided,
-  unauthorized,
-  deauthenticated
+  AUTH_ACTIVE,
+  AUTH_NOT_ACTIVE,
+  AUTH_AUTHENTICATED,
+  AUTH_SESSION_FULL,
+  NO_TOKEN_PROVIDED,
+  AUTH_UNAUTHORIZED,
+  AUTH_DEAUTHENTICATED
 };
 
-enum authAction { login, logout, check };
+enum authAction { LOGIN_ACTION, LOGOUT_ACTION, CHECK_ACTION };
 
 ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
-                                     ClientSession *authenticatedClients);
-ClientSession *findClientSession(ClientSession *authenticatedClients,
+                                     ClientSession *sessions);
+ClientSession *findClientSession(ClientSession *sessions,
                                  const char *token);
-ClientSession *findClientSession(ClientSession *authenticatedClients,
+ClientSession *findClientSession(ClientSession *sessions,
                                  int index);
-AuthStatus authSession(ClientSession *authenticatedClients,
+AuthStatus authSession(ClientSession *sessions,
                        AsyncWebServerRequest *request, authAction action,
                        ClientSession &session);
-AuthStatus authSession(ClientSession *authenticatedClients,
+AuthStatus authSession(ClientSession *sessions,
                        AsyncWebServerRequest *request, authAction action);
 
 void handleLogin(AsyncWebServerRequest *request);
