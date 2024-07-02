@@ -31,7 +31,7 @@ void setup() {
   EEPROM.begin(EEPROM_SIZE_CTL);
 
   // Initialize control data
-  runPumpControl();
+  setupPumpControl();
 
   // Setup WiFi AP and DNS
   setupWifiAP();

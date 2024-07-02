@@ -22,7 +22,7 @@ constexpr size_t SESSION_TIMEOUT = 60000; // 1 minute
 // EEPROM address for control data
 constexpr uint8_t EEPROM_SIZE_CTL = sizeof(uint8_t) + sizeof(control);
 
-// #define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
+#define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
 // serial output
 
 #ifdef DEBUG_SERIAL_ENABLED
@@ -94,8 +94,6 @@ void handleLogout(AsyncWebServerRequest *request);
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType);
 void handleRequest(AsyncWebServerRequest *request);
-
-void setupControl();
 
 // Constants
 /* const char *ssid = "YourSSID";
