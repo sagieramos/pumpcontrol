@@ -28,6 +28,10 @@ void setup() {
   DEBUG_SERIAL_PRINTLN();
 
   pinMode(LED_BUILTIN, OUTPUT);
+  EEPROM.begin(EEPROM_SIZE_CTL);
+
+  // Initialize control data
+  runPumpControl();
 
   // Setup WiFi AP and DNS
   setupWifiAP();
@@ -48,7 +52,7 @@ void setup() {
               });
   }
 
-  // Handle other requests including LOGIN_ACTION, LOGOUT_ACTION, and default routes
+  // Handle other requests including login, logout, and default routes
   server.on("*", HTTP_ANY,
             [](AsyncWebServerRequest *request) { handleRequest(request); });
 

@@ -1,6 +1,6 @@
 #include "main.h"
 
-ClientSession sessions[MAX_CLIENTS];
+ClientSession authenticatedClients[MAX_CLIENTS];
 
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType) {
@@ -34,18 +34,18 @@ void handleRequest(AsyncWebServerRequest *request) {
 
   if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
     // Handle root route (example)
-    int auth = authSession(sessions, request, CHECK_ACTION);
-    if (auth == AUTH_ACTIVE) {
+    int auth = authSession(authenticatedClients, request, check);
+    if (auth == active) {
       request->send(200, "text/plain", "Already logged in");
       DEBUG_SERIAL_PRINTLN("Already logged in");
     } else {
       request->send(SPIFFS, "/_lindex.html", "text/html");
     }
-  } else if (strcmp(urlPath, "/LOGIN_ACTION") == 0 && method == HTTP_POST) {
-    // Handle LOGIN_ACTION route
+  } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
+    // Handle login route
     handleLogin(request);
-  } else if (strcmp(urlPath, "/LOGOUT_ACTION") == 0 && method == HTTP_GET) {
-    // Handle LOGOUT_ACTION route
+  } else if (strcmp(urlPath, "/logout") == 0 && method == HTTP_GET) {
+    // Handle logout route
     handleLogout(request);
   } else {
     // Handle other routes (404 Not Found)
@@ -58,10 +58,10 @@ void handleLogin(AsyncWebServerRequest *request) {
   if (request->hasParam("pin", true)) {
     String pin = request->getParam("pin", true)->value();
     if (pin == PIN) {
-      // Handle successful LOGIN_ACTION
+      // Handle successful login
       ClientSession session;
-      int auth = authSession(sessions, request, LOGIN_ACTION, session);
-      if (auth == AUTH_AUTHENTICATED) {
+      int auth = authSession(authenticatedClients, request, login, session);
+      if (auth == authenticated) {
         // Generate cookies and send response
         String cookie1 = "_imuwahen=" + String(session.token) +
                          "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; "
@@ -75,7 +75,7 @@ void handleLogin(AsyncWebServerRequest *request) {
         response->addHeader("Set-Cookie", cookie2);
         request->send(response);
         DEBUG_SERIAL_PRINTLN("Login successful");
-      } else if (auth == AUTH_SESSION_FULL) {
+      } else if (auth == sessionIsFull) {
         request->send(500, "text/plain", "Session is full");
         DEBUG_SERIAL_PRINTLN("Session is full");
       } else {
@@ -94,21 +94,12 @@ void handleLogin(AsyncWebServerRequest *request) {
 }
 
 void handleLogout(AsyncWebServerRequest *request) {
-  int auth = authSession(sessions, request, LOGOUT_ACTION);
-  if (auth == AUTH_DEAUTHENTICATED) {
+  int auth = authSession(authenticatedClients, request, logout);
+  if (auth == deauthenticated) {
     request->redirect("/");
     DEBUG_SERIAL_PRINTLN("Logged out");
   } else {
     request->send(401, "text/plain", "Unauthorized");
     DEBUG_SERIAL_PRINTLN("Unauthorized");
-  }
-}
-
-void handleDashboard(AsyncWebServerRequest *request) {
-  int auth = authSession(sessions, request, CHECK_ACTION);
-  if (auth == AUTH_ACTIVE) {
-    request->send(SPIFFS, "/_dashboard.html", "text/html");
-  } else {
-    request->redirect("/");
   }
 }

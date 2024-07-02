@@ -2,18 +2,25 @@
 #define MAIN_H
 
 #include "FS.h"
+#include "control.h"
 #include <Arduino.h>
 #include <DNSServer.h>
+#include <EEPROM.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
 
 #define PIN "1234"
-const byte DNS_PORT = 53; // DNS server port
-const byte MAX_CLIENTS =
-    4; // Maximum number of clients that can be AUTH_AUTHENTICATED
-const size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
-const size_t SESSION_TIMEOUT = 60000; // 1 minute
+#define LED_PIN 2
+
+constexpr uint8_t DNS_PORT = 53; // DNS server port
+constexpr uint8_t MAX_CLIENTS =
+    4; // Maximum number of clients that can be authenticated
+constexpr size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
+constexpr size_t SESSION_TIMEOUT = 60000; // 1 minute
+
+// EEPROM address for control data
+constexpr uint8_t EEPROM_SIZE_CTL = sizeof(uint8_t) + sizeof(control);
 
 // #define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
 // serial output
@@ -42,7 +49,7 @@ void taskRun(void *pvParameters);
 struct ClientSession {
   char token[TOKEN_LENGTH]; // Session token
   unsigned long startTime;  // Start time of the session
-  unsigned long lastActive; // Last AUTH_ACTIVE time of the session
+  unsigned long lastActive; // Last active time of the session
   unsigned int index;       // Index of the session in the session array
 };
 
@@ -52,34 +59,34 @@ extern TaskHandle_t dnsTaskHandle;
 extern const byte DNS_PORT;
 extern DNSServer dnsServer;
 // extern AsyncWebServer server;
-// extern ClientSession sessions[MAX_CLIENTS];
+// extern ClientSession authenticatedClients[MAX_CLIENTS];
 
 String getTaskInfo(TaskHandle_t taskHandle);
 
 void generateSessionToken(char *buffer, size_t length);
 
 enum AuthStatus {
-  AUTH_ACTIVE,
-  AUTH_NOT_ACTIVE,
-  AUTH_AUTHENTICATED,
-  AUTH_SESSION_FULL,
-  NO_TOKEN_PROVIDED,
-  AUTH_UNAUTHORIZED,
-  AUTH_DEAUTHENTICATED
+  active,
+  notActive,
+  authenticated,
+  sessionIsFull,
+  noTokenProvided,
+  unauthorized,
+  deauthenticated
 };
 
-enum authAction { LOGIN_ACTION, LOGOUT_ACTION, CHECK_ACTION };
+enum authAction { login, logout, check };
 
 ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
-                                     ClientSession *sessions);
-ClientSession *findClientSession(ClientSession *sessions,
+                                     ClientSession *authenticatedClients);
+ClientSession *findClientSession(ClientSession *authenticatedClients,
                                  const char *token);
-ClientSession *findClientSession(ClientSession *sessions,
+ClientSession *findClientSession(ClientSession *authenticatedClients,
                                  int index);
-AuthStatus authSession(ClientSession *sessions,
+AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, authAction action,
                        ClientSession &session);
-AuthStatus authSession(ClientSession *sessions,
+AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, authAction action);
 
 void handleLogin(AsyncWebServerRequest *request);
@@ -88,6 +95,8 @@ void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType);
 void handleRequest(AsyncWebServerRequest *request);
 
+void setupControl();
+
 // Constants
 /* const char *ssid = "YourSSID";
 const char *password = "YourPassword";
@@ -95,6 +104,5 @@ const char *mqtt_server = "mqtt.example.com";
 const int mqtt_port = 1883; */
 
 // Macros
-#define LED_PIN 2
 
 #endif // MY_HEADER_H
