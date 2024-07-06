@@ -8,6 +8,8 @@ constexpr size_t MAGIC_NUMBER_SIZE = sizeof(MAGIC_NUMBER);
 constexpr int FLOAR_SIGNAL_TRESHOLD = 1500;
 bool signalState = false; // Flag to track signal state
 
+TaskHandle_t runMachineTask = NULL;
+
 controlData &getControlData() {
   static controlData ctrl;
   return ctrl;
@@ -49,7 +51,7 @@ void controlPumpState() {
   case MachineMode::AUTO: {
     if (signalState) {
       static unsigned long lastChangeTime = 0;
-      unsigned long currentTime = millis();
+      unsigned long currentTime = getCurrentTimeMs();
       unsigned long signalTime = currentTime - lastChangeTime;
 
       if (signalTime >= ctrl.timer.resting) {
@@ -117,9 +119,9 @@ void runMachine(void *parameter) {
     signalState = signal >= 4;
     controlPumpState();
 
-    UBaseType_t stackHighwater = uxTaskGetStackHighWaterMark(NULL);
-    DEBUG_SERIAL_PRINTF("Float Signal Task Stack Highwater: %u\n",
-                        stackHighwater);
+    // UBaseType_t stackHighwater = uxTaskGetStackHighWaterMark(NULL);
+    /*     DEBUG_SERIAL_PRINTF("runMachine() stack size: %u\n",
+                            uxTaskGetStackHighWaterMark(NULL)); */
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
@@ -161,5 +163,5 @@ void setupPumpControl() {
   DEBUG_SERIAL_PRINT(ctrl.timer.resting);
   DEBUG_SERIAL_PRINTLN(" ms");
 
-  xTaskCreate(runMachine, "Float Signal Task", 2048, NULL, 1, NULL);
+  xTaskCreate(runMachine, "Machine", 2560, NULL, 1, &runMachineTask);
 }

@@ -52,16 +52,11 @@ bool extractCookieAttribute(const char *cookie, const char *attribute,
   return true;
 }
 
-ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
+ClientSession *getSessionFromRequest(const String &cookieHeader,
                                      ClientSession *authenticatedClients) {
-  DEBUG_SERIAL_PRINTLN(".................getSession2");
-
-  if (!request->hasHeader("Cookie")) {
+  if (cookieHeader.length() == 0) {
     return NULL;
   }
-
-  DEBUG_SERIAL_PRINTLN(".................getSession3");
-  String cookieHeader = request->header("Cookie");
   const char *cookie = cookieHeader.c_str();
 
   DEBUG_SERIAL_PRINTF("Cookies: %s\n", cookie);
@@ -86,11 +81,11 @@ ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
 }
 
 AuthStatus removeSession(ClientSession *authenticatedClients,
-                         ClientSession &session) {
+                         const ClientSession &session) {
   if (session.token[0] == '\0') {
     return noTokenProvided;
   }
-  unsigned long now = millis();
+  unsigned long now = getCurrentTimeMs();
   if (now - session.lastActive < SESSION_TIMEOUT) {
     size_t index = session.index;
     authenticatedClients[index].token[0] = '\0';
@@ -104,7 +99,7 @@ AuthStatus removeSession(ClientSession *authenticatedClients,
 
 AuthStatus createSession(ClientSession *authenticatedClients,
                          ClientSession &session) {
-  unsigned long now = millis();
+  unsigned long now = getCurrentTimeMs();
 
   for (int i = 0; i < MAX_CLIENTS; i++) {
     if (authenticatedClients[i].lastActive == 0 ||
@@ -133,7 +128,7 @@ AuthStatus checkAuth(ClientSession &session) {
   if (session.token[0] == '\0') {
     return noTokenProvided;
   }
-  unsigned long now = millis();
+  unsigned long now = getCurrentTimeMs();
   if (now - session.lastActive < SESSION_TIMEOUT) {
     session.lastActive = now;
     return active;
@@ -145,24 +140,30 @@ AuthStatus checkAuth(ClientSession &session) {
 }
 
 AuthStatus authSession(ClientSession *authenticatedClients,
-                       AsyncWebServerRequest *request, authAction action,
-                       ClientSession &session) {
-  ClientSession *getSession =
-      getSessionFromRequest(request, authenticatedClients);
-  unsigned long now = millis();
-
-  if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == login) {
-    return unauthorized;
-  } else if (!getSession && action != login) {
+                       AsyncWebServerRequest *request, ClientSession &session,
+                       authAction action) {
+  if (!request->hasHeader("Cookie")) {
     return unauthorized;
   }
 
-  if (action == check) {
+  String cookieHeader = request->header("Cookie");
+
+  ClientSession *getSession =
+      getSessionFromRequest(cookieHeader, authenticatedClients);
+  unsigned long now = getCurrentTimeMs();
+
+  if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
+      action == LOGIN) {
+    return unauthorized;
+  } else if (!getSession && action != LOGIN) {
+    return unauthorized;
+  }
+
+  if (action == CHECK) {
     return checkAuth(*getSession);
-  } else if (action == login) {
+  } else if (action == LOGIN) {
     return createSession(authenticatedClients, session);
-  } else if (action == logout) {
+  } else if (action == LOGOUT) {
     return removeSession(authenticatedClients, *getSession);
   }
 
@@ -171,23 +172,29 @@ AuthStatus authSession(ClientSession *authenticatedClients,
 
 AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, authAction action) {
+  if (!request->hasHeader("Cookie")) {
+    return unauthorized;
+  }
+
+  String cookieHeader = request->header("Cookie");
+
   ClientSession *getSession =
-      getSessionFromRequest(request, authenticatedClients);
-  unsigned long now = millis();
+      getSessionFromRequest(cookieHeader, authenticatedClients);
+  unsigned long now = getCurrentTimeMs();
 
   if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == login) {
+      action == LOGIN) {
     return unauthorized;
-  } else if (!getSession && action != login) {
+  } else if (!getSession && action != LOGIN) {
     return unauthorized;
   }
 
   switch (action) {
-  case check:
+  case CHECK:
     return checkAuth(*getSession);
-  case login:
+  case LOGIN:
     return createSession(authenticatedClients, *getSession);
-  case logout:
+  case LOGOUT:
     return removeSession(authenticatedClients, *getSession);
   default:
     return unauthorized;

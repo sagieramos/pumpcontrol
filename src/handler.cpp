@@ -34,7 +34,7 @@ void handleRequest(AsyncWebServerRequest *request) {
 
   if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
     // Handle root route (example)
-    int auth = authSession(authenticatedClients, request, check);
+    int auth = authSession(authenticatedClients, request, CHECK);
     if (auth == active) {
       request->send(200, "text/plain", "Already logged in");
       DEBUG_SERIAL_PRINTLN("Already logged in");
@@ -60,7 +60,7 @@ void handleLogin(AsyncWebServerRequest *request) {
     if (pin == PIN) {
       // Handle successful login
       ClientSession session;
-      int auth = authSession(authenticatedClients, request, login, session);
+      int auth = authSession(authenticatedClients, request, session, LOGIN);
       if (auth == authenticated) {
         // Generate cookies and send response
         String cookie1 = "_imuwahen=" + String(session.token) +
@@ -94,7 +94,7 @@ void handleLogin(AsyncWebServerRequest *request) {
 }
 
 void handleLogout(AsyncWebServerRequest *request) {
-  int auth = authSession(authenticatedClients, request, logout);
+  int auth = authSession(authenticatedClients, request, LOGOUT);
   if (auth == deauthenticated) {
     request->redirect("/");
     DEBUG_SERIAL_PRINTLN("Logged out");

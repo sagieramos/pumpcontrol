@@ -15,7 +15,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   switch (event) {
   case ARDUINO_EVENT_WIFI_AP_START:
     DEBUG_SERIAL_PRINTLN("SoftAP started");
-    if (xTaskCreate(dnsTask, "DNS Task", 2048, NULL, 1, &dnsTaskHandle) !=
+    if (xTaskCreate(dnsTask, "DNS", 4086, NULL, 2, &dnsTaskHandle) !=
         pdPASS) {
       DEBUG_SERIAL_PRINTLN("Failed to create DNS Task");
     } else {
@@ -23,7 +23,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
       vTaskSuspend(dnsTaskHandle); // Suspend task initially
       DEBUG_SERIAL_PRINTLN("DNS Task suspended initially");
     }
-    if (xTaskCreatePinnedToCore(taskBlink, "Blink Task", 2048, NULL, 1,
+    if (xTaskCreatePinnedToCore(taskBlink, "Blink", 2048, NULL, 3,
                                 &blinkTaskHandle, 0) != pdPASS) {
       DEBUG_SERIAL_PRINTLN("Failed to create Blink Task");
     } else {

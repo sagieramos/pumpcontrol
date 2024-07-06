@@ -3,10 +3,10 @@
 
 #include "FS.h"
 #include "control.h"
+#include "server.h"
 #include <Arduino.h>
 #include <DNSServer.h>
 #include <EEPROM.h>
-#include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
 
@@ -45,6 +45,7 @@ void setupWifiAP();
 void taskBlink(void *pvParameters);
 void dnsTask(void *pvParameters);
 void taskRun(void *pvParameters);
+// void stackMonitor(void *pvParameter);
 
 struct ClientSession {
   char token[TOKEN_LENGTH]; // Session token
@@ -56,14 +57,13 @@ struct ClientSession {
 // Task handle for the blink task
 extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
+extern TaskHandle_t runMachineTask;
 extern const byte DNS_PORT;
 extern DNSServer dnsServer;
 // extern AsyncWebServer server;
 // extern ClientSession authenticatedClients[MAX_CLIENTS];
 
 String getTaskInfo(TaskHandle_t taskHandle);
-
-void generateSessionToken(char *buffer, size_t length);
 
 enum AuthStatus {
   active,
@@ -75,17 +75,11 @@ enum AuthStatus {
   deauthenticated
 };
 
-enum authAction { login, logout, check };
+enum authAction { LOGIN, LOGOUT, CHECK };
 
-ClientSession *getSessionFromRequest(AsyncWebServerRequest *request,
-                                     ClientSession *authenticatedClients);
-ClientSession *findClientSession(ClientSession *authenticatedClients,
-                                 const char *token);
-ClientSession *findClientSession(ClientSession *authenticatedClients,
-                                 int index);
 AuthStatus authSession(ClientSession *authenticatedClients,
-                       AsyncWebServerRequest *request, authAction action,
-                       ClientSession &session);
+                       AsyncWebServerRequest *request, ClientSession &session,
+                       authAction action);
 AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, authAction action);
 
@@ -95,6 +89,7 @@ void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType);
 void handleRequest(AsyncWebServerRequest *request);
 
+uint32_t getCurrentTimeMs();
 // Constants
 /* const char *ssid = "YourSSID";
 const char *password = "YourPassword";
