@@ -28,6 +28,14 @@ ClientSession *findClientSession(ClientSession *authenticatedClients,
   return NULL;
 }
 
+ClientSession *findClientSessionByIndex(ClientSession *authenticatedClients,
+                                        size_t index) {
+  if (index >= MAX_CLIENTS) {
+    return NULL;
+  }
+  return &authenticatedClients[index];
+}
+
 bool extractCookieAttribute(const char *cookie, const char *attribute,
                             char *value, size_t value_size) {
   const char *attribute_start = strstr(cookie, attribute);
@@ -83,7 +91,7 @@ ClientSession *getSessionFromRequest(const String &cookieHeader,
 AuthStatus removeSession(ClientSession *authenticatedClients,
                          const ClientSession &session) {
   if (session.token[0] == '\0') {
-    return noTokenProvided;
+    return NO_TOKEN_PROVIDED;
   }
   unsigned long now = getCurrentTimeMs();
   if (now - session.lastActive < SESSION_TIMEOUT) {
@@ -94,7 +102,7 @@ AuthStatus removeSession(ClientSession *authenticatedClients,
     return deauthenticated;
   }
 
-  return unauthorized;
+  return UNAUTHORIZED;
 }
 
 AuthStatus createSession(ClientSession *authenticatedClients,
@@ -123,27 +131,27 @@ AuthStatus createSession(ClientSession *authenticatedClients,
 
 AuthStatus checkAuth(ClientSession &session) {
   if (&session == NULL) {
-    return notActive;
+    return NOT_ACTIVE;
   }
   if (session.token[0] == '\0') {
-    return noTokenProvided;
+    return NO_TOKEN_PROVIDED;
   }
   unsigned long now = getCurrentTimeMs();
   if (now - session.lastActive < SESSION_TIMEOUT) {
     session.lastActive = now;
-    return active;
+    return ACTIVE;
   }
   if (now - session.startTime >= SESSION_TIMEOUT) {
-    return notActive;
+    return NOT_ACTIVE;
   }
-  return unauthorized;
+  return UNAUTHORIZED;
 }
 
 AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, ClientSession &session,
                        authAction action) {
   if (!request->hasHeader("Cookie")) {
-    return unauthorized;
+    return UNAUTHORIZED;
   }
 
   String cookieHeader = request->header("Cookie");
@@ -153,41 +161,42 @@ AuthStatus authSession(ClientSession *authenticatedClients,
   unsigned long now = getCurrentTimeMs();
 
   if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == LOGIN) {
-    return unauthorized;
-  } else if (!getSession && action != LOGIN) {
-    return unauthorized;
-  }
+      action == LOGIN)
+    return UNAUTHORIZED;
 
-  if (action == CHECK) {
+  if (!getSession && action != LOGIN)
+    return UNAUTHORIZED;
+
+  switch (action) {
+  case CHECK:
     return checkAuth(*getSession);
-  } else if (action == LOGIN) {
+  case LOGIN:
     return createSession(authenticatedClients, session);
-  } else if (action == LOGOUT) {
+  case LOGOUT:
     return removeSession(authenticatedClients, *getSession);
+  default:
+    return UNAUTHORIZED;
+    break;
   }
-
-  return unauthorized;
 }
 
 AuthStatus authSession(ClientSession *authenticatedClients,
                        AsyncWebServerRequest *request, authAction action) {
-  if (!request->hasHeader("Cookie")) {
-    return unauthorized;
-  }
+  if (!request->hasHeader("Cookie"))
+    return UNAUTHORIZED;
 
   String cookieHeader = request->header("Cookie");
 
   ClientSession *getSession =
       getSessionFromRequest(cookieHeader, authenticatedClients);
-  unsigned long now = getCurrentTimeMs();
 
-  if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == LOGIN) {
-    return unauthorized;
-  } else if (!getSession && action != LOGIN) {
-    return unauthorized;
-  }
+  if (getSession &&
+      getCurrentTimeMs() - getSession->lastActive < SESSION_TIMEOUT &&
+      action == LOGIN)
+    return UNAUTHORIZED;
+
+  if (!getSession && action != LOGIN)
+    return UNAUTHORIZED;
 
   switch (action) {
   case CHECK:
@@ -197,6 +206,7 @@ AuthStatus authSession(ClientSession *authenticatedClients,
   case LOGOUT:
     return removeSession(authenticatedClients, *getSession);
   default:
-    return unauthorized;
+    return UNAUTHORIZED;
+    break;
   }
 }

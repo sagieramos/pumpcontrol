@@ -50,8 +50,57 @@ void taskRun(void *pvParameters);
 struct ClientSession {
   char token[TOKEN_LENGTH]; // Session token
   unsigned long startTime;  // Start time of the session
-  unsigned long lastActive; // Last active time of the session
+  unsigned long lastActive; // Last ACTIVE time of the session
   unsigned int index;       // Index of the session in the session array
+  uint32_t clientId;
+
+  ClientSession() {
+    memset(token, 0, TOKEN_LENGTH);
+    startTime = 0;
+    lastActive = 0;
+    index = 0;
+    clientId = 0;
+  }
+
+  ClientSession(const ClientSession &session) {
+    strncpy(token, session.token, TOKEN_LENGTH);
+    startTime = session.startTime;
+    lastActive = session.lastActive;
+    index = session.index;
+    clientId = session.clientId;
+  }
+
+  ClientSession &operator=(const ClientSession &session) {
+    if (this == &session) {
+      return *this;
+    }
+    strncpy(token, session.token, TOKEN_LENGTH);
+    startTime = session.startTime;
+    lastActive = session.lastActive;
+    index = session.index;
+    clientId = session.clientId;
+    return *this;
+  }
+
+  bool operator==(const ClientSession &session) const {
+    return strcmp(token, session.token) == 0;
+  }
+
+  bool operator!=(const ClientSession &session) const {
+    return strcmp(token, session.token) != 0;
+  }
+
+  /*   bool operator==(const char *sessionToken) const {
+      return strcmp(token, sessionToken) == 0;
+    }
+
+    bool operator!=(const char *sessionToken) const {
+      return strcmp(token, sessionToken) != 0;
+    }
+
+    bool operator==(const uint32_t id) const { return clientId == id; }
+
+    bool operator!=(const uint32_t id) const { return clientId != id; } */
 };
 
 // Task handle for the blink task
@@ -60,18 +109,19 @@ extern TaskHandle_t dnsTaskHandle;
 extern TaskHandle_t runMachineTask;
 extern const byte DNS_PORT;
 extern DNSServer dnsServer;
+extern ClientSession authenticatedClients[MAX_CLIENTS];
 // extern AsyncWebServer server;
 // extern ClientSession authenticatedClients[MAX_CLIENTS];
 
 String getTaskInfo(TaskHandle_t taskHandle);
 
 enum AuthStatus {
-  active,
-  notActive,
+  ACTIVE,
+  NOT_ACTIVE,
   authenticated,
   sessionIsFull,
-  noTokenProvided,
-  unauthorized,
+  NO_TOKEN_PROVIDED,
+  UNAUTHORIZED,
   deauthenticated
 };
 
@@ -88,6 +138,8 @@ void handleLogout(AsyncWebServerRequest *request);
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType);
 void handleRequest(AsyncWebServerRequest *request);
+ClientSession *findClientSessionByIndex(ClientSession *authenticatedClients,
+                                        size_t index);
 
 uint32_t getCurrentTimeMs();
 // Constants

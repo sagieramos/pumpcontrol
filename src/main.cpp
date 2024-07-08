@@ -83,8 +83,8 @@ void stackMonitor(void *pvParameter) {
           UBaseType_t taskPriority = uxTaskPriorityGet(handle);
 
           DEBUG_SERIAL_PRINTF(
-              "%s Task: %u (Stack High Water Mark), %u (Priority)\n",
-              taskName, stackHighWaterMark, taskPriority);
+              "%s Task: %u (Stack High Water Mark), %u (Priority)\n", taskName,
+              stackHighWaterMark, taskPriority);
         } else {
           DEBUG_SERIAL_PRINTF("%s Task is suspended\n", taskName);
         }

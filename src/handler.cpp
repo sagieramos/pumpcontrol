@@ -35,7 +35,7 @@ void handleRequest(AsyncWebServerRequest *request) {
   if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
     // Handle root route (example)
     int auth = authSession(authenticatedClients, request, CHECK);
-    if (auth == active) {
+    if (auth == ACTIVE) {
       request->send(200, "text/plain", "Already logged in");
       DEBUG_SERIAL_PRINTLN("Already logged in");
     } else {
