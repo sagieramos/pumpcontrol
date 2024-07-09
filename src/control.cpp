@@ -8,6 +8,13 @@ constexpr size_t MAGIC_NUMBER_SIZE = sizeof(MAGIC_NUMBER);
 constexpr int FLOAR_SIGNAL_TRESHOLD = 1500;
 bool signalState = false; // Flag to track signal state
 
+struct machineObjStatus {
+  bool machineIsOn = false;
+  bool waterIsLow = false;
+};
+
+machineObjStatus machineStatus;
+
 TaskHandle_t runMachineTask = NULL;
 
 controlData &getControlData() {
@@ -35,8 +42,19 @@ bool controlPump(bool state) {
   // Only change state if it's different from current state
   if (state != pumpState) {
     pumpState = state; // Update the tracked state
+    JsonDocument doc;
+    doc["pump"] = state;
+    doc["time"] = getCurrentTimeMs();
+    doc["mode"] = static_cast<int>(getControlData().mode);
+    doc["running"] = getControlData().timer.running;
+    doc["resting"] = getControlData().timer.resting;
+
     // Turn Pump ON or OFF based on state
-    digitalWrite(PUMP_RELAY_PIN, state ? HIGH : LOW);
+    if (state) {
+      digitalWrite(PUMP_RELAY_PIN, HIGH);
+    } else {
+      digitalWrite(PUMP_RELAY_PIN, LOW);
+    }
     DEBUG_SERIAL_PRINTLN(state ? "Pump is ON" : "Pump is OFF");
 
     return true;
@@ -53,7 +71,6 @@ void controlPumpState() {
       static unsigned long lastChangeTime = 0;
       unsigned long currentTime = getCurrentTimeMs();
       unsigned long signalTime = currentTime - lastChangeTime;
-
       if (signalTime >= ctrl.timer.resting) {
         lastChangeTime = currentTime;
         // Turn Pump OFF after running

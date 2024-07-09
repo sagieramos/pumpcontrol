@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Data Monitor</title>
+    <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="_dashboard.css">
+</head>
+<body>
+    <header class="header-defaut">
+        <nav>
+            <div id="logo">
+                <img src="../logo.svg" alt="logo">
+                <span id="logo-text">Akowe</span>
+            </div>
+        </nav>
+    </header>
+    <div id="container">
+        <div id="status">
+            <p><strong>Mode:</strong> <span id="mode">N/A</span></p>
+            <p><strong>Running:</strong> <span id="running">N/A</span></p>
+            <p><strong>Resting:</strong> <span id="resting">N/A</span></p>
+        </div>
+        <div id="controls">
+            <label for="modeInput">Mode:</label>
+            <input type="number" id="modeInput" placeholder="Enter mode">
+
+            <label for="runningInput">Running Time:</label>
+            <input type="number" id="runningInput" placeholder="Enter running time">
+
+            <label for="restingInput">Resting Time:</label>
+            <input type="number" id="restingInput" placeholder="Enter resting time">
+
+            <button id="sendBtn">Send</button>
+        </div>
+    </div>
+    <script src="_dashboard.js"></script>
+</body>
+</html>

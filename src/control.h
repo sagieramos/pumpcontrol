@@ -4,7 +4,7 @@
 constexpr unsigned int TIME_ON = 40 * 60000;  // 40 minutes in milliseconds
 constexpr unsigned int TIME_OFF = 20 * 60000; // 20 minutes in milliseconds
 
-enum class MachineMode { POWER_OFF, POWER_ON, AUTO };
+enum class MachineMode { POWER_OFF = 1, POWER_ON, AUTO };
 
 struct control {
   unsigned int running;
@@ -47,6 +47,8 @@ struct controlData {
     return *this;
   }
 };
+
+controlData &getControlData();
 
 void setupPumpControl();
 

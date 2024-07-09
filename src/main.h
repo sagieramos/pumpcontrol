@@ -5,6 +5,7 @@
 #include "control.h"
 #include "server.h"
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <DNSServer.h>
 #include <EEPROM.h>
 #include <SPIFFS.h>
@@ -15,9 +16,11 @@
 
 constexpr uint8_t DNS_PORT = 53; // DNS server port
 constexpr uint8_t MAX_CLIENTS =
-    4; // Maximum number of clients that can be authenticated
+    4; // Maximum number of clients that can be AUTHENTICATED
 constexpr size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
 constexpr size_t SESSION_TIMEOUT = 60000; // 1 minute
+constexpr const char *TOKEN_ATTR = "_imuwahen";
+constexpr const char *INDEX_ATTR = "_idx";
 
 // EEPROM address for control data
 constexpr uint8_t EEPROM_SIZE_CTL = sizeof(uint8_t) + sizeof(control);
@@ -109,37 +112,41 @@ extern TaskHandle_t dnsTaskHandle;
 extern TaskHandle_t runMachineTask;
 extern const byte DNS_PORT;
 extern DNSServer dnsServer;
-extern ClientSession authenticatedClients[MAX_CLIENTS];
+extern ClientSession authClients[MAX_CLIENTS];
+extern AsyncWebSocket ws;
 // extern AsyncWebServer server;
-// extern ClientSession authenticatedClients[MAX_CLIENTS];
+// extern ClientSession authClients[MAX_CLIENTS];
 
 String getTaskInfo(TaskHandle_t taskHandle);
 
 enum AuthStatus {
-  ACTIVE,
   NOT_ACTIVE,
-  authenticated,
-  sessionIsFull,
+  ACTIVE,
+  AUTHENTICATED,
+  SESSION_IS_FULL,
   NO_TOKEN_PROVIDED,
   UNAUTHORIZED,
-  deauthenticated
+  DEAUTHENTICATED
 };
 
 enum authAction { LOGIN, LOGOUT, CHECK };
 
-AuthStatus authSession(ClientSession *authenticatedClients,
+AuthStatus authSession(ClientSession *authClients,
                        AsyncWebServerRequest *request, ClientSession &session,
                        authAction action);
-AuthStatus authSession(ClientSession *authenticatedClients,
+AuthStatus authSession(ClientSession *authClients,
                        AsyncWebServerRequest *request, authAction action);
 
-void handleLogin(AsyncWebServerRequest *request);
-void handleLogout(AsyncWebServerRequest *request);
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType);
 void handleRequest(AsyncWebServerRequest *request);
-ClientSession *findClientSessionByIndex(ClientSession *authenticatedClients,
+ClientSession *findClientSessionByIndex(ClientSession *authClients,
                                         size_t index);
+String serializeMachineData(MachineMode mode, unsigned int running,
+                            unsigned int resting,
+                            const char *objectName = "machineConfig");
+bool deserializeMachineData(const char *jsonString, controlData &machineData,
+                            const char *objectName = "machineConfig");
 
 uint32_t getCurrentTimeMs();
 // Constants

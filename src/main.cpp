@@ -1,9 +1,26 @@
 #include "main.h"
-#include "routes.h"
 
 void stackMonitor(void *pvParameter);
 
 AsyncWebServer server(80);
+
+struct StaticFile {
+  const char *path;
+  const char *contentType;
+};
+
+// Array of StaticFile structures
+const StaticFile staticFiles[] = {{"/_lbundle.js", "application/javascript"},
+                                  {"/_lindex.js", "application/javascript"},
+                                  {"/_lstyles.css", "text/css"},
+                                  {"/favicon.ico", "image/x-icon"},
+                                  {"/logo.svg", "image/svg+xml"},
+                                  {"/warning.svg", "image/svg+xml"},
+                                  {"/_dbundle.js", "application/javascript"},
+                                  {"/_dashboard.js", "application/javascript"},
+                                  {"/_dashboard.css", "text/css"}};
+
+const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
 void setup() {
   DEBUG_SERIAL_BEGIN(115200);
@@ -38,7 +55,7 @@ void setup() {
   // Setup WiFi AP and DNS
   setupWifiAP();
 
-  xTaskCreate(stackMonitor, "Stack monitor", 2560, NULL, 4, NULL);
+  // xTaskCreate(stackMonitor, "Stack monitor", 2560, NULL, 4, NULL);
 
   IPAddress apIP = WiFi.softAPIP();
   dnsServer.start(DNS_PORT, "akowe.org", apIP);
@@ -48,11 +65,12 @@ void setup() {
 
   // Serve static files with appropriate MIME types and CORS headers
   // And routes
-  for (int i = 0; i < numPaths; ++i) {
-    server.on(paths[i], HTTP_GET,
-              [path = paths[i],
-               contentType = contentTypes[i]](AsyncWebServerRequest *request) {
-                serveStaticFile(request, path, contentType);
+  for (int i = 0; i < numPaths; i++) {
+    server.on(staticFiles[i].path, HTTP_GET,
+              [file = staticFiles[i]](AsyncWebServerRequest *request) {
+                DEBUG_SERIAL_PRINTF("Serving path: %s with content type: %s\n",
+                                    file.path, file.contentType);
+                serveStaticFile(request, file.path, file.contentType);
               });
   }
 

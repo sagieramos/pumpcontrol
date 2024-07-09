@@ -1,11 +1,12 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const subDir = 'dashboard';
 
 module.exports = {
-  entry: './public/login/_lindex.js',
+  entry: `./public/${subDir}/_${subDir}.js`,
   output: {
-    filename: '_lbundle.js',
+    filename: `_${subDir.charAt(0)}bundle.js`,
     path: path.resolve(__dirname, 'data'),
     assetModuleFilename: '[name][ext]'
   },
@@ -40,8 +41,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './public/login/_lindex.html',
-      filename: '_lindex.html',
+      template: `./public/${subDir}/_${subDir}.html`,
+      filename: `_${subDir}.html`
     }),
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css'
