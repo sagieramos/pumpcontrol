@@ -10,8 +10,6 @@ void serveStaticFile(AsyncWebServerRequest *request, const char *path,
     return;
   }
 
-  DEBUG_SERIAL_PRINTF("Serving file: %s\n", path);
-
   AsyncWebServerResponse *response =
       request->beginResponse(SPIFFS, path, contentType);
   response->addHeader("Access-Control-Allow-Origin", "*");
@@ -46,36 +44,39 @@ void handleLogout(AsyncWebServerRequest *request) {
 void handleLogin(AsyncWebServerRequest *request) {
   if (request->hasParam("pin", true)) {
     String pin = request->getParam("pin", true)->value();
-    if (pin == PIN) {
-      // Handle successful login
-      ClientSession session;
-      int auth = authSession(authClients, request, session, LOGIN);
-      DEBUG_SERIAL_PRINTF("auth vavlue: %d\n", auth);
-      if (auth == AUTHENTICATED) {
-        // Generate cookies and send response
-        String cookie1 = String(TOKEN_ATTR) + "=" + String(session.token) +
-                         "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; "
-                         "Domain=akowe.org";
-        String cookie2 = String(INDEX_ATTR) + "=" + String(session.index) +
-                         "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; "
-                         "Domain=akowe.org";
-        AsyncWebServerResponse *response =
-            request->beginResponse(SPIFFS, "/_dashboard.html", "text/html");
-        response->addHeader("Set-Cookie", cookie1);
-        response->addHeader("Set-Cookie", cookie2);
-        request->send(response);
-        DEBUG_SERIAL_PRINTLN("Login successful");
-      } else if (auth == SESSION_IS_FULL) {
-        request->send(500, "text/plain", "Session is full");
-        DEBUG_SERIAL_PRINTLN("Session is full");
-      } else {
-        request->send(401, "text/plain", "PIN is incorrect");
-        DEBUG_SERIAL_PRINTLN("PIN is incorrect");
-      }
-    } else {
-      request->send(401, "text/plain",
-                    "The PIN that you've entered is incorrect.");
-      DEBUG_SERIAL_PRINTLN("Invalid PIN format");
+    ClientSession session;
+    AuthStatus auth = authSession(authClients, request, session, LOGIN);
+
+    DEBUG_SERIAL_PRINTF("auth value: %d\n", auth);
+
+    switch (auth) {
+    case AUTHENTICATED: {
+      // Generate cookies and send response
+      const String cookieOptions =
+          "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; Domain=akowe.org";
+      String cookie1 =
+          String(TOKEN_ATTR) + "=" + String(session.token) + cookieOptions;
+      String cookie2 =
+          String(INDEX_ATTR) + "=" + String(session.index) + cookieOptions;
+
+      AsyncWebServerResponse *response =
+          request->beginResponse(SPIFFS, "/_dashboard.html", "text/html");
+      response->addHeader("Set-Cookie", cookie1);
+      response->addHeader("Set-Cookie", cookie2);
+      request->send(response);
+
+      DEBUG_SERIAL_PRINTLN("Login successful");
+      break;
+    }
+    case SESSION_IS_FULL:
+      request->send(500, "text/plain", "Session is full");
+      DEBUG_SERIAL_PRINTLN("Session is full");
+      break;
+    case UNAUTHORIZED:
+    default:
+      request->send(401, "text/plain", "PIN is incorrect or unauthorized");
+      DEBUG_SERIAL_PRINTLN("PIN is incorrect or unauthorized");
+      break;
     }
   } else {
     request->send(400, "text/html", "No PIN provided");
@@ -118,6 +119,8 @@ void handleRequest(AsyncWebServerRequest *request) {
     if (auth == ACTIVE) {
       request->send(SPIFFS, "/_dashboard.html", "text/html");
       DEBUG_SERIAL_PRINTLN("Dashboard");
+    } else {
+      request->redirect("/");
     }
   } else {
     // Handle other routes (404 Not Found)

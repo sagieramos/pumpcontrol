@@ -163,61 +163,59 @@ AuthStatus checkAuth(ClientSession &session) {
 AuthStatus authSession(ClientSession *authClients,
                        AsyncWebServerRequest *request, ClientSession &session,
                        authAction action) {
-  if (!request->hasHeader("Cookie")) {
-    return UNAUTHORIZED;
+  if (action == LOGIN) {
+    if (!request->hasParam("pin", true)) {
+      return UNAUTHORIZED;
+    }
+    String pin = request->getParam("pin", true)->value();
+    if (pin != PIN) {
+      return UNAUTHORIZED;
+    } else {
+      return createSession(authClients, session);
+    }
+  } else if (action == LOGOUT) {
+    return removeSession(authClients, session);
+  } else if (action == CHECK) {
+    return checkAuth(session);
   }
-
-  String cookieHeader = request->header("Cookie");
-
-  ClientSession *getSession = getSessionFromRequest(cookieHeader, authClients);
-  unsigned long now = getCurrentTimeMs();
-
-  if (getSession && now - getSession->lastActive < SESSION_TIMEOUT &&
-      action == LOGIN)
-    return UNAUTHORIZED;
-
-  if (!getSession && action != LOGIN)
-    return UNAUTHORIZED;
-
-  switch (action) {
-  case CHECK:
-    return checkAuth(*getSession);
-  case LOGIN:
-    return createSession(authClients, session);
-  case LOGOUT:
-    return removeSession(authClients, *getSession);
-  default:
-    return UNAUTHORIZED;
-    break;
-  }
+  return UNAUTHORIZED;
 }
 
 AuthStatus authSession(ClientSession *authClients,
                        AsyncWebServerRequest *request, authAction action) {
-  if (!request->hasHeader("Cookie"))
-    return UNAUTHORIZED;
+  String cookieHeader;
+  ClientSession *getSession = nullptr;
 
-  String cookieHeader = request->header("Cookie");
+  // For actions other than LOGIN, check for cookies and get session
+  if (action != LOGIN) {
+    if (!request->hasHeader("Cookie"))
+      return UNAUTHORIZED;
 
-  ClientSession *getSession = getSessionFromRequest(cookieHeader, authClients);
+    cookieHeader = request->header("Cookie");
+    getSession = getSessionFromRequest(cookieHeader, authClients);
 
-  if (getSession &&
-      getCurrentTimeMs() - getSession->lastActive < SESSION_TIMEOUT &&
-      action == LOGIN)
-    return UNAUTHORIZED;
-
-  if (!getSession && action != LOGIN)
-    return UNAUTHORIZED;
+    if (!getSession ||
+        getCurrentTimeMs() - getSession->lastActive >= SESSION_TIMEOUT)
+      return UNAUTHORIZED;
+  }
 
   switch (action) {
   case CHECK:
     return checkAuth(*getSession);
-  case LOGIN:
-    return createSession(authClients, *getSession);
+
+  case LOGIN: {
+    ClientSession newSession;
+    AuthStatus status = createSession(authClients, newSession);
+    if (status == AUTHENTICATED) {
+      *getSession = newSession;
+    }
+    return status;
+  }
+
   case LOGOUT:
     return removeSession(authClients, *getSession);
+
   default:
     return UNAUTHORIZED;
-    break;
   }
 }

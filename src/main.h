@@ -47,7 +47,6 @@ void setupWifiAP();
 // Function prototype for blink task
 void taskBlink(void *pvParameters);
 void dnsTask(void *pvParameters);
-void taskRun(void *pvParameters);
 // void stackMonitor(void *pvParameter);
 
 struct ClientSession {
@@ -55,7 +54,7 @@ struct ClientSession {
   unsigned long startTime;  // Start time of the session
   unsigned long lastActive; // Last ACTIVE time of the session
   unsigned int index;       // Index of the session in the session array
-  uint32_t clientId;
+  uint32_t clientId; // Client ID of the session in the WebSocket client array
 
   ClientSession() {
     memset(token, 0, TOKEN_LENGTH);
@@ -86,24 +85,23 @@ struct ClientSession {
   }
 
   bool operator==(const ClientSession &session) const {
-    return strcmp(token, session.token) == 0;
+    return strcmp(token, session.token) == 0 &&
+           startTime == session.startTime && lastActive == session.lastActive &&
+           index == session.index && clientId == session.clientId;
   }
 
   bool operator!=(const ClientSession &session) const {
-    return strcmp(token, session.token) != 0;
+    return !(*this == session);
   }
 
-  /*   bool operator==(const char *sessionToken) const {
-      return strcmp(token, sessionToken) == 0;
-    }
+  // Method to check if the session is null or uninitialized
+  bool isNull() const {
+    return token[0] == '\0' && startTime == 0 && lastActive == 0 &&
+           index == 0 && clientId == 0;
+  }
 
-    bool operator!=(const char *sessionToken) const {
-      return strcmp(token, sessionToken) != 0;
-    }
-
-    bool operator==(const uint32_t id) const { return clientId == id; }
-
-    bool operator!=(const uint32_t id) const { return clientId != id; } */
+  // Boolean conversion operator to check if the session is null
+  explicit operator bool() const { return !isNull(); }
 };
 
 // Task handle for the blink task
@@ -114,10 +112,6 @@ extern const byte DNS_PORT;
 extern DNSServer dnsServer;
 extern ClientSession authClients[MAX_CLIENTS];
 extern AsyncWebSocket ws;
-// extern AsyncWebServer server;
-// extern ClientSession authClients[MAX_CLIENTS];
-
-String getTaskInfo(TaskHandle_t taskHandle);
 
 enum AuthStatus {
   NOT_ACTIVE,
