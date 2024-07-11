@@ -42,13 +42,6 @@ bool controlPump(bool state) {
   // Only change state if it's different from current state
   if (state != pumpState) {
     pumpState = state; // Update the tracked state
-    JsonDocument doc;
-    doc["pump"] = state;
-    doc["time"] = getCurrentTimeMs();
-    doc["mode"] = static_cast<int>(getControlData().mode);
-    doc["running"] = getControlData().timer.running;
-    doc["resting"] = getControlData().timer.resting;
-
     // Turn Pump ON or OFF based on state
     if (state) {
       digitalWrite(PUMP_RELAY_PIN, HIGH);

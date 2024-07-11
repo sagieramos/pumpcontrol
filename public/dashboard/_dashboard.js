@@ -15,11 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
+
+        return null;
     };
 
     const connectWebSocket = () => {
         const idx = getCookie('_idx');
         const tkn = getCookie('_imuwahen');
+
+        console.log('idx:', idx);
+        console.log('tkn:', tkn);
 
         if (!idx || !tkn) {
             console.error('Authentication tokens not found in cookies');

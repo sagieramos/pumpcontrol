@@ -3,6 +3,7 @@
 void stackMonitor(void *pvParameter);
 
 AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
 
 struct StaticFile {
   const char *path;
@@ -62,6 +63,10 @@ void setup() {
   dnsServer.start(DNS_PORT, "www.akowe.org", apIP);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.setTTL(604800);
+
+  // Handle WebSocket events
+  ws.onEvent(onWsEvent);
+  server.addHandler(&ws);
 
   // Serve static files with appropriate MIME types and CORS headers
   // And routes

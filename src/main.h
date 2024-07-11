@@ -3,16 +3,22 @@
 
 #include "FS.h"
 #include "control.h"
-#include "server.h"
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <DNSServer.h>
 #include <EEPROM.h>
+#include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
+#include <domsg.pb.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
+
+extern AsyncWebServer server;
 
 #define PIN "1234"
 #define LED_PIN 2
+
+#define MAX_BUFFER_SIZE 1024
 
 constexpr uint8_t DNS_PORT = 53; // DNS server port
 constexpr uint8_t MAX_CLIENTS =
@@ -104,6 +110,11 @@ struct ClientSession {
   explicit operator bool() const { return !isNull(); }
 };
 
+struct DoMessage {
+  char inst[16];
+  int32_t value;
+};
+
 // Task handle for the blink task
 extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
@@ -136,13 +147,20 @@ void serveStaticFile(AsyncWebServerRequest *request, const char *path,
 void handleRequest(AsyncWebServerRequest *request);
 ClientSession *findClientSessionByIndex(ClientSession *authClients,
                                         size_t index);
-String serializeMachineData(MachineMode mode, unsigned int running,
-                            unsigned int resting,
-                            const char *objectName = "machineConfig");
-bool deserializeMachineData(const char *jsonString, controlData &machineData,
-                            const char *objectName = "machineConfig");
+void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
+               AwsEventType type, void *arg, uint8_t *data, size_t len);
+bool serializeDoMessage(uint8_t *buffer, DoMessage &obj, size_t buffer_size,
+                        size_t &bytes_written);
+int serializeArrayDoMessage(uint8_t *buffer, DoMessage *messages,
+                            size_t num_messages, size_t buffer_size);
+bool deserializeDoMessage(const uint8_t *buffer, DoMessage &objToFill,
+                          size_t buffer_len);
+bool serializeDoMessage(uint8_t *buffer, DoMessage *messages,
+                        size_t num_messages, size_t buffer_size,
+                        size_t &bytes_written_total);
 
 uint32_t getCurrentTimeMs();
+
 // Constants
 /* const char *ssid = "YourSSID";
 const char *password = "YourPassword";

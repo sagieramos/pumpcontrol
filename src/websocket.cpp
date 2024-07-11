@@ -1,8 +1,6 @@
 #include "main.h"
-#include <ArduinoJson.h>
 #include <unordered_map>
 
-AsyncWebSocket ws("/ws");
 // AsyncEventSource events("/events");
 
 std::unordered_map<size_t, size_t> clientIdToIndexMap;
@@ -64,6 +62,11 @@ bool handlePong(ClientSession *authClients, AsyncWebSocketClient *client) {
 
 void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
                        uint8_t *data, size_t len) {
+  if (len > MAX_BUFFER_SIZE) {
+    DEBUG_SERIAL_PRINTLN("Data too large");
+    return;
+  }
+
   size_t wsClientId = client->id();
   if (!authClients || !clientIdToIndexMap.count(wsClientId) || wsClientId == 0)
     return;
@@ -77,89 +80,83 @@ void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
 
     controlData &machineDataRef = getControlData();
 
+    DoMessage doMessage;
+
+    if (deserializeDoMessage(data, doMessage, len)) {
+      // Send data to machine
+      DEBUG_SERIAL_PRINTLN("Data received from client (DoMessage proto):");
+      DEBUG_SERIAL_PRINTF("Instruction: %s\n", doMessage.inst);
+      DEBUG_SERIAL_PRINTF("Value: %d\n", doMessage.value);
+      machineDataRef = getControlData();
+    } else
+      DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
+
     // Deserialize the received data
-    if (deserializeMachineData(reinterpret_cast<const char *>(data),
-                               machineDataRef)) {
-      DEBUG_SERIAL_PRINTLN("Data deserialized");
-      DEBUG_SERIAL_PRINTF("Mode: %d\n", static_cast<int>(machineDataRef.mode));
-      DEBUG_SERIAL_PRINTF("Running: %u\n", machineDataRef.timer.running);
-      DEBUG_SERIAL_PRINTF("Resting: %u\n", machineDataRef.timer.resting);
-    } else {
-      DEBUG_SERIAL_PRINTLN("Data deserialization failed");
-    }
   }
 }
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
-  switch (type) {
-  case WS_EVT_CONNECT:
+  if (type == WS_EVT_CONNECT) {
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
                         client->id());
-    if (len > 0) {
-      JsonDocument doc;
-      ArduinoJson::DeserializationError error = deserializeJson(
-          doc, data, len); // Specify the namespace for DeserializationError
-      if (!error) {
-        size_t index = atoi(doc[INDEX_ATTR]);
-        const char *token = doc[TOKEN_ATTR];
-        if (authenticate(index, token, authClients, client->id())) {
-          const controlData &machineData = getControlData();
-          String machineConfig =
-              serializeMachineData(machineData.mode, machineData.timer.running,
-                                   machineData.timer.resting);
-          // Send machine data to authenticated client
-          client->text(machineConfig);
+    // Get initial data from client
 
-          int clientsOnline = static_cast<int>(ws.count());
+    const size_t NUM_MSGS = 3;
+    const controlData &machineData = getControlData();
+    DoMessage messages[NUM_MSGS] = {
+        {"mode_bagoguhgfv", static_cast<int32_t>(machineData.mode)},
+        {"running_dmnfmd", static_cast<int32_t>(machineData.timer.running)},
+        {"resting_7fdjdj", static_cast<int32_t>(machineData.timer.resting)}};
 
-          DEBUG_SERIAL_PRINTF("Clients online: %d\n", clientsOnline);
+    uint8_t buffer[1024];
 
-          JsonDocument online;
-          online["online"] = clientsOnline;
-          String clientCount;
-          serializeJson(online, clientCount);
-
-          // Send number of available clients to all authenticated clients
-          ws.textAll(clientCount);
-
-          DEBUG_SERIAL_PRINTLN("Authentication successful");
-        } else {
-          DEBUG_SERIAL_PRINTLN("Authentication failed");
-          client->close();
-        }
-      } else {
-        DEBUG_SERIAL_PRINTLN("Invalid JSON data");
-        client->close();
-      }
+    int buffer_len =
+        serializeArrayDoMessage(buffer, messages, NUM_MSGS, sizeof(buffer));
+    if (buffer_len > 0) {
+      client->binary(buffer, buffer_len);
     }
-    break;
-  case WS_EVT_DISCONNECT:
+    // bool serializeDoMessage(uint8_t *buffer, DoMessage &obj, size_t
+    // buffer_size, size_t &bytes_written);
+    // send messages[0]
+
+    // Define a buffer size that is reasonably large to hold the serialized data
+
+    /*    const size_t BUFFER_SIZE = 128;
+
+       DoMessage message = {"mode", 42};
+
+       // Serialize the DoMessage object
+       size_t bytes_written = 0; // Declare bytes_written here
+       if (serializeDoMessage(buffer, message, BUFFER_SIZE, bytes_written))
+       {
+         // Send the serialized data to the client
+         client->binary(buffer, bytes_written);
+       }
+       else
+       {
+         DEBUG_SERIAL_PRINTLN("Failed to serialize data");
+       } */
+
+    DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
+  } else if (type == WS_EVT_DISCONNECT) {
     if (deauthenticate(authClients, client)) {
       DEBUG_SERIAL_PRINTF("Websocket client connection closed: %u\n",
                           client->id());
     }
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
-    break;
-  case WS_EVT_ERROR:
+  } else if (type == WS_EVT_ERROR) {
     DEBUG_SERIAL_PRINTLN("Websocket error");
-    break;
-  case WS_EVT_PONG:
+  } else if (type == WS_EVT_PONG) {
     if (handlePong(authClients, client))
       DEBUG_SERIAL_PRINTF("Websocket pong: %u\n", client->id());
-    break;
-  case WS_EVT_DATA:
+  } else if (WS_EVT_DATA) {
     DEBUG_SERIAL_PRINTLN("Websocket data received");
     handleRecieveData(authClients, client, data, len);
-    break;
-  default:
-    break;
+  } else {
+    DEBUG_SERIAL_PRINTLN("Websocket event not handled");
   }
 }
 
-void setupWebsocket() {
-  ws.onEvent(onWsEvent);
-  server.addHandler(&ws);
-  // server.addHandler(&events);
-}
+// create virtual V1 to V10 use to recieve websocket data from client
