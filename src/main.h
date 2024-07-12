@@ -3,15 +3,12 @@
 
 #include "FS.h"
 #include "control.h"
-#include <Arduino.h>
+#include "dev_or_prod.h"
 #include <DNSServer.h>
 #include <EEPROM.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
-#include <domsg.pb.h>
-#include <pb_decode.h>
-#include <pb_encode.h>
 
 extern AsyncWebServer server;
 
@@ -30,21 +27,6 @@ constexpr const char *INDEX_ATTR = "_idx";
 
 // EEPROM address for control data
 constexpr uint8_t EEPROM_SIZE_CTL = sizeof(uint8_t) + sizeof(control);
-
-#define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle
-// serial output
-
-#ifdef DEBUG_SERIAL_ENABLED
-#define DEBUG_SERIAL_BEGIN(baud) Serial.begin(baud)
-#define DEBUG_SERIAL_PRINT(...) Serial.print(__VA_ARGS__)
-#define DEBUG_SERIAL_PRINTLN(...) Serial.println(__VA_ARGS__)
-#define DEBUG_SERIAL_PRINTF(...) Serial.printf(__VA_ARGS__)
-#else
-#define DEBUG_SERIAL_BEGIN(baud) ((void)0)
-#define DEBUG_SERIAL_PRINT(...) ((void)0)
-#define DEBUG_SERIAL_PRINTLN(...) ((void)0)
-#define DEBUG_SERIAL_PRINTF(...) ((void)0)
-#endif
 
 // Function prototypes
 void setupWifiAP();
@@ -110,11 +92,6 @@ struct ClientSession {
   explicit operator bool() const { return !isNull(); }
 };
 
-struct DoMessage {
-  char inst[16];
-  int32_t value;
-};
-
 // Task handle for the blink task
 extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
@@ -149,15 +126,6 @@ ClientSession *findClientSessionByIndex(ClientSession *authClients,
                                         size_t index);
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len);
-bool serializeDoMessage(uint8_t *buffer, DoMessage &obj, size_t buffer_size,
-                        size_t &bytes_written);
-int serializeArrayDoMessage(uint8_t *buffer, DoMessage *messages,
-                            size_t num_messages, size_t buffer_size);
-bool deserializeDoMessage(const uint8_t *buffer, DoMessage &objToFill,
-                          size_t buffer_len);
-bool serializeDoMessage(uint8_t *buffer, DoMessage *messages,
-                        size_t num_messages, size_t buffer_size,
-                        size_t &bytes_written_total);
 
 uint32_t getCurrentTimeMs();
 

@@ -1,3 +1,4 @@
+#include "domsg/domsg.h"
 #include "main.h"
 #include <unordered_map>
 
@@ -80,18 +81,19 @@ void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
 
     controlData &machineDataRef = getControlData();
 
-    DoMessage doMessage;
+    /*     DoMessage doMessage;
 
-    if (deserializeDoMessage(data, doMessage, len)) {
-      // Send data to machine
-      DEBUG_SERIAL_PRINTLN("Data received from client (DoMessage proto):");
-      DEBUG_SERIAL_PRINTF("Instruction: %s\n", doMessage.inst);
-      DEBUG_SERIAL_PRINTF("Value: %d\n", doMessage.value);
-      machineDataRef = getControlData();
-    } else
-      DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
+        if (deserializeDoMessage(data, doMessage, len)) {
+          // Send data to machine
+          DEBUG_SERIAL_PRINTLN("Data received from client (DoMessage proto):");
+          DEBUG_SERIAL_PRINTF("Instruction: %s\n", doMessage.inst);
+          DEBUG_SERIAL_PRINTF("Value: %d\n", doMessage.value);
+          machineDataRef = getControlData();
+        } else
+          DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
 
-    // Deserialize the received data
+        // Deserialize the received data
+      } */
   }
 }
 
@@ -105,38 +107,24 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     const size_t NUM_MSGS = 3;
     const controlData &machineData = getControlData();
     DoMessage messages[NUM_MSGS] = {
-        {"mode_bagoguhgfv", static_cast<int32_t>(machineData.mode)},
-        {"running_dmnfmd", static_cast<int32_t>(machineData.timer.running)},
-        {"resting_7fdjdj", static_cast<int32_t>(machineData.timer.resting)}};
+        {"V1", static_cast<int32_t>(machineData.mode)},
+        {"V2", static_cast<int32_t>(machineData.timer.running)},
+        {"V3", static_cast<int32_t>(machineData.timer.resting)}};
 
     uint8_t buffer[1024];
 
     int buffer_len =
-        serializeArrayDoMessage(buffer, messages, NUM_MSGS, sizeof(buffer));
+        serializeDoMessage(messages, NUM_MSGS, buffer, sizeof(buffer));
     if (buffer_len > 0) {
       client->binary(buffer, buffer_len);
     }
-    // bool serializeDoMessage(uint8_t *buffer, DoMessage &obj, size_t
-    // buffer_size, size_t &bytes_written);
-    // send messages[0]
 
-    // Define a buffer size that is reasonably large to hold the serialized data
-
-    /*    const size_t BUFFER_SIZE = 128;
-
-       DoMessage message = {"mode", 42};
-
-       // Serialize the DoMessage object
-       size_t bytes_written = 0; // Declare bytes_written here
-       if (serializeDoMessage(buffer, message, BUFFER_SIZE, bytes_written))
-       {
-         // Send the serialized data to the client
-         client->binary(buffer, bytes_written);
-       }
-       else
-       {
-         DEBUG_SERIAL_PRINTLN("Failed to serialize data");
-       } */
+    uint8_t single_buffer[1024];
+    int single_buffer_len =
+        serializeDoMessage(messages[2], single_buffer, sizeof(single_buffer));
+    if (single_buffer_len > 0) {
+      client->binary(single_buffer, single_buffer_len);
+    }
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_DISCONNECT) {
