@@ -1,9 +1,11 @@
 #ifndef DEV_OR_PROD_H
 #define DEV_OR_PROD_H
 
-#include <Arduino.h>
+#ifndef TESTING
+   #include <Arduino.h>
+#endif
 
-#define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle serial
+//#define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle serial
                              // output
 
 #ifdef DEBUG_SERIAL_ENABLED

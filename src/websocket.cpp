@@ -105,20 +105,58 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                         client->id());
     // Get initial data from client
 
-    const size_t NUM_MSGS = 3;
+    const size_t NUM_MSGS = 10;
     const controlData &machineData = getControlData();
 
-    DoId doId[10] = {{1, static_cast<float>(machineData.mode)},
+    DoId doId[NUM_MSGS] = {{1, static_cast<float>(machineData.mode)},
                      {2, static_cast<float>(machineData.timer.resting)},
                      {3, static_cast<float>(machineData.timer.running)},
                      {4, 232.13f},
                      {5, 6765.32f},
-                     {6, 0.0f},
+                     {6, 0.2f},
                      {7, 7.0f},
                      {8, 0.3f},
                      {9, 9.0f},
                      {10, 10.0f}};
-   
+    DEBUG_SERIAL_PRINTLN("Data to be serialized:");
+    for (size_t i = 0; i < NUM_MSGS; i++) {
+      DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId[i].id, doId[i].value);
+    }
+    DEBUG_SERIAL_PRINTLN();
+
+    DEBUG_SERIAL_PRINTLN("Serializing data...");
+    uint8_t buffer[256];
+    int bytes_written = serialize_do_id(buffer, sizeof(buffer), doId, NUM_MSGS);
+    if(bytes_written > 0) {
+     DEBUG_SERIAL_PRINTLN("Data serialized successfully");
+    for(int i = 0; i < bytes_written; i++) {
+      DEBUG_SERIAL_PRINT(buffer[i]);
+    }
+      DEBUG_SERIAL_PRINTLN();
+      DEBUG_SERIAL_PRINTLN();
+      client->text(buffer, bytes_written);
+    } else {
+      DEBUG_SERIAL_PRINTLN("Failed to serialize data");
+    }
+
+    DEBUG_SERIAL_PRINTLN();
+
+    DEBUG_SERIAL_PRINTLN("Deserializing data...");
+    uint8_t buffer2[1024];
+    size_t bytes_read = 0;
+    DoId doId2[10];
+    size_t num_of_objs = deserialize_do_id(buffer, sizeof(buffer), bytes_read, doId2, 10);
+    if(num_of_objs > 0) {
+      DEBUG_SERIAL_PRINTLN("Data deserialized successfully");
+      for(size_t i = 0; i < num_of_objs; i++) {
+        DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId2[i].id, doId2[i].value);
+      }
+    } else {
+      DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
+    }
+
+    DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
+
   } else if (type == WS_EVT_DISCONNECT) {
     if (deauthenticate(authClients, client)) {
       DEBUG_SERIAL_PRINTF("Websocket client connection closed: %u\n",
