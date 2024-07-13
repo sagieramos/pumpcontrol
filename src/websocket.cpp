@@ -1,6 +1,6 @@
 /* #include <domsg.h> */
-#include <domsgid.h>
 #include "main.h"
+#include <domsgid.h>
 #include <unordered_map>
 
 // AsyncEventSource events("/events");
@@ -109,15 +109,15 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     const controlData &machineData = getControlData();
 
     DoId doId[NUM_MSGS] = {{1, static_cast<float>(machineData.mode)},
-                     {2, static_cast<float>(machineData.timer.resting)},
-                     {3, static_cast<float>(machineData.timer.running)},
-                     {4, 232.13f},
-                     {5, 6765.32f},
-                     {6, 0.2f},
-                     {7, 7.0f},
-                     {8, 0.3f},
-                     {9, 9.0f},
-                     {10, 10.0f}};
+                           {2, static_cast<float>(machineData.timer.resting)},
+                           {3, static_cast<float>(machineData.timer.running)},
+                           {4, 232.13f},
+                           {5, 6765.32f},
+                           {6, 0.2f},
+                           {7, 7.0f},
+                           {8, 0.3f},
+                           {9, 9.0f},
+                           {10, 10.0f}};
     DEBUG_SERIAL_PRINTLN("Data to be serialized:");
     for (size_t i = 0; i < NUM_MSGS; i++) {
       DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId[i].id, doId[i].value);
@@ -127,11 +127,11 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     DEBUG_SERIAL_PRINTLN("Serializing data...");
     uint8_t buffer[256];
     int bytes_written = serialize_do_id(buffer, sizeof(buffer), doId, NUM_MSGS);
-    if(bytes_written > 0) {
-     DEBUG_SERIAL_PRINTLN("Data serialized successfully");
-    for(int i = 0; i < bytes_written; i++) {
-      DEBUG_SERIAL_PRINT(buffer[i]);
-    }
+    if (bytes_written > 0) {
+      DEBUG_SERIAL_PRINTLN("Data serialized successfully");
+      for (int i = 0; i < bytes_written; i++) {
+        DEBUG_SERIAL_PRINT(buffer[i]);
+      }
       DEBUG_SERIAL_PRINTLN();
       DEBUG_SERIAL_PRINTLN();
       client->text(buffer, bytes_written);
@@ -145,10 +145,11 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     uint8_t buffer2[1024];
     size_t bytes_read = 0;
     DoId doId2[10];
-    size_t num_of_objs = deserialize_do_id(buffer, sizeof(buffer), bytes_read, doId2, 10);
-    if(num_of_objs > 0) {
+    size_t num_of_objs =
+        deserialize_do_id(buffer, sizeof(buffer), bytes_read, doId2, 10);
+    if (num_of_objs > 0) {
       DEBUG_SERIAL_PRINTLN("Data deserialized successfully");
-      for(size_t i = 0; i < num_of_objs; i++) {
+      for (size_t i = 0; i < num_of_objs; i++) {
         DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId2[i].id, doId2[i].value);
       }
     } else {

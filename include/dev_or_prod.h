@@ -2,11 +2,13 @@
 #define DEV_OR_PROD_H
 
 #ifndef TESTING
-   #include <Arduino.h>
+#include <Arduino.h>
+
+#ifdef PRODUCTION
+#define DEBUG_SERIAL_ENABLED 
 #endif
 
-//#define DEBUG_SERIAL_ENABLED // Comment or uncomment this line to toggle serial
-                             // output
+#endif // TESTING
 
 #ifdef DEBUG_SERIAL_ENABLED
 #define DEBUG_SERIAL_BEGIN(baud) Serial.begin(baud)
@@ -20,4 +22,4 @@
 #define DEBUG_SERIAL_PRINTF(...) ((void)0)
 #endif
 
-#endif
+#endif // DEV_OR_PROD_H
