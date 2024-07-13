@@ -1,4 +1,5 @@
-#include "domsg/domsg.h"
+/* #include <domsg.h> */
+#include <domsgid.h>
 #include "main.h"
 #include <unordered_map>
 
@@ -106,27 +107,18 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
     const size_t NUM_MSGS = 3;
     const controlData &machineData = getControlData();
-    DoMessage messages[NUM_MSGS] = {
-        {"V1", static_cast<int32_t>(machineData.mode)},
-        {"V2", static_cast<int32_t>(machineData.timer.running)},
-        {"V3", static_cast<int32_t>(machineData.timer.resting)}};
 
-    uint8_t buffer[1024];
-
-    int buffer_len =
-        serializeDoMessage(messages, NUM_MSGS, buffer, sizeof(buffer));
-    if (buffer_len > 0) {
-      client->binary(buffer, buffer_len);
-    }
-
-    uint8_t single_buffer[1024];
-    int single_buffer_len =
-        serializeDoMessage(messages[2], single_buffer, sizeof(single_buffer));
-    if (single_buffer_len > 0) {
-      client->binary(single_buffer, single_buffer_len);
-    }
-
-    DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
+    DoId doId[10] = {{1, static_cast<float>(machineData.mode)},
+                     {2, static_cast<float>(machineData.timer.resting)},
+                     {3, static_cast<float>(machineData.timer.running)},
+                     {4, 232.13f},
+                     {5, 6765.32f},
+                     {6, 0.0f},
+                     {7, 7.0f},
+                     {8, 0.3f},
+                     {9, 9.0f},
+                     {10, 10.0f}};
+   
   } else if (type == WS_EVT_DISCONNECT) {
     if (deauthenticate(authClients, client)) {
       DEBUG_SERIAL_PRINTF("Websocket client connection closed: %u\n",

@@ -14,7 +14,7 @@ pip install protobuf grpcio-tools
 
 # Step 4: Run your script (replace with your actual script command)
 # Example command to run your script
-./run_protoc.sh protoc/domsg.proto test/
+./run_protoc.sh protoc/domsgid.proto
 
 # Step 5: Deactivate the virtual environment (optional)
 deactivate
