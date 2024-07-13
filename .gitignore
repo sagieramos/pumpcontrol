@@ -3,7 +3,9 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-./lib/python*
+lib/python*
 lib64/python*
 include/python*
+venv/
+.env/
 node_modules
