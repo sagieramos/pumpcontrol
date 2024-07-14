@@ -15,6 +15,10 @@ typedef struct _DoId {
   float value;
 } DoId;
 
+typedef struct _DoIdList {
+  pb_callback_t doid;
+} DoIdList;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -22,12 +26,21 @@ extern "C" {
 /* Initializer values for message structs */
 #define DoId_init_default                                                      \
   { 0, 0 }
+#define DoIdList_init_default                                                  \
+  {                                                                            \
+    { {NULL}, NULL }                                                           \
+  }
 #define DoId_init_zero                                                         \
   { 0, 0 }
+#define DoIdList_init_zero                                                     \
+  {                                                                            \
+    { {NULL}, NULL }                                                           \
+  }
 
 /* Field tags (for use in manual encoding/decoding) */
 #define DoId_id_tag 1
 #define DoId_value_tag 2
+#define DoIdList_doid_tag 1
 
 /* Struct field encoding specification for nanopb */
 #define DoId_FIELDLIST(X, a)                                                   \
@@ -36,12 +49,20 @@ extern "C" {
 #define DoId_CALLBACK NULL
 #define DoId_DEFAULT NULL
 
+#define DoIdList_FIELDLIST(X, a) X(a, CALLBACK, REPEATED, MESSAGE, doid, 1)
+#define DoIdList_CALLBACK pb_default_field_callback
+#define DoIdList_DEFAULT NULL
+#define DoIdList_doid_MSGTYPE DoId
+
 extern const pb_msgdesc_t DoId_msg;
+extern const pb_msgdesc_t DoIdList_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define DoId_fields &DoId_msg
+#define DoIdList_fields &DoIdList_msg
 
 /* Maximum encoded size of messages (where known) */
+/* DoIdList_size depends on runtime parameters */
 #define DoId_size 11
 #define PROTOC_DOMSGID_PB_H_MAX_SIZE DoId_size
 

@@ -4,3 +4,7 @@ message DoId {
   uint32 id = 1;
   float value = 2;
 }
+
+message DoIdList {
+  repeated DoId doid = 1;
+}

@@ -9,4 +9,7 @@
 PB_BIND(DoId, DoId, AUTO)
 
 
+PB_BIND(DoIdList, DoIdList, AUTO)
+
+
 

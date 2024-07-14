@@ -5,6 +5,8 @@
 
 // AsyncEventSource events("/events");
 
+uint8_t buffer[1024];
+
 std::unordered_map<size_t, size_t> clientIdToIndexMap;
 
 bool authenticate(size_t index, const char *token, ClientSession *authClients,
@@ -123,37 +125,34 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
       DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId[i].id, doId[i].value);
     }
     DEBUG_SERIAL_PRINTLN();
-
-    DEBUG_SERIAL_PRINTLN("Serializing data...");
-    uint8_t buffer[256];
-    int bytes_written = serialize_do_id(buffer, sizeof(buffer), doId, NUM_MSGS);
-    if (bytes_written > 0) {
-      DEBUG_SERIAL_PRINTLN("Data serialized successfully");
-      for (int i = 0; i < bytes_written; i++) {
-        DEBUG_SERIAL_PRINT(buffer[i]);
+    for (size_t i = 0; i < NUM_MSGS; i++) {
+      DEBUG_SERIAL_PRINTLN("Serializing data...");
+      size_t bytes_written;
+      if (serialize_DoId(&doId[i], buffer, sizeof(buffer), &bytes_written)) {
+        DEBUG_SERIAL_PRINTLN("Data serialized successfully");
+        for (int i = 0; i < bytes_written; i++) {
+          DEBUG_SERIAL_PRINTF("%02X ", buffer[i]);
+        }
+        DEBUG_SERIAL_PRINTLN();
+        client->binary(buffer, bytes_written);
+      } else {
+        DEBUG_SERIAL_PRINTLN("Failed to serialize data");
       }
-      DEBUG_SERIAL_PRINTLN();
-      DEBUG_SERIAL_PRINTLN();
-      client->text(buffer, bytes_written);
-    } else {
-      DEBUG_SERIAL_PRINTLN("Failed to serialize data");
-    }
 
-    DEBUG_SERIAL_PRINTLN();
+      DEBUG_SERIAL_PRINTLN();
 
-    DEBUG_SERIAL_PRINTLN("Deserializing data...");
-    uint8_t buffer2[1024];
-    size_t bytes_read = 0;
-    DoId doId2[10];
-    size_t num_of_objs =
-        deserialize_do_id(buffer, sizeof(buffer), bytes_read, doId2, 10);
-    if (num_of_objs > 0) {
-      DEBUG_SERIAL_PRINTLN("Data deserialized successfully");
-      for (size_t i = 0; i < num_of_objs; i++) {
-        DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId2[i].id, doId2[i].value);
+      DEBUG_SERIAL_PRINTLN("Deserializing data...");
+      DoId doIdDeserialized = DoId_init_default;
+
+      if (deserialize_DoId(buffer, bytes_written, &doIdDeserialized)) {
+        DEBUG_SERIAL_PRINTLN("Data deserialized successfully");
+        DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doIdDeserialized.id,
+                            doIdDeserialized.value);
+      } else {
+        DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
       }
-    } else {
-      DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
+      memset(buffer, 0, sizeof(buffer));
+      DEBUG_SERIAL_PRINTLN("............................................");
     }
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());

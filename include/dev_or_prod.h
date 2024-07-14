@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 #ifdef PRODUCTION
-#define DEBUG_SERIAL_ENABLED 
+#define DEBUG_SERIAL_ENABLED
 #endif
 
 #endif // TESTING
