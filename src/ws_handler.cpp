@@ -1,11 +1,10 @@
 /* #include <domsg.h> */
 #include "main.h"
-#include <domsgid.h>
+#include "network.h"
+#include "test_transcode.h"
 #include <unordered_map>
 
-// AsyncEventSource events("/events");
-
-uint8_t buffer[1024];
+AsyncWebSocket ws("/ws");
 
 std::unordered_map<size_t, size_t> clientIdToIndexMap;
 
@@ -105,55 +104,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
   if (type == WS_EVT_CONNECT) {
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
                         client->id());
-    // Get initial data from client
 
-    const size_t NUM_MSGS = 10;
-    const controlData &machineData = getControlData();
-
-    DoId doId[NUM_MSGS] = {{1, static_cast<float>(machineData.mode)},
-                           {2, static_cast<float>(machineData.timer.resting)},
-                           {3, static_cast<float>(machineData.timer.running)},
-                           {4, 232.13f},
-                           {5, 6765.32f},
-                           {6, 0.2f},
-                           {7, 7.0f},
-                           {8, 0.3f},
-                           {9, 9.0f},
-                           {10, 10.0f}};
-    DEBUG_SERIAL_PRINTLN("Data to be serialized:");
-    for (size_t i = 0; i < NUM_MSGS; i++) {
-      DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doId[i].id, doId[i].value);
-    }
-    DEBUG_SERIAL_PRINTLN();
-    for (size_t i = 0; i < NUM_MSGS; i++) {
-      DEBUG_SERIAL_PRINTLN("Serializing data...");
-      size_t bytes_written;
-      if (serialize_DoId(&doId[i], buffer, sizeof(buffer), &bytes_written)) {
-        DEBUG_SERIAL_PRINTLN("Data serialized successfully");
-        for (int i = 0; i < bytes_written; i++) {
-          DEBUG_SERIAL_PRINTF("%02X ", buffer[i]);
-        }
-        DEBUG_SERIAL_PRINTLN();
-        client->binary(buffer, bytes_written);
-      } else {
-        DEBUG_SERIAL_PRINTLN("Failed to serialize data");
-      }
-
-      DEBUG_SERIAL_PRINTLN();
-
-      DEBUG_SERIAL_PRINTLN("Deserializing data...");
-      DoId doIdDeserialized = DoId_init_default;
-
-      if (deserialize_DoId(buffer, bytes_written, &doIdDeserialized)) {
-        DEBUG_SERIAL_PRINTLN("Data deserialized successfully");
-        DEBUG_SERIAL_PRINTF("DoId %d: %f\n", doIdDeserialized.id,
-                            doIdDeserialized.value);
-      } else {
-        DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
-      }
-      memset(buffer, 0, sizeof(buffer));
-      DEBUG_SERIAL_PRINTLN("............................................");
-    }
+    test_transcode_doId(client->id());
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
 
@@ -176,5 +128,3 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     DEBUG_SERIAL_PRINTLN("Websocket event not handled");
   }
 }
-
-// create virtual V1 to V10 use to recieve websocket data from client

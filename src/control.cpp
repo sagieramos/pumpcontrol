@@ -6,6 +6,8 @@ constexpr int PUMP_RELAY_PIN = 12;    // Relay pin for pump
 constexpr uint8_t MAGIC_NUMBER = 123; // Magic number for EEPROM data validity
 constexpr size_t MAGIC_NUMBER_SIZE = sizeof(MAGIC_NUMBER);
 constexpr int FLOAR_SIGNAL_TRESHOLD = 1500;
+constexpr size_t EEPROM_SIZE_CTL = sizeof(control) + MAGIC_NUMBER_SIZE;
+
 bool signalState = false; // Flag to track signal state
 
 struct machineObjStatus {
@@ -129,10 +131,6 @@ void runMachine(void *parameter) {
     signalState = signal >= 4;
     controlPumpState();
 
-    // UBaseType_t stackHighwater = uxTaskGetStackHighWaterMark(NULL);
-    /*     DEBUG_SERIAL_PRINTF("runMachine() stack size: %u\n",
-                            uxTaskGetStackHighWaterMark(NULL)); */
-
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
@@ -142,7 +140,8 @@ void setupPumpControl() {
   pinMode(PUMP_RELAY_PIN, OUTPUT);
   digitalWrite(PUMP_RELAY_PIN, LOW);
 
-  // EEPROM.begin(512); // Initialize EEPROM with size. already initialized in
+  EEPROM.begin(
+      EEPROM_SIZE_CTL); // Initialize EEPROM with size. already initialized in
   // main.cpp
 
   if (EEPROM.read(0) != MAGIC_NUMBER) {

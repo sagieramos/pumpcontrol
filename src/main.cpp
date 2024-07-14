@@ -1,9 +1,7 @@
 #include "main.h"
+#include "network.h"
 
 void stackMonitor(void *pvParameter);
-
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
 
 struct StaticFile {
   const char *path;
@@ -48,7 +46,6 @@ void setup() {
   DEBUG_SERIAL_PRINTLN();
 
   pinMode(LED_BUILTIN, OUTPUT);
-  EEPROM.begin(EEPROM_SIZE_CTL);
 
   // Initialize control data
   setupPumpControl();

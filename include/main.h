@@ -4,8 +4,6 @@
 #include "FS.h"
 #include "control.h"
 #include "dev_or_prod.h"
-#include <DNSServer.h>
-#include <EEPROM.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <WiFi.h>
@@ -24,9 +22,6 @@ constexpr size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
 constexpr size_t SESSION_TIMEOUT = 60000; // 1 minute
 constexpr const char *TOKEN_ATTR = "_imuwahen";
 constexpr const char *INDEX_ATTR = "_idx";
-
-// EEPROM address for control data
-constexpr uint8_t EEPROM_SIZE_CTL = sizeof(uint8_t) + sizeof(control);
 
 // Function prototypes
 void setupWifiAP();
@@ -97,9 +92,7 @@ extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
 extern TaskHandle_t runMachineTask;
 extern const byte DNS_PORT;
-extern DNSServer dnsServer;
 extern ClientSession authClients[MAX_CLIENTS];
-extern AsyncWebSocket ws;
 
 enum AuthStatus {
   NOT_ACTIVE,

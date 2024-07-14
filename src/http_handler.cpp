@@ -1,4 +1,7 @@
 #include "main.h"
+#include "network.h"
+
+AsyncWebServer server(80);
 
 ClientSession authClients[MAX_CLIENTS];
 
