@@ -74,13 +74,12 @@ bool deserialize_DoId(const pb_byte_t *buffer, size_t buffer_size,
  */
 bool serialize_DoIdList(const DoIdList *message, pb_byte_t *buffer,
                         size_t buffer_size, size_t *bytes_written) {
-  pb_ostream_t stream;
-
   // Initialize the output stream with the buffer and size
-  stream = pb_ostream_from_buffer(buffer, buffer_size);
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, buffer_size);
 
   // Serialize the DoIdList message
   if (!pb_encode(&stream, DoIdList_fields, message)) {
+    // printf("Encoding failed: %s\n", PB_GET_ERROR(&stream));
     return false; // Serialization failed
   }
 
@@ -99,13 +98,12 @@ bool serialize_DoIdList(const DoIdList *message, pb_byte_t *buffer,
  */
 bool deserialize_DoIdList(const pb_byte_t *buffer, size_t buffer_size,
                           DoIdList *message) {
-  pb_istream_t stream;
-
   // Initialize the input stream with the buffer and size
-  stream = pb_istream_from_buffer(buffer, buffer_size);
+  pb_istream_t stream = pb_istream_from_buffer(buffer, buffer_size);
 
   // Deserialize the DoIdList message
   if (!pb_decode(&stream, DoIdList_fields, message)) {
+    //("Decoding failed: %s\n", PB_GET_ERROR(&stream));
     return false; // Deserialization failed
   }
 

@@ -1,7 +1,8 @@
 #ifndef DOMSGID_H
 #define DOMSGID_H
 
-#include "domsgid.pb.h" // Path to the generated protobuf header
+#include <domsgid.pb.h>
+#include <pb_common.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
 

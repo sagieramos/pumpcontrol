@@ -1,4 +1,6 @@
+#include "domsgid.h"
 #include "main.h"
+#include "network.h"
 #include <EEPROM.h>
 
 constexpr int FLOAT_SIGNAL_PIN = 21;  // Float signal pin
@@ -132,6 +134,74 @@ void runMachine(void *parameter) {
     controlPumpState();
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+static bool fields_encode(pb_ostream_t *stream, const pb_field_t *field,
+                          void *const *arg) {
+  DoId message = DoId_init_zero;
+  const controlData &ctrl = getControlData();
+  const unsigned int obj[3] = {static_cast<unsigned int>(ctrl.mode),
+                               ctrl.timer.running, ctrl.timer.resting};
+
+  for (size_t i = 0; i < 3; ++i) {
+    message.id = MAGIC_NUMBER + i;
+    message.value = obj[i];
+
+    if (!pb_encode_tag_for_field(stream, field)) {
+      return false;
+    }
+
+    if (!pb_encode_submessage(stream, DoId_fields, &message)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool fields_decode(pb_istream_t *stream, const pb_field_t *field, void **arg) {
+  DoId message = DoId_init_zero;
+  controlData &ctrl = getControlData();
+
+  if (!pb_decode(stream, DoId_fields, &message)) {
+    return false;
+  }
+
+  DEBUG_SERIAL_PRINTF("DoId - ID: %d\tValue: %d\n", message.id, message.value);
+
+  return true;
+}
+
+bool send_ctr_data(const size_t client_id) {
+  if (client_id == 0) {
+    return false;
+  }
+  unsigned char buffer[1024];
+
+  DoIdList message = DoIdList_init_zero;
+  message.doid.funcs.encode = fields_encode;
+  pb_ostream_t ostream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+  bool status = pb_encode(&ostream, DoIdList_fields, &message);
+
+  if (status) {
+    for (size_t i = 0; i < ostream.bytes_written; i++) {
+      DEBUG_SERIAL_PRINTF("%02X ", buffer[i]);
+    }
+
+    DEBUG_SERIAL_PRINTLN();
+  }
+
+  if (status && client_id == 0) {
+    // send to all clients
+    ws.binaryAll(buffer, ostream.bytes_written);
+    return true;
+  } else if (status) {
+    // send to specific client
+    ws.binary(client_id, buffer, ostream.bytes_written);
+    return true;
+  } else {
+    return false;
   }
 }
 

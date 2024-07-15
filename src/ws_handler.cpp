@@ -102,10 +102,13 @@ void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
   if (type == WS_EVT_CONNECT) {
+    size_t client_id = client->id();
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
-                        client->id());
+                        client_id);
 
-    test_transcode_doId(client->id());
+    test_transcode_doId(client_id);
+
+    send_ctr_data(client_id);
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
 

@@ -1,6 +1,8 @@
 #ifndef CONTROL_H
 #define CONTROL_H
 
+#include <cstddef>
+
 constexpr unsigned int TIME_ON = 40 * 60000;  // 40 minutes in milliseconds
 constexpr unsigned int TIME_OFF = 20 * 60000; // 20 minutes in milliseconds
 
@@ -49,6 +51,7 @@ struct controlData {
 };
 
 controlData &getControlData();
+bool send_ctr_data(const size_t client_id = 0);
 
 void setupPumpControl();
 
