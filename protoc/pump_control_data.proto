@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package pump;
+
+enum MachineMode {
+    POWER_OFF = 0;
+    POWER_ON = 1;
+    AUTO = 2;
+}
+
+message TimeRange {
+    uint32 running = 1;
+    uint32 resting = 2;
+}
+
+message ControlData {
+    MachineMode mode = 1;
+    bool is_running = 2;
+    TimeRange time_range = 3;
+}

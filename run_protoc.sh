@@ -21,7 +21,7 @@ fi
 mkdir -p "$OUTPUT_DIR"
 
 # Find the first directory in libdeps
-LIBDEPS_DIR=$(find .pio/libdeps -maxdepth 1 -type d -name "*" | head -n 2 | tail -n 1)
+LIBDEPS_DIR=$(find .pio/libdeps -maxdepth 1 -type d -name "esp32" | head -n 2 | tail -n 1)
 
 if [ -z "$LIBDEPS_DIR" ]; then
     echo "No directory found in libdeps"
