@@ -1,4 +1,7 @@
 #include "main_test.h"
+#include <stdio.h>
+
+#include "domsgid.h"
 
 // Helper functions
 void assert_DoId_equal(const DoId *a, const DoId *b) {

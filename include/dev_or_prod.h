@@ -22,6 +22,6 @@
 #define DEBUG_SERIAL_PRINTF(...) ((void)0)
 #endif
 
-uint32_t getCurrentTimeMs();
+unsigned int getCurrentTimeMs();
 
 #endif // DEV_OR_PROD_H
