@@ -2,6 +2,7 @@
 #include "msg_type_identifier.h"
 #include "network.h"
 #include <EEPROM.h>
+#include <str_num_msg_transcode.h>
 
 TaskHandle_t runMachineTask = NULL;
 bool signalState = false;
@@ -142,6 +143,56 @@ void runMachine(void *parameter) {
     signalState = signal >= 4;
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+void send_control_data(const size_t client_id) {
+  if (client_id == 0) {
+    return;
+  }
+  uint8_t buffer[1024];
+  size_t buffer_size = sizeof(buffer);
+
+  pump_ControlData control_data = get_current_control_data();
+  DEBUG_SERIAL_PRINTF("Control Data - Mode: %d\tRunning: %d\tTime Range - "
+                      "Running: %d\tResting: %d\n",
+                      control_data.mode, control_data.is_running,
+                      control_data.time_range.running,
+                      control_data.time_range.resting);
+  size_t encoded_size;
+  bool status = serialize_control_data(buffer, &buffer_size, &control_data,
+                                       TYPE_IDENTIFIER_PUMP_CONTROL_DATA);
+#ifndef PRODUCTION
+  if (status) {
+    for (size_t i = 0; i < encoded_size; i++) {
+      DEBUG_SERIAL_PRINTF("%02X ", buffer[i]);
+    }
+
+    // Deserialize the data
+    pump_ControlData control_data_deserialized;
+    if (deserialize_control_data(buffer, encoded_size,
+                                 &control_data_deserialized)) {
+      DEBUG_SERIAL_PRINTLN("Deserialized data..............................:");
+      DEBUG_SERIAL_PRINTF("Mode: %d\n", control_data_deserialized.mode);
+      DEBUG_SERIAL_PRINTF("Running: %d\n",
+                          control_data_deserialized.is_running);
+      DEBUG_SERIAL_PRINTF("Time Range - Running: %d\n",
+                          control_data_deserialized.time_range.running);
+      DEBUG_SERIAL_PRINTF("Time Range - Resting: %d\n",
+                          control_data_deserialized.time_range.resting);
+    } else {
+      DEBUG_SERIAL_PRINTLN("Failed to deserialize control data");
+    }
+    DEBUG_SERIAL_PRINTLN();
+  }
+#endif
+
+  if (status && client_id == 0) {
+    ws.binaryAll(buffer, encoded_size);
+  } else if (status) {
+    ws.binary(client_id, buffer, encoded_size);
+  } else {
+    DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
   }
 }
 

@@ -1,4 +1,4 @@
-#include "str_num_msg_transcode.h"
+#include "./str_num_msg_transcode.h"
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include <stdlib.h>
@@ -74,8 +74,8 @@ bool deserialize_strnum(strnum &msg, const uint8_t *buffer,
   msg = strnum_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   msg.str.funcs.decode = &pb_decode_string;
-  
-  return(pb_decode(&stream, strnum_fields, &msg));
+
+  return (pb_decode(&stream, strnum_fields, &msg));
 }
 
 void free_strnum(strnum &msg) {

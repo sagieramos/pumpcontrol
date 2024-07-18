@@ -45,7 +45,7 @@ void test_serialize_deserialize_strnum() {
   printf("string.........................%s\n", (const char *)msg_out.str.arg);
   TEST_ASSERT_EQUAL_STRING((const char *)msg.str.arg,
                            (const char *)msg_out.str.arg);
-  
+
   free_strnum(msg_out);
 
   // Test msg_out.str is NULL

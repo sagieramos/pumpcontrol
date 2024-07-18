@@ -2,10 +2,9 @@
 #define PUMP_CONTROL_H
 
 #include "dev_or_prod.h"
-#include <pb_common.h>
-#include <pb_decode.h>
-#include <pb_encode.h>
-#include <pump_control_data.pb.h>
+#include "msg_type_identifier.h"
+#include "network.h"
+#include <transcode_pump_control.h>
 
 constexpr uint32_t TIME_ON(40 * 60000);
 constexpr uint32_t TIME_OFF(20 * 60000);
@@ -18,7 +17,6 @@ constexpr size_t EEPROM_SIZE_CTL = sizeof(pump_TimeRange) + MAGIC_NUMBER_SIZE;
 
 extern TaskHandle_t runMachineTask;
 
-pump_ControlData &get_current_control_data();
 void send_control_data(const size_t client_id);
 void store_pump_time_range(const pump_TimeRange *time_range);
 void store_pump_time_range();

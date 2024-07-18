@@ -1,7 +1,7 @@
 #ifndef STR_NUM_MSG_TRANSCODE_H
 #define STR_NUM_MSG_TRANSCODE_H
 
-#include <str_num_msg.pb.h>
+#include "./protoc/str_num_msg.pb.h"
 
 /**
  * @brief Initializes a `strnum` message with the provided string, float, and
