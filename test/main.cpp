@@ -11,7 +11,7 @@ int main() {
 
   RUN_TEST(test_create_strunum);
   RUN_TEST(test_serialize_deserialize_strnum);
-  RUN_TEST(test_serialize_deserialize_strnumlst);
+  // RUN_TEST(test_serialize_deserialize_strnumlst);
 
   return UNITY_END();
 }

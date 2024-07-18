@@ -1,5 +1,6 @@
 #include "main_test.h"
-#include "str_num_msg_transcode.h"
+#include <stdio.h>
+#include <str_num_msg_transcode.h>
 
 // Test creating a strnum message
 void test_create_strunum() {
@@ -25,17 +26,30 @@ void test_serialize_deserialize_strnum() {
 
   uint8_t buffer[128];
   size_t buffer_size = sizeof(buffer);
-  uint8_t type_id = 1;
+  uint8_t type_id = 10;
+
+  printf("size of buffer before strnum serialization: %ld\n", buffer_size);
 
   TEST_ASSERT_TRUE(serialize_strnum(msg, buffer, &buffer_size, type_id));
+  for (int i = 0; i < sizeof(buffer); i++) {
+    printf("%x ", buffer[i]);
+  }
+  printf("\n");
+  printf("size of buffer after strnum serialization: %ld\n", buffer_size);
 
   strnum msg_out;
   TEST_ASSERT_TRUE(deserialize_strnum(msg_out, buffer, buffer_size));
 
   TEST_ASSERT_EQUAL_UINT32(msg.key, msg_out.key);
   TEST_ASSERT_EQUAL_FLOAT(msg.num, msg_out.num);
+  printf("string.........................%s\n", (const char *)msg_out.str.arg);
   TEST_ASSERT_EQUAL_STRING((const char *)msg.str.arg,
                            (const char *)msg_out.str.arg);
+  
+  free_strnum(msg_out);
+
+  // Test msg_out.str is NULL
+  TEST_ASSERT_NULL(msg_out.str.arg);
 }
 
 // Test serializing and deserializing a strnumlst message

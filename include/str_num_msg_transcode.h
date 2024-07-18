@@ -79,4 +79,16 @@ bool deserialize_strnum(strnum &msg, const uint8_t *buffer, size_t buffer_size);
 bool deserialize_strnumlst(strnumlst &msg, const uint8_t *buffer,
                            size_t buffer_size);
 
+/**
+ * @brief Frees dynamically allocated memory in a `strnum` message.
+ *
+ * This function frees any dynamically allocated memory within a `strnum`
+ * message, such as the memory allocated for the string field. It should be
+ * called to prevent memory leaks when the `strnum` message is no longer needed.
+ *
+ * @param msg Reference to the `strnum` message whose dynamically allocated
+ * memory needs to be freed.
+ */
+void free_strnum(strnum &msg);
+
 #endif // STR_NUM_MSG_TRANSCODE_H
