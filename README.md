@@ -32,6 +32,7 @@
 - JavaScript
 - HTML
 - CSS
+- [FreeRTOS](https://www.freertos.org/)
 - [Protocol buffer](https://protobuf.dev/) 
 - [PlatformIO](https://platformio.org/)
 - [Nanopb](https://github.com/nanopb/nanopb)
