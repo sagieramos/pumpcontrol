@@ -1,6 +1,0 @@
-syntax = "proto3";
-
-message Do {
-  string inst = 1;
-  int32 value = 2;
-}

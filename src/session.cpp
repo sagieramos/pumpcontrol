@@ -1,7 +1,4 @@
 #include "main.h"
-#include <map>
-
-std::map<std::string, size_t> tokenToIndexMap;
 
 const char CHARSET[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

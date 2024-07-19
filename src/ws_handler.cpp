@@ -1,7 +1,8 @@
 /* #include <domsg.h> */
 #include "main.h"
 #include "network.h"
-#include "test_transcode.h"
+/* #include "test_transcode.h" */
+#include "pump_control.h"
 #include <unordered_map>
 
 AsyncWebSocket ws("/ws");
@@ -81,7 +82,7 @@ void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
     size_t index = it->second;
     authClients[index].lastActive = getCurrentTimeMs();
 
-    controlData &machineDataRef = getControlData();
+    /* controlData &machineDataRef = getControlData(); */
 
     /*     DoMessage doMessage;
 
@@ -102,10 +103,14 @@ void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
   if (type == WS_EVT_CONNECT) {
+    size_t client_id = client->id();
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
-                        client->id());
+                        client_id);
 
-    test_transcode_doId(client->id());
+    // test_transcode_doId(client_id);
+
+    // send_ctr_data(client_id);
+    send_control_data(client_id);
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
 

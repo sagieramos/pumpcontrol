@@ -2,7 +2,6 @@
 #define MAIN_H
 
 #include "FS.h"
-#include "control.h"
 #include "dev_or_prod.h"
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
@@ -90,7 +89,6 @@ struct ClientSession {
 // Task handle for the blink task
 extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
-extern TaskHandle_t runMachineTask;
 extern const byte DNS_PORT;
 extern ClientSession authClients[MAX_CLIENTS];
 
@@ -119,8 +117,6 @@ ClientSession *findClientSessionByIndex(ClientSession *authClients,
                                         size_t index);
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len);
-
-uint32_t getCurrentTimeMs();
 
 // Constants
 /* const char *ssid = "YourSSID";

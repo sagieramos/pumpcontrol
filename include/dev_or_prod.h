@@ -4,7 +4,7 @@
 #ifndef TESTING
 #include <Arduino.h>
 
-#ifdef PRODUCTION
+#ifndef PRODUCTION
 #define DEBUG_SERIAL_ENABLED
 #endif
 
@@ -21,5 +21,7 @@
 #define DEBUG_SERIAL_PRINTLN(...) ((void)0)
 #define DEBUG_SERIAL_PRINTF(...) ((void)0)
 #endif
+
+unsigned int getCurrentTimeMs();
 
 #endif // DEV_OR_PROD_H

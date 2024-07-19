@@ -1,5 +1,6 @@
 #include "main.h"
 #include "network.h"
+#include "pump_control.h"
 
 void stackMonitor(void *pvParameter);
 
@@ -48,7 +49,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
 
   // Initialize control data
-  setupPumpControl();
+  setup_pump_controller();
 
   // Setup WiFi AP and DNS
   setupWifiAP();
