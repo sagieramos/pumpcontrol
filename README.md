@@ -39,9 +39,16 @@
 - [ESPAsyncWebServer](https://github.com/lacamera/ESPAsyncWebServer)
 
 ### Key Features <a name="key-features"></a>
-
+- FreeRTOS for Task Management: Use FreeRTOS tasks to separate concerns, such as handling WebSocket connections, processing data, and managing authentication.
+- Secure authentication
+  - A task to handle HTTP requests for user authentication. This task verifies credentials and sets a session cookie.
+  - Cookie Validation: The WebSocket task checks the session cookie during the handshake to authenticate the client.
 - Efficient Data Serialization/Deserialization: Utilizing nanopb and protocol buffer for handling structured data.
-- WebSocket Communication: Managing real-time data exchange.
+- WebSocket Communication
+  - A dedicated task to manage WebSocket connections, including sending and receiving messages.
+- Data Handling 
+  - Separate handling for text and binary messages using Protocol Buffers.
+  - Ensure data is correctly interpreted without needing conversion to host byte order.
 - Memory Management: Ensuring proper management of dynamically allocated memory to prevent leaks.
 - Testing: Comprehensive tests to ensure data integrity.
 
