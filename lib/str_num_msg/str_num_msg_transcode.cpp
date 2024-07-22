@@ -42,6 +42,21 @@ bool pb_decode_string(pb_istream_t *stream, const pb_field_t *field,
   return true;
 }
 
+void create_num(float number, uint32_t key, num *msg) {
+  *msg = num_init_zero;
+  msg->key = key;
+  msg->value = number;
+}
+
+void create_str(const char *str, uint32_t key, strnum *msg) {
+  *msg = strnum_init_zero;
+  msg->key = key;
+  if (str != NULL) {
+    msg->str.funcs.encode = &pb_encode_string;
+    msg->str.arg = (void *)str;
+  }
+}
+
 void create_strunum(const char *str, float num, uint32_t key, strnum *msg) {
   *msg = strnum_init_zero;
   msg->key = key;
@@ -56,6 +71,46 @@ void create_strnumlst(const strnum *strum, strnumlst *msg) {
   *msg = strnumlst_init_zero;
   msg->str_nums.funcs.encode = &pb_encode_strnum;
   msg->str_nums.arg = (void *)strum;
+}
+
+bool serialize_num(const num &msg, uint8_t *buffer, size_t *buffer_size,
+                   uint8_t type_id) {
+  buffer[0] = type_id;
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
+  bool status = pb_encode(&stream, num_fields, &msg);
+  if (status) {
+    *buffer_size = stream.bytes_written + 1;
+  }
+  return status;
+}
+
+bool deserialize_num(num &msg, const uint8_t *buffer, size_t buffer_size) {
+  pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
+  return pb_decode(&stream, num_fields, &msg);
+}
+
+bool serialize_str(const str &msg, uint8_t *buffer, size_t *buffer_size,
+                   uint8_t type_id) {
+  buffer[0] = type_id;
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
+  bool status = pb_encode(&stream, str_fields, &msg);
+  if (status) {
+    *buffer_size = stream.bytes_written + 1;
+  }
+  return status;
+}
+
+bool deserialize_str(str &msg, const uint8_t *buffer, size_t buffer_size) {
+  msg = str_init_zero;
+  pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
+  return pb_decode(&stream, str_fields, &msg);
+}
+
+void free_str(str &msg) {
+  if (msg.value.arg) {
+    free(msg.value.arg);
+    msg.value.arg = NULL;
+  }
 }
 
 bool serialize_strnum(strnum &msg, uint8_t *buffer, size_t *buffer_size,

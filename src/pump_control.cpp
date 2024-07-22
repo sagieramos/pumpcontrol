@@ -1,6 +1,6 @@
 #include "pump_control.h"
-#include "msg_type_identifier.h"
 #include "network.h"
+#include "type_id.h"
 #include <EEPROM.h>
 #include <str_num_msg_transcode.h>
 
@@ -161,7 +161,7 @@ void send_control_data(const size_t client_id) {
                       control_data.time_range.resting);
   size_t encoded_size;
   bool status = serialize_control_data(buffer, &buffer_size, &control_data,
-                                       TYPE_IDENTIFIER_PUMP_CONTROL_DATA);
+                                       CONTROL_DATA_TYPE_ID);
 #ifndef PRODUCTION
   if (status) {
     for (size_t i = 0; i < encoded_size; i++) {
