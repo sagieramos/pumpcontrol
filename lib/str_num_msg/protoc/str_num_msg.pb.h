@@ -10,149 +10,125 @@
 #endif
 
 /* Struct definitions */
-typedef struct _num {
-  uint32_t key;
-  float value;
-} num;
+typedef struct _Num {
+    uint32_t key;
+    float value;
+} Num;
 
-typedef struct _numlst {
-  pb_callback_t numbers;
-} numlst;
+typedef struct _Numlist {
+    pb_callback_t numbers;
+} Numlist;
 
-typedef struct _str {
-  uint32_t key;
-  pb_callback_t value;
-} str;
+typedef struct _Str {
+    uint32_t key;
+    pb_callback_t value;
+} Str;
 
-typedef struct _strlst {
-  pb_callback_t str;
-} strlst;
+typedef struct _Strlist {
+    pb_callback_t Str;
+} Strlist;
 
-typedef struct _strnum {
-  uint32_t key;
-  pb_callback_t str;
-  float num;
-} strnum;
+typedef struct _Strnum {
+    uint32_t key;
+    pb_callback_t str;
+    float num;
+} Strnum;
 
-typedef struct _strnumlst {
-  pb_callback_t str_nums;
-} strnumlst;
+typedef struct _Strnumlist {
+    pb_callback_t str_nums;
+} Strnumlist;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define num_init_default                                                       \
-  { 0, 0 }
-#define numlst_init_default                                                    \
-  {                                                                            \
-    { {NULL}, NULL }                                                           \
-  }
-#define str_init_default                                                       \
-  {                                                                            \
-    0, { {NULL}, NULL }                                                        \
-  }
-#define strlst_init_default                                                    \
-  {                                                                            \
-    { {NULL}, NULL }                                                           \
-  }
-#define strnum_init_default                                                    \
-  { 0, {{NULL}, NULL}, 0 }
-#define strnumlst_init_default                                                 \
-  {                                                                            \
-    { {NULL}, NULL }                                                           \
-  }
-#define num_init_zero                                                          \
-  { 0, 0 }
-#define numlst_init_zero                                                       \
-  {                                                                            \
-    { {NULL}, NULL }                                                           \
-  }
-#define str_init_zero                                                          \
-  {                                                                            \
-    0, { {NULL}, NULL }                                                        \
-  }
-#define strlst_init_zero                                                       \
-  {                                                                            \
-    { {NULL}, NULL }                                                           \
-  }
-#define strnum_init_zero                                                       \
-  { 0, {{NULL}, NULL}, 0 }
-#define strnumlst_init_zero                                                    \
-  {                                                                            \
-    { {NULL}, NULL }                                                           \
-  }
+#define Num_init_default                         {0, 0}
+#define Numlist_init_default                     {{{NULL}, NULL}}
+#define Str_init_default                         {0, {{NULL}, NULL}}
+#define Strlist_init_default                     {{{NULL}, NULL}}
+#define Strnum_init_default                      {0, {{NULL}, NULL}, 0}
+#define Strnumlist_init_default                  {{{NULL}, NULL}}
+#define Num_init_zero                            {0, 0}
+#define Numlist_init_zero                        {{{NULL}, NULL}}
+#define Str_init_zero                            {0, {{NULL}, NULL}}
+#define Strlist_init_zero                        {{{NULL}, NULL}}
+#define Strnum_init_zero                         {0, {{NULL}, NULL}, 0}
+#define Strnumlist_init_zero                     {{{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define num_key_tag 1
-#define num_value_tag 2
-#define numlst_numbers_tag 1
-#define str_key_tag 1
-#define str_value_tag 2
-#define strlst_str_tag 1
-#define strnum_key_tag 1
-#define strnum_str_tag 2
-#define strnum_num_tag 3
-#define strnumlst_str_nums_tag 1
+#define Num_key_tag                              1
+#define Num_value_tag                            2
+#define Numlist_numbers_tag                      1
+#define Str_key_tag                              1
+#define Str_value_tag                            2
+#define Strlist_Str_tag                          1
+#define Strnum_key_tag                           1
+#define Strnum_str_tag                           2
+#define Strnum_num_tag                           3
+#define Strnumlist_str_nums_tag                  1
 
 /* Struct field encoding specification for nanopb */
-#define num_FIELDLIST(X, a)                                                    \
-  X(a, STATIC, SINGULAR, UINT32, key, 1)                                       \
-  X(a, STATIC, SINGULAR, FLOAT, value, 2)
-#define num_CALLBACK NULL
-#define num_DEFAULT NULL
+#define Num_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, UINT32,   key,               1) \
+X(a, STATIC,   SINGULAR, FLOAT,    value,             2)
+#define Num_CALLBACK NULL
+#define Num_DEFAULT NULL
 
-#define numlst_FIELDLIST(X, a) X(a, CALLBACK, REPEATED, MESSAGE, numbers, 1)
-#define numlst_CALLBACK pb_default_field_callback
-#define numlst_DEFAULT NULL
-#define numlst_numbers_MSGTYPE num
+#define Numlist_FIELDLIST(X, a) \
+X(a, CALLBACK, REPEATED, MESSAGE,  numbers,           1)
+#define Numlist_CALLBACK pb_default_field_callback
+#define Numlist_DEFAULT NULL
+#define Numlist_numbers_MSGTYPE Num
 
-#define str_FIELDLIST(X, a)                                                    \
-  X(a, STATIC, SINGULAR, UINT32, key, 1)                                       \
-  X(a, CALLBACK, SINGULAR, STRING, value, 2)
-#define str_CALLBACK pb_default_field_callback
-#define str_DEFAULT NULL
+#define Str_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, UINT32,   key,               1) \
+X(a, CALLBACK, SINGULAR, STRING,   value,             2)
+#define Str_CALLBACK pb_default_field_callback
+#define Str_DEFAULT NULL
 
-#define strlst_FIELDLIST(X, a) X(a, CALLBACK, REPEATED, STRING, str, 1)
-#define strlst_CALLBACK pb_default_field_callback
-#define strlst_DEFAULT NULL
+#define Strlist_FIELDLIST(X, a) \
+X(a, CALLBACK, REPEATED, STRING,   Str,               1)
+#define Strlist_CALLBACK pb_default_field_callback
+#define Strlist_DEFAULT NULL
 
-#define strnum_FIELDLIST(X, a)                                                 \
-  X(a, STATIC, SINGULAR, UINT32, key, 1)                                       \
-  X(a, CALLBACK, SINGULAR, STRING, str, 2)                                     \
-  X(a, STATIC, SINGULAR, FLOAT, num, 3)
-#define strnum_CALLBACK pb_default_field_callback
-#define strnum_DEFAULT NULL
+#define Strnum_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, UINT32,   key,               1) \
+X(a, CALLBACK, SINGULAR, STRING,   str,               2) \
+X(a, STATIC,   SINGULAR, FLOAT,    num,               3)
+#define Strnum_CALLBACK pb_default_field_callback
+#define Strnum_DEFAULT NULL
 
-#define strnumlst_FIELDLIST(X, a) X(a, CALLBACK, REPEATED, MESSAGE, str_nums, 1)
-#define strnumlst_CALLBACK pb_default_field_callback
-#define strnumlst_DEFAULT NULL
-#define strnumlst_str_nums_MSGTYPE strnum
+#define Strnumlist_FIELDLIST(X, a) \
+X(a, CALLBACK, REPEATED, MESSAGE,  str_nums,          1)
+#define Strnumlist_CALLBACK pb_default_field_callback
+#define Strnumlist_DEFAULT NULL
+#define Strnumlist_str_nums_MSGTYPE Strnum
 
-extern const pb_msgdesc_t num_msg;
-extern const pb_msgdesc_t numlst_msg;
-extern const pb_msgdesc_t str_msg;
-extern const pb_msgdesc_t strlst_msg;
-extern const pb_msgdesc_t strnum_msg;
-extern const pb_msgdesc_t strnumlst_msg;
+extern const pb_msgdesc_t Num_msg;
+extern const pb_msgdesc_t Numlist_msg;
+extern const pb_msgdesc_t Str_msg;
+extern const pb_msgdesc_t Strlist_msg;
+extern const pb_msgdesc_t Strnum_msg;
+extern const pb_msgdesc_t Strnumlist_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
-#define num_fields &num_msg
-#define numlst_fields &numlst_msg
-#define str_fields &str_msg
-#define strlst_fields &strlst_msg
-#define strnum_fields &strnum_msg
-#define strnumlst_fields &strnumlst_msg
+#define Num_fields &Num_msg
+#define Numlist_fields &Numlist_msg
+#define Str_fields &Str_msg
+#define Strlist_fields &Strlist_msg
+#define Strnum_fields &Strnum_msg
+#define Strnumlist_fields &Strnumlist_msg
 
 /* Maximum encoded size of messages (where known) */
-/* numlst_size depends on runtime parameters */
-/* str_size depends on runtime parameters */
-/* strlst_size depends on runtime parameters */
-/* strnum_size depends on runtime parameters */
-/* strnumlst_size depends on runtime parameters */
-#define PROTOC_STR_NUM_MSG_PB_H_MAX_SIZE num_size
-#define num_size 11
+/* Numlist_size depends on runtime parameters */
+/* Str_size depends on runtime parameters */
+/* Strlist_size depends on runtime parameters */
+/* Strnum_size depends on runtime parameters */
+/* Strnumlist_size depends on runtime parameters */
+#define Num_size                                 11
+#define PROTOC_STR_NUM_MSG_PB_H_MAX_SIZE         Num_size
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -15,11 +15,11 @@ bool pb_encode_string(pb_ostream_t *stream, const pb_field_t *field,
 
 bool pb_encode_strnum(pb_ostream_t *stream, const pb_field_t *field,
                       void *const *arg) {
-  const strnum *msg = (const strnum *)(*arg);
+  const Strnum *msg = (const Strnum *)(*arg);
   if (!pb_encode_tag_for_field(stream, field)) {
     return false;
   }
-  if (!pb_encode_submessage(stream, strnum_fields, msg)) {
+  if (!pb_encode_submessage(stream, Strnum_fields, msg)) {
     return false;
   }
   return true;
@@ -42,14 +42,14 @@ bool pb_decode_string(pb_istream_t *stream, const pb_field_t *field,
   return true;
 }
 
-void create_num(float number, uint32_t key, num *msg) {
-  *msg = num_init_zero;
+void create_num(float number, uint32_t key, Num *msg) {
+  *msg = Num_init_zero;
   msg->key = key;
   msg->value = number;
 }
 
-void create_str(const char *str, uint32_t key, strnum *msg) {
-  *msg = strnum_init_zero;
+void create_str(const char *str, uint32_t key, Strnum *msg) {
+  *msg = Strnum_init_zero;
   msg->key = key;
   if (str != NULL) {
     msg->str.funcs.encode = &pb_encode_string;
@@ -57,8 +57,8 @@ void create_str(const char *str, uint32_t key, strnum *msg) {
   }
 }
 
-void create_strunum(const char *str, float num, uint32_t key, strnum *msg) {
-  *msg = strnum_init_zero;
+void create_strnum(const char *str, float num, uint32_t key, Strnum *msg) {
+  *msg = Strnum_init_zero;
   msg->key = key;
   msg->num = num;
   if (str != NULL) {
@@ -67,94 +67,94 @@ void create_strunum(const char *str, float num, uint32_t key, strnum *msg) {
   }
 }
 
-void create_strnumlst(const strnum *strum, strnumlst *msg) {
-  *msg = strnumlst_init_zero;
+void create_strnumlst(const Strnum *strum, Strnumlist *msg) {
+  *msg = Strnumlist_init_zero;
   msg->str_nums.funcs.encode = &pb_encode_strnum;
   msg->str_nums.arg = (void *)strum;
 }
 
-bool serialize_num(const num &msg, uint8_t *buffer, size_t *buffer_size,
+bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
                    uint8_t type_id) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
-  bool status = pb_encode(&stream, num_fields, &msg);
+  bool status = pb_encode(&stream, Num_fields, &msg);
   if (status) {
     *buffer_size = stream.bytes_written + 1;
   }
   return status;
 }
 
-bool deserialize_num(num &msg, const uint8_t *buffer, size_t buffer_size) {
+bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
-  return pb_decode(&stream, num_fields, &msg);
+  return pb_decode(&stream, Num_fields, &msg);
 }
 
-bool serialize_str(const str &msg, uint8_t *buffer, size_t *buffer_size,
+bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
                    uint8_t type_id) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
-  bool status = pb_encode(&stream, str_fields, &msg);
+  bool status = pb_encode(&stream, Str_fields, &msg);
   if (status) {
     *buffer_size = stream.bytes_written + 1;
   }
   return status;
 }
 
-bool deserialize_str(str &msg, const uint8_t *buffer, size_t buffer_size) {
-  msg = str_init_zero;
+bool deserialize_str(Str &msg, const uint8_t *buffer, size_t buffer_size) {
+  msg = Str_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
-  return pb_decode(&stream, str_fields, &msg);
+  return pb_decode(&stream, Str_fields, &msg);
 }
 
-void free_str(str &msg) {
+void free_str(Str &msg) {
   if (msg.value.arg) {
     free(msg.value.arg);
     msg.value.arg = NULL;
   }
 }
 
-bool serialize_strnum(strnum &msg, uint8_t *buffer, size_t *buffer_size,
+bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
                       uint8_t type_id) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
-  bool status = pb_encode(&stream, strnum_fields, &msg);
+  bool status = pb_encode(&stream, Strnum_fields, &msg);
   if (status) {
     *buffer_size = stream.bytes_written + 1;
   }
   return status;
 }
 
-bool deserialize_strnum(strnum &msg, const uint8_t *buffer,
+bool deserialize_strnum(Strnum &msg, const uint8_t *buffer,
                         size_t buffer_size) {
-  msg = strnum_init_zero;
+  msg = Strnum_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   msg.str.funcs.decode = &pb_decode_string;
 
-  return (pb_decode(&stream, strnum_fields, &msg));
+  return (pb_decode(&stream, Strnum_fields, &msg));
 }
 
-void free_strnum(strnum &msg) {
+void free_strnum(Strnum &msg) {
   if (msg.str.arg) {
     free(msg.str.arg);
     msg.str.arg = NULL;
   }
 }
 
-bool serialize_strnumlst(const strnumlst *msg, uint8_t *buffer,
+bool serialize_strnumlst(const Strnumlist *msg, uint8_t *buffer,
                          size_t *buffer_size, uint8_t type_id) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
-  bool status = pb_encode(&stream, strnumlst_fields, msg);
+  bool status = pb_encode(&stream, Strnumlist_fields, msg);
   if (status) {
     *buffer_size = stream.bytes_written + 1;
   }
   return status;
 }
 
-bool deserialize_strnumlst(strnumlst &msg, const uint8_t *buffer,
+bool deserialize_strnumlst(Strnumlist &msg, const uint8_t *buffer,
                            size_t buffer_size) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
-  return pb_decode(&stream, strnumlst_fields, &msg);
+  return pb_decode(&stream, Strnumlist_fields, &msg);
 }
 
 /*

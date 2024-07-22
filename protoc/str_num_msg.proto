@@ -1,31 +1,31 @@
 syntax = "proto3";
 
-message num {
+message Num {
   uint32 key = 1;
   float value = 2;
 }
 
-message numlst {
-  repeated num numbers = 1;
+message Numlist {
+  repeated Num numbers = 1;
 }
 
-message str {
+message Str {
   uint32 key = 1;
   string value = 2;
 }
 
-message strlst {
-  repeated string str = 1;
+message Strlist {
+  repeated string Str = 1;
 }
 
-message strnum {
+message Strnum {
   uint32 key = 1;
   string str = 2;
   float num = 3;
 }
 
-message strnumlst {
-  repeated strnum str_nums = 1;
+message Strnumlist {
+  repeated Strnum str_nums = 1;
 }
 
 

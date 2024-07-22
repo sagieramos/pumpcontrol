@@ -19,7 +19,7 @@ void void_action(uint8_t *data, size_t len) {
 }
 
 void receive_strnum(uint8_t *data, size_t len) {
-  strnum msg;
+  Strnum msg;
   if (deserialize_strnum(msg, data, len)) {
     DEBUG_SERIAL_PRINTF("Received string: %s\n", msg.str);
     DEBUG_SERIAL_PRINTF("Received number: %f\n", msg.num);
@@ -30,7 +30,7 @@ void receive_strnum(uint8_t *data, size_t len) {
 }
 
 void receive_str(uint8_t *data, size_t len) {
-  str msg;
+  Str msg;
   if (deserialize_str(msg, data, len)) {
     DEBUG_SERIAL_PRINTF("Received string: %s\n", msg.value);
     DEBUG_SERIAL_PRINTF("Received key: %u\n", msg.key);
@@ -41,7 +41,7 @@ void receive_str(uint8_t *data, size_t len) {
 
 // void receive_num(uint8_t *data, size_t len)
 void receive_single_config(uint8_t *data, size_t len) {
-  num msg;
+  Num msg;
   if (!deserialize_num(msg, data, len)) {
     return;
   }

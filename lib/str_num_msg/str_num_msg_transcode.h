@@ -4,37 +4,37 @@
 #include "./protoc/str_num_msg.pb.h"
 
 /**
- * @brief Initializes a `num` message with a float value and a key.
+ * @brief Initializes a `Num` message with a float value and a key.
  *
- * This function sets up a `num` message structure with the provided float value
+ * This function sets up a `Num` message structure with the provided float value
  * and key. The message is initialized to zero before setting these values.
  *
- * @param number  The float value to be assigned to the `num` message.
- * @param key     The key to be assigned to the `num` message.
- * @param msg     A pointer to the `num` message structure to be initialized.
+ * @param Number  The float value to be assigned to the `Num` message.
+ * @param key     The key to be assigned to the `Num` message.
+ * @param msg     A pointer to the `Num` message structure to be initialized.
  *
- * @note The `msg` structure is first zeroed out using `num_init_zero` before
+ * @note The `msg` structure is first zeroed out using `Num_init_zero` before
  * setting the `key` and `value`.
  */
-void create_num(float number, uint32_t key, num *msg);
+void create_num(float Number, uint32_t key, Num *msg);
 
 /**
- * @brief Initializes a `strnum` message with a string value and a key.
+ * @brief Initializes a `StrNum` message with a string value and a key.
  *
- * This function sets up a `strnum` message structure with the provided string
+ * This function sets up a `StrNum` message structure with the provided string
  * value and key. The message is initialized to zero before setting these
  * values. If the string is not NULL, it sets up the necessary encoding function
  * and argument for Protocol Buffers.
  *
- * @param str     The string value to be assigned to the `strnum` message.
- * @param key     The key to be assigned to the `strnum` message.
- * @param msg     A pointer to the `strnum` message structure to be initialized.
+ * @param str     The string value to be assigned to the `StrNum` message.
+ * @param key     The key to be assigned to the `StrNum` message.
+ * @param msg     A pointer to the `StrNum` message structure to be initialized.
  *
- * @note The `msg` structure is first zeroed out using `strnum_init_zero` before
+ * @note The `msg` structure is first zeroed out using `StrNum_init_zero` before
  * setting the `key` and `str` values. If the string is not NULL, it prepares
  * the Protocol Buffers encoding function and argument.
  */
-void create_str(const char *str, uint32_t key, strnum *msg);
+void create_str(const char *str, uint32_t key, Strnum *msg);
 
 /**
  * @brief Serializes a `str` message into a buffer with a type ID.
@@ -56,7 +56,7 @@ void create_str(const char *str, uint32_t key, strnum *msg);
  *
  * @return `true` if serialization is successful, `false` otherwise.
  */
-bool serialize_str(const str &msg, uint8_t *buffer, size_t *buffer_size,
+bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
                    uint8_t type_id);
 
 /**
@@ -77,7 +77,7 @@ bool serialize_str(const str &msg, uint8_t *buffer, size_t *buffer_size,
  *
  * @return `true` if deserialization is successful, `false` otherwise.
  */
-bool deserialize_str(str &msg, const uint8_t *buffer, size_t buffer_size);
+bool deserialize_str(Str &msg, const uint8_t *buffer, size_t buffer_size);
 
 /**
  * @brief Frees the dynamically allocated memory in a `str` message.
@@ -88,29 +88,29 @@ bool deserialize_str(str &msg, const uint8_t *buffer, size_t buffer_size);
  *
  * @param msg  A reference to the `str` message whose memory needs to be freed.
  */
-void free_str(str &msg);
+void free_str(Str &msg);
 
 /**
- * @brief Initializes a `strnum` message with the provided string, float, and
+ * @brief Initializes a `StrNum` message with the provided string, float, and
  * key.
  *
- * @param str Pointer to the string value for the `strnum` message. Can be NULL.
- * @param num The floating-point number for the `strnum` message.
- * @param key The unique key associated with this `strnum` message.
- * @param msg Pointer to the `strnum` structure to be initialized.
+ * @param str Pointer to the string value for the `StrNum` message. Can be NULL.
+ * @param Num The floating-point Number for the `StrNum` message.
+ * @param key The unique key associated with this `StrNum` message.
+ * @param msg Pointer to the `StrNum` structure to be initialized.
  */
-void create_strunum(const char *str, float num, uint32_t key, strnum *msg);
+void create_strnum(const char *str, float Num, uint32_t key, Strnum *msg);
 
 /**
- * @brief Serializes a `num` message into a buffer with a type ID.
+ * @brief Serializes a `Num` message into a buffer with a type ID.
  *
- * This function encodes a `num` message into a buffer, prepending the buffer
+ * This function encodes a `Num` message into a buffer, prepending the buffer
  * with a type ID. The encoding uses Protocol Buffers (protobuf) to serialize
  * the message fields. The buffer size is updated to reflect the total size of
  * the serialized message including the type ID. The function returns a boolean
  * indicating the success or failure of the encoding operation.
  *
- * @param msg          A reference to the `num` message to be serialized.
+ * @param msg          A reference to the `Num` message to be serialized.
  * @param buffer       A pointer to the buffer where the serialized data will be
  * written.
  * @param buffer_size  A pointer to the size of the buffer. On entry, it should
@@ -121,19 +121,19 @@ void create_strunum(const char *str, float num, uint32_t key, strnum *msg);
  *
  * @return `true` if serialization is successful, `false` otherwise.
  */
-bool serialize_num(const num &msg, uint8_t *buffer, size_t *buffer_size,
+bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
                    uint8_t type_id);
 
 /**
- * @brief Deserializes a `num` message from a buffer.
+ * @brief Deserializes a `Num` message from a buffer.
  *
- * This function decodes a `num` message from a buffer. It assumes that the
- * buffer starts with a type ID followed by the serialized `num` message data.
+ * This function decodes a `Num` message from a buffer. It assumes that the
+ * buffer starts with a type ID followed by the serialized `Num` message data.
  * The type ID is ignored, and only the message data is used for
  * deserialization. The function returns a boolean indicating the success or
  * failure of the decoding operation.
  *
- * @param msg          A reference to the `num` message structure where the
+ * @param msg          A reference to the `Num` message structure where the
  * deserialized data will be stored.
  * @param buffer       A pointer to the buffer containing the serialized message
  * data with a type ID prefix.
@@ -142,22 +142,22 @@ bool serialize_num(const num &msg, uint8_t *buffer, size_t *buffer_size,
  *
  * @return `true` if deserialization is successful, `false` otherwise.
  */
-bool deserialize_num(num &msg, const uint8_t *buffer, size_t buffer_size);
+bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size);
 
 /**
- * @brief Initializes a `strnumlst` message by associating it with a `strnum`
+ * @brief Initializes a `StrNumlst` message by associating it with a `StrNum`
  * message.
  *
- * @param strum Pointer to the `strnum` message to include in the `strnumlst`.
- * @param msg Pointer to the `strnumlst` structure to be initialized.
+ * @param strum Pointer to the `StrNum` message to include in the `StrNumlst`.
+ * @param msg Pointer to the `StrNumlst` structure to be initialized.
  */
-void create_strnumlst(const strnum *strum, strnumlst *msg);
+void create_strnumlst(const Strnum *strum, Strnumlist *msg);
 
 /**
- * @brief Serializes a `strnum` message into a byte buffer with a type
+ * @brief Serializes a `StrNum` message into a byte buffer with a type
  * identifier.
  *
- * @param msg Reference to the `strnum` message to be serialized.
+ * @param msg Reference to the `StrNum` message to be serialized.
  * @param buffer Pointer to the buffer where the serialized data will be
  * written.
  * @param buffer_size Pointer to a variable containing the size of the buffer,
@@ -165,14 +165,14 @@ void create_strnumlst(const strnum *strum, strnumlst *msg);
  * @param type_id Type identifier to prepend to the serialized message.
  * @return true if serialization is successful, false otherwise.
  */
-bool serialize_strnum(strnum &msg, uint8_t *buffer, size_t *buffer_size,
+bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
                       uint8_t type_id);
 
 /**
- * @brief Serializes a `strnumlst` message into a byte buffer with a type
+ * @brief Serializes a `StrNumlst` message into a byte buffer with a type
  * identifier.
  *
- * @param msg Pointer to the `strnumlst` message to serialize.
+ * @param msg Pointer to the `StrNumlst` message to serialize.
  * @param buffer Pointer to the buffer where the serialized data will be
  * written.
  * @param buffer_size Pointer to the size of the buffer; it will be updated with
@@ -181,44 +181,44 @@ bool serialize_strnum(strnum &msg, uint8_t *buffer, size_t *buffer_size,
  * indicating the type of message being serialized.
  * @return true if serialization was successful, false otherwise.
  */
-bool serialize_strnumlst(const strnumlst *msg, uint8_t *buffer,
+bool serialize_strnumlst(const Strnumlist *msg, uint8_t *buffer,
                          size_t *buffer_size, uint8_t type_id);
 
 /**
- * @brief Deserializes a `strnum` message from a byte buffer.
+ * @brief Deserializes a `StrNum` message from a byte buffer.
  *
- * @param msg Reference to the `strnum` structure where the deserialized data
+ * @param msg Reference to the `StrNum` structure where the deserialized data
  * will be stored.
- * @param buffer Pointer to the byte buffer containing the serialized `strnum`
+ * @param buffer Pointer to the byte buffer containing the serialized `StrNum`
  * message.
  * @param buffer_size Size of the buffer in bytes.
  * @return true if deserialization is successful, false otherwise.
  */
-bool deserialize_strnum(strnum &msg, const uint8_t *buffer, size_t buffer_size);
+bool deserialize_strnum(Strnum &msg, const uint8_t *buffer, size_t buffer_size);
 
 /**
- * @brief Deserializes a `strnumlst` message from a byte buffer.
+ * @brief Deserializes a `StrNumlst` message from a byte buffer.
  *
- * @param msg Reference to the `strnumlst` structure where the deserialized data
+ * @param msg Reference to the `StrNumlst` structure where the deserialized data
  * will be stored.
  * @param buffer Pointer to the byte buffer containing the serialized
- * `strnumlst` message.
+ * `StrNumlst` message.
  * @param buffer_size Size of the buffer in bytes.
  * @return true if deserialization is successful, false otherwise.
  */
-bool deserialize_strnumlst(strnumlst &msg, const uint8_t *buffer,
+bool deserialize_strnumlst(Strnumlist &msg, const uint8_t *buffer,
                            size_t buffer_size);
 
 /**
- * @brief Frees dynamically allocated memory in a `strnum` message.
+ * @brief Frees dynamically allocated memory in a `StrNum` message.
  *
- * This function frees any dynamically allocated memory within a `strnum`
+ * This function frees any dynamically allocated memory within a `StrNum`
  * message, such as the memory allocated for the string field. It should be
- * called to prevent memory leaks when the `strnum` message is no longer needed.
+ * called to prevent memory leaks when the `StrNum` message is no longer needed.
  *
- * @param msg Reference to the `strnum` message whose dynamically allocated
+ * @param msg Reference to the `StrNum` message whose dynamically allocated
  * memory needs to be freed.
  */
-void free_strnum(strnum &msg);
+void free_strnum(Strnum &msg);
 
 #endif // STR_NUM_MSG_TRANSCODE_H

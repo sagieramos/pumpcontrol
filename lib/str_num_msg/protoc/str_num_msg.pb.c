@@ -6,22 +6,22 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
-PB_BIND(num, num, AUTO)
+PB_BIND(Num, Num, AUTO)
 
 
-PB_BIND(numlst, numlst, AUTO)
+PB_BIND(Numlist, Numlist, AUTO)
 
 
-PB_BIND(str, str, AUTO)
+PB_BIND(Str, Str, AUTO)
 
 
-PB_BIND(strlst, strlst, AUTO)
+PB_BIND(Strlist, Strlist, AUTO)
 
 
-PB_BIND(strnum, strnum, AUTO)
+PB_BIND(Strnum, Strnum, AUTO)
 
 
-PB_BIND(strnumlst, strnumlst, AUTO)
+PB_BIND(Strnumlist, Strnumlist, AUTO)
 
 
 
