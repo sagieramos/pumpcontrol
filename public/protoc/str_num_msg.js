@@ -6,473 +6,454 @@
 /* eslint-disable camelcase */
 
 // Remember to `npm install --save protocol-buffers-encodings`
-var encodings = require('protocol-buffers-encodings')
-var varint = encodings.varint
-var skip = encodings.skip
+import encodings from 'protocol-buffers-encodings';
+const { varint, skip } = encodings;
 
-var num = exports.num = {
+export const Num = {
   buffer: true,
   encodingLength: null,
   encode: null,
-  decode: null
-}
+  decode: null,
+};
 
-var numlst = exports.numlst = {
+export const Numlist = {
   buffer: true,
   encodingLength: null,
   encode: null,
-  decode: null
-}
+  decode: null,
+};
 
-var str = exports.str = {
+export const Str = {
   buffer: true,
   encodingLength: null,
   encode: null,
-  decode: null
-}
+  decode: null,
+};
 
-var strlst = exports.strlst = {
+export const Strlist = {
   buffer: true,
   encodingLength: null,
   encode: null,
-  decode: null
-}
+  decode: null,
+};
 
-var strnum = exports.strnum = {
+export const Strnum = {
   buffer: true,
   encodingLength: null,
   encode: null,
-  decode: null
-}
+  decode: null,
+};
 
-var strnumlst = exports.strnumlst = {
+export const Strnumlist = {
   buffer: true,
   encodingLength: null,
   encode: null,
-  decode: null
-}
+  decode: null,
+};
 
-definenum()
-definenumlst()
-definestr()
-definestrlst()
-definestrnum()
-definestrnumlst()
+defineNum();
+defineNumlist();
+defineStr();
+defineStrlist();
+defineStrnum();
+defineStrnumlist();
 
-function definenum () {
-  num.encodingLength = encodingLength
-  num.encode = encode
-  num.decode = decode
+function defineNum() {
+  Num.encodingLength = encodingLength;
+  Num.encode = encode;
+  Num.decode = decode;
 
-  function encodingLength (obj) {
-    var length = 0
+  function encodingLength(obj) {
+    let length = 0;
     if (defined(obj.key)) {
-      var len = encodings.varint.encodingLength(obj.key)
-      length += 1 + len
+      const len = varint.encodingLength(obj.key);
+      length += 1 + len;
     }
     if (defined(obj.value)) {
-      var len = encodings.float.encodingLength(obj.value)
-      length += 1 + len
+      const len = encodings.float.encodingLength(obj.value);
+      length += 1 + len;
     }
-    return length
+    return length;
   }
 
-  function encode (obj, buf, offset) {
-    if (!offset) offset = 0
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
-    var oldOffset = offset
+  function encode(obj, buf, offset = 0) {
+    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+    const oldOffset = offset;
     if (defined(obj.key)) {
-      buf[offset++] = 8
-      encodings.varint.encode(obj.key, buf, offset)
-      offset += encodings.varint.encode.bytes
+      buf[offset++] = 8;
+      varint.encode(obj.key, buf, offset);
+      offset += varint.encode.bytes;
     }
     if (defined(obj.value)) {
-      buf[offset++] = 21
-      encodings.float.encode(obj.value, buf, offset)
-      offset += encodings.float.encode.bytes
+      buf[offset++] = 21;
+      encodings.float.encode(obj.value, buf, offset);
+      offset += encodings.float.encode.bytes;
     }
-    encode.bytes = offset - oldOffset
-    return buf
+    encode.bytes = offset - oldOffset;
+    return buf;
   }
 
-  function decode (buf, offset, end) {
-    if (!offset) offset = 0
-    if (!end) end = buf.length
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
-    var oldOffset = offset
-    var obj = {
+  function decode(buf, offset = 0, end = buf.length) {
+    if (!(end <= buf.length && offset <= buf.length)) throw new Error('Decoded message is not valid');
+    const oldOffset = offset;
+    const obj = {
       key: 0,
-      value: 0
-    }
+      value: 0,
+    };
     while (true) {
       if (end <= offset) {
-        decode.bytes = offset - oldOffset
-        return obj
+        decode.bytes = offset - oldOffset;
+        return obj;
       }
-      var prefix = varint.decode(buf, offset)
-      offset += varint.decode.bytes
-      var tag = prefix >> 3
+      const prefix = varint.decode(buf, offset);
+      offset += varint.decode.bytes;
+      const tag = prefix >> 3;
       switch (tag) {
         case 1:
-        obj.key = encodings.varint.decode(buf, offset)
-        offset += encodings.varint.decode.bytes
-        break
+          obj.key = varint.decode(buf, offset);
+          offset += varint.decode.bytes;
+          break;
         case 2:
-        obj.value = encodings.float.decode(buf, offset)
-        offset += encodings.float.decode.bytes
-        break
+          obj.value = encodings.float.decode(buf, offset);
+          offset += encodings.float.decode.bytes;
+          break;
         default:
-        offset = skip(prefix & 7, buf, offset)
+          offset = skip(prefix & 7, buf, offset);
       }
     }
   }
 }
 
-function definenumlst () {
-  numlst.encodingLength = encodingLength
-  numlst.encode = encode
-  numlst.decode = decode
+function defineNumlist() {
+  Numlist.encodingLength = encodingLength;
+  Numlist.encode = encode;
+  Numlist.decode = decode;
 
-  function encodingLength (obj) {
-    var length = 0
+  function encodingLength(obj) {
+    let length = 0;
     if (defined(obj.numbers)) {
-      for (var i = 0; i < obj.numbers.length; i++) {
-        if (!defined(obj.numbers[i])) continue
-        var len = num.encodingLength(obj.numbers[i])
-        length += varint.encodingLength(len)
-        length += 1 + len
+      for (const number of obj.numbers) {
+        if (!defined(number)) continue;
+        const len = Num.encodingLength(number);
+        length += varint.encodingLength(len);
+        length += 1 + len;
       }
     }
-    return length
+    return length;
   }
 
-  function encode (obj, buf, offset) {
-    if (!offset) offset = 0
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
-    var oldOffset = offset
+  function encode(obj, buf, offset = 0) {
+    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+    const oldOffset = offset;
     if (defined(obj.numbers)) {
-      for (var i = 0; i < obj.numbers.length; i++) {
-        if (!defined(obj.numbers[i])) continue
-        buf[offset++] = 10
-        varint.encode(num.encodingLength(obj.numbers[i]), buf, offset)
-        offset += varint.encode.bytes
-        num.encode(obj.numbers[i], buf, offset)
-        offset += num.encode.bytes
+      for (const number of obj.numbers) {
+        if (!defined(number)) continue;
+        buf[offset++] = 10;
+        varint.encode(Num.encodingLength(number), buf, offset);
+        offset += varint.encode.bytes;
+        Num.encode(number, buf, offset);
+        offset += Num.encode.bytes;
       }
     }
-    encode.bytes = offset - oldOffset
-    return buf
+    encode.bytes = offset - oldOffset;
+    return buf;
   }
 
-  function decode (buf, offset, end) {
-    if (!offset) offset = 0
-    if (!end) end = buf.length
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
-    var oldOffset = offset
-    var obj = {
-      numbers: []
-    }
+  function decode(buf, offset = 0, end = buf.length) {
+    if (!(end <= buf.length && offset <= buf.length)) throw new Error('Decoded message is not valid');
+    const oldOffset = offset;
+    const obj = {
+      numbers: [],
+    };
     while (true) {
       if (end <= offset) {
-        decode.bytes = offset - oldOffset
-        return obj
+        decode.bytes = offset - oldOffset;
+        return obj;
       }
-      var prefix = varint.decode(buf, offset)
-      offset += varint.decode.bytes
-      var tag = prefix >> 3
+      const prefix = varint.decode(buf, offset);
+      offset += varint.decode.bytes;
+      const tag = prefix >> 3;
       switch (tag) {
         case 1:
-        var len = varint.decode(buf, offset)
-        offset += varint.decode.bytes
-        obj.numbers.push(num.decode(buf, offset, offset + len))
-        offset += num.decode.bytes
-        break
+          const len = varint.decode(buf, offset);
+          offset += varint.decode.bytes;
+          obj.numbers.push(Num.decode(buf, offset, offset + len));
+          offset += Num.decode.bytes;
+          break;
         default:
-        offset = skip(prefix & 7, buf, offset)
+          offset = skip(prefix & 7, buf, offset);
       }
     }
   }
 }
 
-function definestr () {
-  str.encodingLength = encodingLength
-  str.encode = encode
-  str.decode = decode
+function defineStr() {
+  Str.encodingLength = encodingLength;
+  Str.encode = encode;
+  Str.decode = decode;
 
-  function encodingLength (obj) {
-    var length = 0
+  function encodingLength(obj) {
+    let length = 0;
     if (defined(obj.key)) {
-      var len = encodings.varint.encodingLength(obj.key)
-      length += 1 + len
+      const len = varint.encodingLength(obj.key);
+      length += 1 + len;
     }
     if (defined(obj.value)) {
-      var len = encodings.string.encodingLength(obj.value)
-      length += 1 + len
+      const len = encodings.string.encodingLength(obj.value);
+      length += 1 + len;
     }
-    return length
+    return length;
   }
 
-  function encode (obj, buf, offset) {
-    if (!offset) offset = 0
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
-    var oldOffset = offset
+  function encode(obj, buf, offset = 0) {
+    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+    const oldOffset = offset;
     if (defined(obj.key)) {
-      buf[offset++] = 8
-      encodings.varint.encode(obj.key, buf, offset)
-      offset += encodings.varint.encode.bytes
+      buf[offset++] = 8;
+      varint.encode(obj.key, buf, offset);
+      offset += varint.encode.bytes;
     }
     if (defined(obj.value)) {
-      buf[offset++] = 18
-      encodings.string.encode(obj.value, buf, offset)
-      offset += encodings.string.encode.bytes
+      buf[offset++] = 18;
+      encodings.string.encode(obj.value, buf, offset);
+      offset += encodings.string.encode.bytes;
     }
-    encode.bytes = offset - oldOffset
-    return buf
+    encode.bytes = offset - oldOffset;
+    return buf;
   }
 
-  function decode (buf, offset, end) {
-    if (!offset) offset = 0
-    if (!end) end = buf.length
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
-    var oldOffset = offset
-    var obj = {
+  function decode(buf, offset = 0, end = buf.length) {
+    if (!(end <= buf.length && offset <= buf.length)) throw new Error('Decoded message is not valid');
+    const oldOffset = offset;
+    const obj = {
       key: 0,
-      value: ""
-    }
+      value: '',
+    };
     while (true) {
       if (end <= offset) {
-        decode.bytes = offset - oldOffset
-        return obj
+        decode.bytes = offset - oldOffset;
+        return obj;
       }
-      var prefix = varint.decode(buf, offset)
-      offset += varint.decode.bytes
-      var tag = prefix >> 3
+      const prefix = varint.decode(buf, offset);
+      offset += varint.decode.bytes;
+      const tag = prefix >> 3;
       switch (tag) {
         case 1:
-        obj.key = encodings.varint.decode(buf, offset)
-        offset += encodings.varint.decode.bytes
-        break
+          obj.key = varint.decode(buf, offset);
+          offset += varint.decode.bytes;
+          break;
         case 2:
-        obj.value = encodings.string.decode(buf, offset)
-        offset += encodings.string.decode.bytes
-        break
+          obj.value = encodings.string.decode(buf, offset);
+          offset += encodings.string.decode.bytes;
+          break;
         default:
-        offset = skip(prefix & 7, buf, offset)
+          offset = skip(prefix & 7, buf, offset);
       }
     }
   }
 }
 
-function definestrlst () {
-  strlst.encodingLength = encodingLength
-  strlst.encode = encode
-  strlst.decode = decode
+function defineStrlist() {
+  Strlist.encodingLength = encodingLength;
+  Strlist.encode = encode;
+  Strlist.decode = decode;
 
-  function encodingLength (obj) {
-    var length = 0
-    if (defined(obj.str)) {
-      for (var i = 0; i < obj.str.length; i++) {
-        if (!defined(obj.str[i])) continue
-        var len = encodings.string.encodingLength(obj.str[i])
-        length += 1 + len
+  function encodingLength(obj) {
+    let length = 0;
+    if (defined(obj.Str)) {
+      for (const str of obj.Str) {
+        if (!defined(str)) continue;
+        const len = encodings.string.encodingLength(str);
+        length += 1 + len;
       }
     }
-    return length
+    return length;
   }
 
-  function encode (obj, buf, offset) {
-    if (!offset) offset = 0
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
-    var oldOffset = offset
-    if (defined(obj.str)) {
-      for (var i = 0; i < obj.str.length; i++) {
-        if (!defined(obj.str[i])) continue
-        buf[offset++] = 10
-        encodings.string.encode(obj.str[i], buf, offset)
-        offset += encodings.string.encode.bytes
+  function encode(obj, buf, offset = 0) {
+    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+    const oldOffset = offset;
+    if (defined(obj.Str)) {
+      for (const str of obj.Str) {
+        if (!defined(str)) continue;
+        buf[offset++] = 10;
+        encodings.string.encode(str, buf, offset);
+        offset += encodings.string.encode.bytes;
       }
     }
-    encode.bytes = offset - oldOffset
-    return buf
+    encode.bytes = offset - oldOffset;
+    return buf;
   }
 
-  function decode (buf, offset, end) {
-    if (!offset) offset = 0
-    if (!end) end = buf.length
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
-    var oldOffset = offset
-    var obj = {
-      str: []
-    }
+  function decode(buf, offset = 0, end = buf.length) {
+    if (!(end <= buf.length && offset <= buf.length)) throw new Error('Decoded message is not valid');
+    const oldOffset = offset;
+    const obj = {
+      Str: [],
+    };
     while (true) {
       if (end <= offset) {
-        decode.bytes = offset - oldOffset
-        return obj
+        decode.bytes = offset - oldOffset;
+        return obj;
       }
-      var prefix = varint.decode(buf, offset)
-      offset += varint.decode.bytes
-      var tag = prefix >> 3
+      const prefix = varint.decode(buf, offset);
+      offset += varint.decode.bytes;
+      const tag = prefix >> 3;
       switch (tag) {
         case 1:
-        obj.str.push(encodings.string.decode(buf, offset))
-        offset += encodings.string.decode.bytes
-        break
+          obj.Str.push(encodings.string.decode(buf, offset));
+          offset += encodings.string.decode.bytes;
+          break;
         default:
-        offset = skip(prefix & 7, buf, offset)
+          offset = skip(prefix & 7, buf, offset);
       }
     }
   }
 }
 
-function definestrnum () {
-  strnum.encodingLength = encodingLength
-  strnum.encode = encode
-  strnum.decode = decode
+function defineStrnum() {
+  Strnum.encodingLength = encodingLength;
+  Strnum.encode = encode;
+  Strnum.decode = decode;
 
-  function encodingLength (obj) {
-    var length = 0
+  function encodingLength(obj) {
+    let length = 0;
     if (defined(obj.key)) {
-      var len = encodings.varint.encodingLength(obj.key)
-      length += 1 + len
+      const len = varint.encodingLength(obj.key);
+      length += 1 + len;
     }
     if (defined(obj.str)) {
-      var len = encodings.string.encodingLength(obj.str)
-      length += 1 + len
+      const len = encodings.string.encodingLength(obj.str);
+      length += 1 + len;
     }
     if (defined(obj.num)) {
-      var len = encodings.float.encodingLength(obj.num)
-      length += 1 + len
+      const len = encodings.float.encodingLength(obj.num);
+      length += 1 + len;
     }
-    return length
+    return length;
   }
 
-  function encode (obj, buf, offset) {
-    if (!offset) offset = 0
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
-    var oldOffset = offset
+  function encode(obj, buf, offset = 0) {
+    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+    const oldOffset = offset;
     if (defined(obj.key)) {
-      buf[offset++] = 8
-      encodings.varint.encode(obj.key, buf, offset)
-      offset += encodings.varint.encode.bytes
+      buf[offset++] = 8;
+      varint.encode(obj.key, buf, offset);
+      offset += varint.encode.bytes;
     }
     if (defined(obj.str)) {
-      buf[offset++] = 18
-      encodings.string.encode(obj.str, buf, offset)
-      offset += encodings.string.encode.bytes
+      buf[offset++] = 18;
+      encodings.string.encode(obj.str, buf, offset);
+      offset += encodings.string.encode.bytes;
     }
     if (defined(obj.num)) {
-      buf[offset++] = 29
-      encodings.float.encode(obj.num, buf, offset)
-      offset += encodings.float.encode.bytes
+      buf[offset++] = 29;
+      encodings.float.encode(obj.num, buf, offset);
+      offset += encodings.float.encode.bytes;
     }
-    encode.bytes = offset - oldOffset
-    return buf
+    encode.bytes = offset - oldOffset;
+    return buf;
   }
 
-  function decode (buf, offset, end) {
-    if (!offset) offset = 0
-    if (!end) end = buf.length
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
-    var oldOffset = offset
-    var obj = {
+  function decode(buf, offset = 0, end = buf.length) {
+    if (!(end <= buf.length && offset <= buf.length)) throw new Error('Decoded message is not valid');
+    const oldOffset = offset;
+    const obj = {
       key: 0,
-      str: "",
-      num: 0
-    }
+      str: '',
+      num: 0,
+    };
     while (true) {
       if (end <= offset) {
-        decode.bytes = offset - oldOffset
-        return obj
+        decode.bytes = offset - oldOffset;
+        return obj;
       }
-      var prefix = varint.decode(buf, offset)
-      offset += varint.decode.bytes
-      var tag = prefix >> 3
+      const prefix = varint.decode(buf, offset);
+      offset += varint.decode.bytes;
+      const tag = prefix >> 3;
       switch (tag) {
         case 1:
-        obj.key = encodings.varint.decode(buf, offset)
-        offset += encodings.varint.decode.bytes
-        break
+          obj.key = varint.decode(buf, offset);
+          offset += varint.decode.bytes;
+          break;
         case 2:
-        obj.str = encodings.string.decode(buf, offset)
-        offset += encodings.string.decode.bytes
-        break
+          obj.str = encodings.string.decode(buf, offset);
+          offset += encodings.string.decode.bytes;
+          break;
         case 3:
-        obj.num = encodings.float.decode(buf, offset)
-        offset += encodings.float.decode.bytes
-        break
+          obj.num = encodings.float.decode(buf, offset);
+          offset += encodings.float.decode.bytes;
+          break;
         default:
-        offset = skip(prefix & 7, buf, offset)
+          offset = skip(prefix & 7, buf, offset);
       }
     }
   }
 }
 
-function definestrnumlst () {
-  strnumlst.encodingLength = encodingLength
-  strnumlst.encode = encode
-  strnumlst.decode = decode
+function defineStrnumlist() {
+  Strnumlist.encodingLength = encodingLength;
+  Strnumlist.encode = encode;
+  Strnumlist.decode = decode;
 
-  function encodingLength (obj) {
-    var length = 0
-    if (defined(obj.str_nums)) {
-      for (var i = 0; i < obj.str_nums.length; i++) {
-        if (!defined(obj.str_nums[i])) continue
-        var len = strnum.encodingLength(obj.str_nums[i])
-        length += varint.encodingLength(len)
-        length += 1 + len
+  function encodingLength(obj) {
+    let length = 0;
+    if (defined(obj.strnum)) {
+      for (const strnum of obj.strnum) {
+        if (!defined(strnum)) continue;
+        const len = Strnum.encodingLength(strnum);
+        length += varint.encodingLength(len);
+        length += 1 + len;
       }
     }
-    return length
+    return length;
   }
 
-  function encode (obj, buf, offset) {
-    if (!offset) offset = 0
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj))
-    var oldOffset = offset
-    if (defined(obj.str_nums)) {
-      for (var i = 0; i < obj.str_nums.length; i++) {
-        if (!defined(obj.str_nums[i])) continue
-        buf[offset++] = 10
-        varint.encode(strnum.encodingLength(obj.str_nums[i]), buf, offset)
-        offset += varint.encode.bytes
-        strnum.encode(obj.str_nums[i], buf, offset)
-        offset += strnum.encode.bytes
+  function encode(obj, buf, offset = 0) {
+    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+    const oldOffset = offset;
+    if (defined(obj.strnum)) {
+      for (const strnum of obj.strnum) {
+        if (!defined(strnum)) continue;
+        buf[offset++] = 10;
+        varint.encode(Strnum.encodingLength(strnum), buf, offset);
+        offset += varint.encode.bytes;
+        Strnum.encode(strnum, buf, offset);
+        offset += Strnum.encode.bytes;
       }
     }
-    encode.bytes = offset - oldOffset
-    return buf
+    encode.bytes = offset - oldOffset;
+    return buf;
   }
 
-  function decode (buf, offset, end) {
-    if (!offset) offset = 0
-    if (!end) end = buf.length
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid")
-    var oldOffset = offset
-    var obj = {
-      str_nums: []
-    }
+  function decode(buf, offset = 0, end = buf.length) {
+    if (!(end <= buf.length && offset <= buf.length)) throw new Error('Decoded message is not valid');
+    const oldOffset = offset;
+    const obj = {
+      strnum: [],
+    };
     while (true) {
       if (end <= offset) {
-        decode.bytes = offset - oldOffset
-        return obj
+        decode.bytes = offset - oldOffset;
+        return obj;
       }
-      var prefix = varint.decode(buf, offset)
-      offset += varint.decode.bytes
-      var tag = prefix >> 3
+      const prefix = varint.decode(buf, offset);
+      offset += varint.decode.bytes;
+      const tag = prefix >> 3;
       switch (tag) {
         case 1:
-        var len = varint.decode(buf, offset)
-        offset += varint.decode.bytes
-        obj.str_nums.push(strnum.decode(buf, offset, offset + len))
-        offset += strnum.decode.bytes
-        break
+          const len = varint.decode(buf, offset);
+          offset += varint.decode.bytes;
+          obj.strnum.push(Strnum.decode(buf, offset, offset + len));
+          offset += Strnum.decode.bytes;
+          break;
         default:
-        offset = skip(prefix & 7, buf, offset)
+          offset = skip(prefix & 7, buf, offset);
       }
     }
   }
 }
 
-function defined (val) {
-  return val !== null && val !== undefined && (typeof val !== 'number' || !isNaN(val))
+function defined(val) {
+  return val !== null && val !== undefined && (typeof val !== 'number' || !isNaN(val));
 }
