@@ -75,12 +75,26 @@ void receive_single_config(uint8_t *data, size_t len) {
   }
 }
 
+void recieve_pump_time_range(uint8_t *data, size_t len) {
+  pump_TimeRange time_range;
+  if (deserialize_time_range(data, len, time_range)) {
+    pump_ControlData control_data = get_current_control_data();
+    control_data.time_range = time_range;
+    store_pump_time_range();
+
+    if (ws.count() > 0) {
+      ws.binaryAll(data, len);
+    }
+  }
+}
+
 MsgHandler receive_ptr[] = {
-    void_action,           // Placeholder for index 0
-    receive_single_config, // Handle single configuration updates
-    receive_str,           // Handle string messages
-    receive_strnum,        // Handle string and number messages
-    receive_control_data   // Handle control data
+    void_action,            // Placeholder for index 0
+    receive_single_config,  // Handle single configuration updates
+    receive_str,            // Handle string messages
+    receive_strnum,         // Handle string and number messages
+    receive_control_data,   // Handle control data
+    recieve_pump_time_range // Handle pump time range
 };
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len) {

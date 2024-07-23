@@ -24,8 +24,9 @@ typedef void (*MsgHandler)(uint8_t *, size_t);
  * - `receive_ptr[1]` handles single configuration updates
  * (`receive_single_config`).
  * - `receive_ptr[2]` handles string messages (`receive_str`).
- * - `receive_ptr[3]` handles string and number messages (`receive_Strnum`).
+ * - `receive_ptr[3]` handles string and number messages (`receive_strnum`).
  * - `receive_ptr[4]` handles control data (`receive_control_data`).
+ * - `receive_ptr[5]` handles pump time range data (`receive_pump_time_range`).
  */
 extern MsgHandler receive_ptr[];
 
@@ -81,7 +82,7 @@ constexpr uint8_t STR_TYPE_ID = 0x02;
  * @brief Type ID for string and number messages.
  *
  * This constant represents the type ID used for messages that contain both
- * strings and numbers. It is mapped to the `receive_Strnum` function in the
+ * strings and numbers. It is mapped to the `receive_strnum` function in the
  * `receive_ptr` array.
  *
  * usage:
@@ -93,7 +94,6 @@ constexpr uint8_t STR_TYPE_ID = 0x02;
  * @note This type ID is used for messages that contain both strings and
  * numbers. It is different from the `STR_TYPE_ID` used for messages that
  * contain only strings.
- *
  */
 constexpr uint8_t STR_NUM_TYPE_ID = 0x03;
 
@@ -112,5 +112,21 @@ constexpr uint8_t STR_NUM_TYPE_ID = 0x03;
  * `receive_ptr` array.
  */
 constexpr uint8_t CONTROL_DATA_TYPE_ID = 0x04;
+
+/**
+ * @def PUMP_TIME_RANGE_TYPE_ID
+ * @brief Type ID for pump time range messages.
+ *
+ * This constant represents the type ID used for messages that contain pump
+ * time range data. It is mapped to the `receive_pump_time_range` function in
+ * the `receive_ptr` array.
+ *
+ * usage:
+ * - This type ID should be used when serializing messages that contain pump
+ * time range data.
+ * - It helps in routing the messages to appropriate handlers based on their
+ * type.
+ */
+constexpr uint8_t PUMP_TIME_RANGE_TYPE_ID = 0x05;
 
 #endif // TYPE_ID_H

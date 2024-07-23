@@ -106,11 +106,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     size_t client_id = client->id();
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
                         client_id);
-
-    // test_transcode_doId(client_id);
-
-    // send_ctr_data(client_id);
-    send_control_data(client_id);
+    receive_msg_and_perform_action(data, len);
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
 
