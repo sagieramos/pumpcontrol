@@ -1,13 +1,13 @@
 #include "main.h"
+#include "pump_control.h"
 
 void stackMonitor(void *pvParameter) {
   TaskHandle_t taskHandles[] = {dnsTaskHandle, blinkTaskHandle, runMachineTask};
   const int numTasks = sizeof(taskHandles) / sizeof(TaskHandle_t);
 
   for (;;) {
-    DEBUG_SERIAL_PRINTLN("Stack Monitor:");
+    DEBUG_SERIAL_PRINTF("STACK MONITOR: Time: %lu ms\n", getCurrentTimeMs());
 
-    // Iterate through all task handles
     for (int i = 0; i < numTasks; i++) {
       TaskHandle_t handle = taskHandles[i];
       const char *taskName = pcTaskGetName(handle);
@@ -16,7 +16,11 @@ void stackMonitor(void *pvParameter) {
         eTaskState taskState = eTaskGetState(handle);
         if (taskState != eSuspended) {
           UBaseType_t stackHighWaterMark = uxTaskGetStackHighWaterMark(handle);
-          DEBUG_SERIAL_PRINTF("%s Task: %u\n", taskName, stackHighWaterMark);
+          UBaseType_t taskPriority = uxTaskPriorityGet(handle);
+
+          DEBUG_SERIAL_PRINTF(
+              "%s Task: %u (Stack High Water Mark), %u (Priority)\n", taskName,
+              stackHighWaterMark, taskPriority);
         } else {
           DEBUG_SERIAL_PRINTF("%s Task is suspended\n", taskName);
         }
@@ -24,11 +28,8 @@ void stackMonitor(void *pvParameter) {
         DEBUG_SERIAL_PRINTF("%s Task handle is NULL\n", taskName);
       }
     }
+    DEBUG_SERIAL_PRINTLN();
 
-    // this task stack
-    DEBUG_SERIAL_PRINTF("Stack Monitor Task(This task): %u\n",
-                        uxTaskGetStackHighWaterMark(NULL));
-
-    vTaskDelay(pdMS_TO_TICKS(3000)); // Adjust delay as needed
+    vTaskDelay(pdMS_TO_TICKS(2500));
   }
 }

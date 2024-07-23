@@ -117,6 +117,7 @@ ClientSession *findClientSessionByIndex(ClientSession *authClients,
                                         size_t index);
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len);
+void stackMonitor(void *pvParameter);
 
 // Constants
 /* const char *ssid = "YourSSID";
