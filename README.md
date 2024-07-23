@@ -120,6 +120,7 @@ If you like this project, please consider subscribing to my GitHub account for u
 - Jehovah God
 - [ALX Africa](https://www.alxafrica.com/).
 - [Microverse Team](https://www.microverse.org/).
+- [ts-proto](https://github.com/stephenh/ts-proto).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
