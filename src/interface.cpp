@@ -2,12 +2,10 @@
 #include "str_num_msg_transcode.h"
 #include "type_id.h"
 
-typedef void (*Cb)(int);
-
 void receive_control_data(uint8_t *data, size_t len) {
   pump_ControlData control_data = get_current_control_data();
 
-  if (deserialize_control_data(data, len, &control_data)) {
+  if (deserialize_control_data(control_data, data, len)) {
     if (ws.count() > 0) {
       ws.binaryAll(data, len);
     }
@@ -78,10 +76,17 @@ void receive_single_config(uint8_t *data, size_t len) {
 }
 
 void recieve_pump_time_range(uint8_t *data, size_t len) {
-  pump_TimeRange time_range;
-  if (deserialize_time_range(data, len, time_range)) {
+  pump_TimeRange time_range = pump_TimeRange_init_zero;
+  if (deserialize_time_range(time_range, data, len)) {
     pump_ControlData control_data = get_current_control_data();
     control_data.time_range = time_range;
+
+    DEBUG_SERIAL_PRINTF("Received Time Range - Running: %d\tResting: %d\n",
+                        time_range.running, time_range.resting);
+    DEBUG_SERIAL_PRINTF("Current Time Range - Running: %d\tResting: %d\n",
+                        control_data.time_range.running,
+                        control_data.time_range.resting);
+    DEBUG_SERIAL_PRINTF("Current Control Mode: %d\n", control_data.mode);
     store_pump_time_range();
 
     if (ws.count() > 0) {
@@ -100,6 +105,10 @@ MsgHandler receive_ptr[] = {
 };
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len) {
+  if (data == NULL || len == 0) {
+    DEBUG_SERIAL_PRINTLN("Invalid data received");
+    return;
+  }
   if (data[0] < sizeof(receive_ptr) / sizeof(receive_ptr[0])) {
     receive_ptr[data[0]](data, len);
   } else {

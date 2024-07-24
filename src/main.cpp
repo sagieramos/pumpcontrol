@@ -51,7 +51,7 @@ void setup() {
   // Setup WiFi AP and DNS
   setupWifiAP();
 
-  xTaskCreate(stackMonitor, "Stack monitor", 2560, NULL, 4, NULL);
+  // xTaskCreate(stackMonitor, "Stack monitor", 2560, NULL, 4, NULL);
 
   IPAddress apIP = WiFi.softAPIP();
   dnsServer.start(DNS_PORT, "akowe.org", apIP);

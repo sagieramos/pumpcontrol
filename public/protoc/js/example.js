@@ -106,8 +106,8 @@ const controlData = {
     mode: MachineMode.AUTO,
     is_running: true,
     time_range: {
-        running: 5000,
-        resting: 10000
+        running: 830000,
+        resting: 970000
     }
 };
 
@@ -139,3 +139,8 @@ let hexString = "01 08 02 1A 09 08 80 BE 92 01 10 80 9F 49".replace(/ /g, '');
 let binaryBuffer = Buffer.from(hexString, 'hex');
 let decodedControlData = deserializeData(binaryBuffer, TYPE_IDENTIFIER_NUM, ControlData);
 console.log('Decoded ControlData:', decodedControlData);
+
+let hexString1 = "04 08 02 1A 09 08 80 BE 92 01 10 80 9F 49".replace(/ /g, '');
+let binaryBuffer1 = Buffer.from(hexString1, 'hex');
+let decodedControlData1 = deserializeData(binaryBuffer1, TYPE_IDS.CONTROL_DATA_TYPE_ID, ControlData);
+console.log('Decoded ControlData:', decodedControlData1);

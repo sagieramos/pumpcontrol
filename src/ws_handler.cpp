@@ -3,6 +3,8 @@
 #include "network.h"
 /* #include "test_transcode.h" */
 #include "pump_control.h"
+#include "type_id.h"
+#include <str_num_msg_transcode.h>
 #include <unordered_map>
 
 AsyncWebSocket ws("/ws");
@@ -81,22 +83,13 @@ void handleRecieveData(ClientSession *authClients, AsyncWebSocketClient *client,
   if (it != clientIdToIndexMap.end()) {
     size_t index = it->second;
     authClients[index].lastActive = getCurrentTimeMs();
+  }
+}
 
-    /* controlData &machineDataRef = getControlData(); */
-
-    /*     DoMessage doMessage;
-
-        if (deserializeDoMessage(data, doMessage, len)) {
-          // Send data to machine
-          DEBUG_SERIAL_PRINTLN("Data received from client (DoMessage proto):");
-          DEBUG_SERIAL_PRINTF("Instruction: %s\n", doMessage.inst);
-          DEBUG_SERIAL_PRINTF("Value: %d\n", doMessage.value);
-          machineDataRef = getControlData();
-        } else
-          DEBUG_SERIAL_PRINTLN("Failed to deserialize data");
-
-        // Deserialize the received data
-      } */
+void send_binary_data(void *data, size_t len) {
+  uint8_t *buffer = static_cast<uint8_t *>(data);
+  if (ws.count() > 0) {
+    ws.binaryAll(buffer, len);
   }
 }
 
@@ -106,7 +99,12 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     size_t client_id = client->id();
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
                         client_id);
-    receive_msg_and_perform_action(data, len);
+
+    uint8_t buff[56];
+    size_t buff_size = sizeof(buff);
+
+    serialize_control_data(get_current_control_data(), buff, &buff_size,
+                           CONTROL_DATA_TYPE_ID, send_binary_data);
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
 
@@ -123,7 +121,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     if (handlePong(authClients, client))
       DEBUG_SERIAL_PRINTF("Websocket pong: %u\n", client->id());
   } else if (WS_EVT_DATA) {
-    DEBUG_SERIAL_PRINTLN("Websocket data received");
+    DEBUG_SERIAL_PRINTF("Websocket data received: %u\n", client->id());
+    receive_msg_and_perform_action(data, len);
     handleRecieveData(authClients, client, data, len);
   } else {
     DEBUG_SERIAL_PRINTLN("Websocket event not handled");

@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Callback_strnum function to encode a string
+// callback function to encode a string
 /**
- * @brief Callback_strnum function to encode a string in a protobuf message.
+ * @brief callback function to encode a string in a protobuf message.
  *
  * @param stream The stream to write to.
  * @param field The field descriptor for the string.
@@ -23,9 +23,9 @@ bool pb_encode_string(pb_ostream_t *stream, const pb_field_t *field,
   return pb_encode_string(stream, (const uint8_t *)str, strlen(str));
 }
 
-// Callback_strnum function to encode a Strnum message
+// callback function to encode a Strnum message
 /**
- * @brief Callback_strnum function to encode a Strnum message in a protobuf
+ * @brief callback function to encode a Strnum message in a protobuf
  * message.
  *
  * @param stream The stream to write to.
@@ -43,9 +43,9 @@ bool pb_encode_strnum(pb_ostream_t *stream, const pb_field_t *field,
   return pb_encode_submessage(stream, Strnum_fields, msg);
 }
 
-// Callback_strnum function to decode a string
+// callback function to decode a string
 /**
- * @brief Callback_strnum function to decode a string from a protobuf message.
+ * @brief callback function to decode a string from a protobuf message.
  *
  * @param stream The stream to read from.
  * @param field The field descriptor for the string.
@@ -147,7 +147,7 @@ void create_strnumlst(const Strnum *strum, Strnumlist *msg) {
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
-                   uint8_t type_id, Callback_strnum cb) {
+                   uint8_t type_id, strnum_codec_callback cb) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
   bool status = pb_encode(&stream, Num_fields, &msg);
@@ -172,7 +172,7 @@ bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
-                     Callback_strnum cb) {
+                     strnum_codec_callback cb) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   bool status = pb_decode(&stream, Num_fields, &msg);
   if (status && cb) {
@@ -194,7 +194,7 @@ bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
-                   uint8_t type_id, Callback_strnum cb) {
+                   uint8_t type_id, strnum_codec_callback cb) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
   bool status = pb_encode(&stream, Str_fields, &msg);
@@ -219,12 +219,12 @@ bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_str(Str &msg, const uint8_t *buffer, size_t buffer_size,
-                     Callback_strnum cb) {
+                     strnum_codec_callback cb) {
   msg = Str_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   bool status = pb_decode(&stream, Str_fields, &msg);
   if (status && cb) {
-    cb((void *)buffer, buffer_size);
+    cb((void *)&msg, buffer_size);
     free_str(msg);
   }
   return status;
@@ -256,7 +256,7 @@ void free_str(Str &msg) {
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
-                      uint8_t type_id, Callback_strnum cb) {
+                      uint8_t type_id, strnum_codec_callback cb) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
   bool status = pb_encode(&stream, Strnum_fields, &msg);
@@ -281,14 +281,14 @@ bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_strnum(Strnum &msg, const uint8_t *buffer, size_t buffer_size,
-                        Callback_strnum cb) {
+                        strnum_codec_callback cb) {
   msg = Strnum_init_zero;
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   msg.str.funcs.decode = &pb_decode_string;
 
   bool status = pb_decode(&stream, Strnum_fields, &msg);
   if (status && cb) {
-    cb((void *)buffer, buffer_size);
+    cb(static_cast<void *>(&msg), buffer_size);
     free_strnum(msg);
   }
 

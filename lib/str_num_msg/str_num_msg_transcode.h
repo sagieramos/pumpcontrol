@@ -3,7 +3,6 @@
 
 #include "./protoc/str_num_msg.pb.h"
 
-// Type definition for callback function
 /**
  * @brief Type definition for a callback function used in
  * serialization/deserialization.
@@ -11,12 +10,10 @@
  * @param data Pointer to the data buffer.
  * @param len Length of the data buffer.
  */
-typedef void (*Callback_strnum)(void *data, size_t len);
-
-// Functions for encoding and decoding strings
+typedef void (*strnum_codec_callback)(void *data, size_t len);
 
 /**
- * @brief Callback_strnum function to encode a string.
+ * @brief callback function to encode a string.
  *
  * @param stream The stream to write the encoded data to.
  * @param field The field descriptor for the field being encoded.
@@ -28,7 +25,7 @@ bool pb_encode_string(pb_ostream_t *stream, const pb_field_t *field,
                       void *const *arg);
 
 /**
- * @brief Callback_strnum function to encode a Strnum message.
+ * @brief callback function to encode a Strnum message.
  *
  * @param stream The stream to write the encoded data to.
  * @param field The field descriptor for the field being encoded.
@@ -40,7 +37,7 @@ bool pb_encode_strnum(pb_ostream_t *stream, const pb_field_t *field,
                       void *const *arg);
 
 /**
- * @brief Callback_strnum function to decode a string from a buffer.
+ * @brief callback function to decode a string from a buffer.
  *
  * @param stream The stream to read the encoded data from.
  * @param field The field descriptor for the field being decoded.
@@ -89,8 +86,6 @@ void create_strnum(const char *str, float num, uint32_t key, Strnum *msg);
  */
 void create_strnumlst(const Strnum *strum, Strnumlist *msg);
 
-// Functions for serialization and deserialization
-
 /**
  * @brief Serializes a Num message into a buffer.
  *
@@ -103,7 +98,7 @@ void create_strnumlst(const Strnum *strum, Strnumlist *msg);
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
-                   uint8_t type_id, Callback_strnum cb = NULL);
+                   uint8_t type_id, strnum_codec_callback cb = NULL);
 
 /**
  * @brief Deserializes a Num message from a buffer.
@@ -116,7 +111,7 @@ bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
-                     Callback_strnum cb = NULL);
+                     strnum_codec_callback cb = NULL);
 
 /**
  * @brief Serializes a Str message into a buffer.
@@ -130,7 +125,7 @@ bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
-                   uint8_t type_id, Callback_strnum cb = NULL);
+                   uint8_t type_id, strnum_codec_callback cb = NULL);
 
 /**
  * @brief Deserializes a Str message from a buffer.
@@ -143,7 +138,7 @@ bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_str(Str &msg, const uint8_t *buffer, size_t buffer_size,
-                     Callback_strnum cb = NULL);
+                     strnum_codec_callback cb = NULL);
 
 /**
  * @brief Serializes a Strnum message into a buffer.
@@ -157,7 +152,7 @@ bool deserialize_str(Str &msg, const uint8_t *buffer, size_t buffer_size,
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
-                      uint8_t type_id, Callback_strnum cb = NULL);
+                      uint8_t type_id, strnum_codec_callback cb = NULL);
 
 /**
  * @brief Deserializes a Strnum message from a buffer.
@@ -170,7 +165,7 @@ bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_strnum(Strnum &msg, const uint8_t *buffer, size_t buffer_size,
-                        Callback_strnum cb = NULL);
+                        strnum_codec_callback cb = NULL);
 
 /**
  * @brief Serializes a Strnumlist message into a buffer.

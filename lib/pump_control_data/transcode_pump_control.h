@@ -3,6 +3,8 @@
 
 #include "./protoc/pump_control_data.pb.h"
 
+typedef void (*pump_codec_callback_t)(void *data, size_t len);
+
 /**
  * @brief Initializes a `pump_TimeRange` message with running and resting times.
  *
@@ -37,9 +39,9 @@ void create_pump_time_range(pump_TimeRange &time_range, uint32_t running,
  * `pump_ControlData` message.
  * @param is_running    A boolean indicating whether the pump is running.
  * @param time_range    A pointer to the `pump_TimeRange` structure to be
- * included in the `pump_ControlData` message.
+ * included in the `pump_ControlData` message, or `nullptr` if not used.
  *
- * @note If `time_range` is not nullptr, it sets `has_time_range` to true and
+ * @note If `time_range` is not `nullptr`, it sets `has_time_range` to true and
  * assigns the `time_range` to the message.
  */
 void create_control_data(pump_ControlData &control_data, pump_MachineMode mode,
@@ -53,20 +55,22 @@ void create_control_data(pump_ControlData &control_data, pump_MachineMode mode,
  * (protobuf) to serialize the message fields. The buffer size is updated to
  * reflect the total size of the serialized message including the type ID.
  *
+ * @param time_range   The `pump_TimeRange` structure to be serialized.
  * @param buffer       A pointer to the buffer where the serialized data will be
  * written.
  * @param buffer_size  A pointer to the size of the buffer. On entry, it should
  * contain the maximum size of the buffer. On exit, it will contain the size of
  * the serialized data including the type ID.
- * @param time_range   A pointer to the `pump_TimeRange` structure to be
- * serialized.
  * @param type_id      A type identifier that will be written as the first byte
  * of the buffer.
+ * @param cb           Optional callback function to call with the serialized
+ * data.
  *
  * @return `true` if serialization is successful, `false` otherwise.
  */
-bool serialize_time_range(uint8_t *buffer, size_t *buffer_size,
-                          const pump_TimeRange *time_range, uint8_t type_id);
+bool serialize_time_range(const pump_TimeRange &time_range, uint8_t *buffer,
+                          size_t *buffer_size, uint8_t type_id,
+                          pump_codec_callback_t cb = nullptr);
 
 /**
  * @brief Deserializes a `pump_TimeRange` message from a buffer.
@@ -82,11 +86,15 @@ bool serialize_time_range(uint8_t *buffer, size_t *buffer_size,
  * the buffer including the type ID.
  * @param time_range   A reference to the `pump_TimeRange` structure where the
  * deserialized data will be stored.
+ * @param cb           Optional callback function to call with the deserialized
+ * data.
  *
  * @return `true` if deserialization is successful, `false` otherwise.
  */
-bool deserialize_time_range(const uint8_t *buffer, size_t buffer_size,
-                            pump_TimeRange &time_range);
+bool deserialize_time_range(pump_TimeRange &time_range, const uint8_t *buffer,
+                            size_t buffer_size,
+
+                            pump_codec_callback_t cb = nullptr);
 
 /**
  * @brief Serializes a `pump_ControlData` message into a buffer with a type ID.
@@ -96,21 +104,23 @@ bool deserialize_time_range(const uint8_t *buffer, size_t buffer_size,
  * (protobuf) to serialize the message fields. The buffer size is updated to
  * reflect the total size of the serialized message including the type ID.
  *
+ * @param control_data The `pump_ControlData` structure to be serialized.
  * @param buffer       A pointer to the buffer where the serialized data will be
  * written.
  * @param buffer_size  A pointer to the size of the buffer. On entry, it should
  * contain the maximum size of the buffer. On exit, it will contain the size of
  * the serialized data including the type ID.
- * @param control_data A pointer to the `pump_ControlData` structure to be
- * serialized.
  * @param type_id      A type identifier that will be written as the first byte
  * of the buffer.
+ * @param cb           Optional callback function to call with the serialized
+ * data.
  *
  * @return `true` if serialization is successful, `false` otherwise.
  */
-bool serialize_control_data(uint8_t *buffer, size_t *buffer_size,
-                            const pump_ControlData *control_data,
-                            uint8_t type_id);
+bool serialize_control_data(const pump_ControlData &control_data,
+                            uint8_t *buffer, size_t *buffer_size,
+                            uint8_t type_id,
+                            pump_codec_callback_t cb = nullptr);
 
 /**
  * @brief Deserializes a `pump_ControlData` message from a buffer.
@@ -120,16 +130,19 @@ bool serialize_control_data(uint8_t *buffer, size_t *buffer_size,
  * `pump_ControlData` message data. The type ID is ignored, and only the message
  * data is used for deserialization.
  *
+ * @param control_data A reference to the `pump_ControlData` structure where the
+ * deserialized data will be stored.
  * @param buffer       A pointer to the buffer containing the serialized message
  * data with a type ID prefix.
  * @param buffer_size  The size of the buffer. This should be the total size of
  * the buffer including the type ID.
- * @param control_data A pointer to the `pump_ControlData` structure where the
- * deserialized data will be stored.
+ * @param cb           Optional callback function to call with the deserialized
+ * data.
  *
  * @return `true` if deserialization is successful, `false` otherwise.
  */
-bool deserialize_control_data(const uint8_t *buffer, size_t buffer_size,
-                              pump_ControlData *control_data);
+bool deserialize_control_data(pump_ControlData &control_data,
+                              const uint8_t *buffer, size_t buffer_size,
+                              pump_codec_callback_t cb = nullptr);
 
 #endif // TRANS_PUMP_CONTROL_H
