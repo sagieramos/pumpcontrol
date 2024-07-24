@@ -2,6 +2,8 @@
 #include "str_num_msg_transcode.h"
 #include "type_id.h"
 
+typedef void (*Cb)(int);
+
 void receive_control_data(uint8_t *data, size_t len) {
   pump_ControlData control_data = get_current_control_data();
 

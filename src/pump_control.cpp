@@ -5,7 +5,6 @@
 #include <str_num_msg_transcode.h>
 
 TaskHandle_t runMachineTask = NULL;
-bool signalState = false;
 
 void set_default_control_data(pump_ControlData *control_data) {
   control_data->mode = pump_MachineMode_AUTO;
@@ -84,44 +83,83 @@ bool switch_pump(bool state) {
   return false;
 }
 
-void controlPumpState() {
+void send_binary_data(void *data, size_t len) {
+  uint8_t *buffer = static_cast<uint8_t *>(data);
+  if (ws.count() > 0) {
+    ws.binaryAll(buffer, len);
+  }
+}
+
+void controlPumpState(bool triger_auto_pump) {
   pump_ControlData &ctrl = get_current_control_data();
+
+  bool pumpStateChanged = false;
+  static unsigned long lastChangeTime = 0;
+
   switch (ctrl.mode) {
   case pump_MachineMode::pump_MachineMode_AUTO: {
-    if (signalState) {
-      static unsigned long lastChangeTime = 0;
+    if (triger_auto_pump) {
       unsigned long currentTime = getCurrentTimeMs();
       unsigned long signalTime = currentTime - lastChangeTime;
+
       if (signalTime >= ctrl.time_range.resting) {
         lastChangeTime = currentTime;
-        // Turn Pump OFF after running
-        if (switch_pump(false)) {
+        if (switch_pump(false)) { // Turn Pump OFF
           ctrl.is_running = false;
-          DEBUG_SERIAL_PRINTF("Pump ran in: %lums\n", signalTime);
+          pumpStateChanged = true;
         }
       } else if (signalTime >= ctrl.time_range.running) {
-        // Keep Pump ON after running
-        if (switch_pump(true)) {
+        if (switch_pump(true)) { // Keep Pump ON
           ctrl.is_running = true;
-          DEBUG_SERIAL_PRINTF("Pump ran in: %lums\n", signalTime);
+          pumpStateChanged = true;
         }
       }
     } else {
-      switch_pump(false);
+      if (switch_pump(false)) { // Turn Pump OFF
+        ctrl.is_running = false;
+        pumpStateChanged = true;
+      }
     }
   } break;
+
   case pump_MachineMode::pump_MachineMode_POWER_ON:
-    switch_pump(true);
-    ctrl.is_running = true;
+    if (switch_pump(true)) { // Turn Pump ON
+      ctrl.is_running = true;
+      pumpStateChanged = true;
+    }
     break;
+
   case pump_MachineMode::pump_MachineMode_POWER_OFF:
-    switch_pump(false);
-    ctrl.is_running = false;
+    if (switch_pump(false)) { // Turn Pump OFF
+      ctrl.is_running = false;
+      pumpStateChanged = true;
+    }
     break;
+
   default:
     DEBUG_SERIAL_PRINTLN("Invalid mode");
     break;
   }
+
+  if (pumpStateChanged) {
+    pumpStateChanged = false;
+    Num msg;
+    pump_ControlData &control_data = get_current_control_data();
+    msg.key = 4;
+    msg.value = static_cast<float>(control_data.is_running);
+    uint8_t buffer[128];
+    size_t buffer_size = sizeof(buffer);
+    serialize_num(msg, buffer, &buffer_size, SINGLE_CONFIG_TYPE_ID,
+                  send_binary_data);
+  }
+
+#ifndef PRODUCTION
+  if (pumpStateChanged) {
+    DEBUG_SERIAL_PRINTF("Pump state changed in: %lums\n",
+                        getCurrentTimeMs() - lastChangeTime);
+    DEBUG_SERIAL_PRINTF("Pump is %s\n", ctrl.is_running ? "ON" : "OFF");
+  }
+#endif
 }
 
 void runMachine(void *parameter) {
@@ -130,7 +168,8 @@ void runMachine(void *parameter) {
   pinMode(PUMP_RELAY_PIN, OUTPUT);
   digitalWrite(PUMP_RELAY_PIN, LOW);
 
-  controlPumpState();
+  pump_ControlData &control_data = get_current_control_data();
+  init_EEPROM_pump_controller();
 
   for (;;) {
     int signal = 0;
@@ -140,8 +179,7 @@ void runMachine(void *parameter) {
       vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 
-    signalState = signal >= 4;
-
+    controlPumpState(signal >= 4);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
@@ -195,45 +233,3 @@ void send_control_data(const size_t client_id) {
     DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
   }
 }
-
-void setup_pump_controller() {
-  pinMode(FLOAT_SIGNAL_PIN, INPUT);
-  pinMode(PUMP_RELAY_PIN, OUTPUT);
-  digitalWrite(PUMP_RELAY_PIN, LOW);
-
-  pump_ControlData &control_data = get_current_control_data();
-  init_EEPROM_pump_controller();
-
-  xTaskCreate(runMachine, "Pump Controller", 10000, NULL, 1, &runMachineTask);
-}
-
-/* int main() {
-    uint8_t buffer[128];
-    size_t encoded_size;
-
-    pump_ControlData control_data;
-    set_default_control_data(&control_data);
-
-    if (serialize_control_data(buffer, sizeof(buffer), &encoded_size,
-&control_data)) { printf("Serialized ControlData, size: %zu bytes\n",
-encoded_size);
-
-        pump_ControlData decoded_control_data = pump_ControlData_init_zero;
-        if (deserialize_control_data(buffer, encoded_size,
-&decoded_control_data)) { printf("Deserialized ControlData successfully\n");
-            printf("Mode: %d\n", decoded_control_data.mode);
-            if (decoded_control_data.has_time_range) {
-                printf("Running Time: %u\n",
-decoded_control_data.time_range.running); printf("Resting Time: %u\n",
-decoded_control_data.time_range.resting);
-            }
-        } else {
-            printf("Failed to deserialize ControlData\n");
-        }
-    } else {
-        printf("Failed to serialize ControlData\n");
-    }
-
-    return 0;
-}
- */

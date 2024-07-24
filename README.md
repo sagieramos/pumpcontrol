@@ -36,6 +36,8 @@
 - [Protocol buffer](https://protobuf.dev/) 
 - [PlatformIO](https://platformio.org/)
 - [Nanopb](https://github.com/nanopb/nanopb)
+- [ts-proto](https://github.com/stephenh/ts-proto).
+- [Arduino Framework](https://www.arduino.cc/)
 - [ESPAsyncWebServer](https://github.com/lacamera/ESPAsyncWebServer)
 
 ### Key Features <a name="key-features"></a>
@@ -74,7 +76,6 @@ To run the project, execute the following command:
 
 ```sh
   cd $HOME/pumpcontrol
-  pio run
   pio test -e test
   pio run -e esp32 -t upload
 ```
@@ -120,7 +121,6 @@ If you like this project, please consider subscribing to my GitHub account for u
 - Jehovah God
 - [ALX Africa](https://www.alxafrica.com/).
 - [Microverse Team](https://www.microverse.org/).
-- [ts-proto](https://github.com/stephenh/ts-proto).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -137,7 +137,6 @@ If you like this project, please consider subscribing to my GitHub account for u
 This project is [MIT](./LICENSE) licensed.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- https://www.iconpacks.net/free-icon/warning-sign-9773.html -->

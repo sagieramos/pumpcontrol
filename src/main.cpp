@@ -46,8 +46,7 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  // Initialize control data
-  setup_pump_controller();
+  xTaskCreate(runMachine, "Pump Controller", 4096, NULL, 1, &runMachineTask);
 
   // Setup WiFi AP and DNS
   setupWifiAP();

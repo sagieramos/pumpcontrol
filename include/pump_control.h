@@ -19,7 +19,7 @@ extern TaskHandle_t runMachineTask;
 void send_control_data(const size_t client_id = 0);
 void store_pump_time_range(const pump_TimeRange *time_range);
 void store_pump_time_range();
-void setup_pump_controller();
+void runMachine(void *parameter);
 pump_ControlData &get_current_control_data();
 
 /**
