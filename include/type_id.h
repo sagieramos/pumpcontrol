@@ -129,4 +129,54 @@ constexpr uint8_t CONTROL_DATA_TYPE_ID = 0x04;
  */
 constexpr uint8_t PUMP_TIME_RANGE_TYPE_ID = 0x05;
 
+/**
+ * @enum ConfigKey
+ * @brief Enum representing the configuration keys for pump control settings.
+ *
+ * This enum defines the possible keys used to identify different configuration
+ * parameters within the pump control system. These keys are used to deserialize
+ * incoming messages and update specific settings of the pump control data.
+ *
+ * @note The keys are assigned specific values to avoid conflicts with other
+ *       message types or configuration parameters. Ensure that the keys used
+ *       in messages match these defined values to avoid unexpected behavior.
+ */
+enum ConfigKey {
+  /**
+   * @brief Key for setting the pump mode.
+   *
+   * This key is used to update the operating mode of the pump. The value should
+   * be of type `pump_MachineMode`, which represents different modes of
+   * operation.
+   */
+  CONFIG_MODE = 1,
+
+  /**
+   * @brief Key for setting the running time of the pump.
+   *
+   * This key is used to update the duration for which the pump should remain
+   * running. The value should be a `uint32_t` representing the time in
+   * milliseconds.
+   */
+  CONFIG_RUNNING_TIME,
+
+  /**
+   * @brief Key for setting the resting time of the pump.
+   *
+   * This key is used to update the duration for which the pump should remain
+   * in a resting state. The value should be a `uint32_t` representing the time
+   * in milliseconds.
+   */
+  CONFIG_RESTING_TIME,
+
+  /**
+   * @brief Key for reporting the pump's running state.
+   *
+   * This key is used to report whether the pump is currently running or not.
+   * The value should be of type `float`, where a value of `1.0` represents
+   * that the pump is running, and `0.0` represents that it is not running.
+   */
+  CONFIG_RUNNING_STATE
+};
+
 #endif // TYPE_ID_H

@@ -21,6 +21,8 @@ void runMachine(void *parameter);
 
 pump_ControlData &get_current_control_data();
 
+extern SemaphoreHandle_t controlDataMutex;
+
 /**
  * @brief Processes a message and performs an action based on the first byte of
  * the data.
