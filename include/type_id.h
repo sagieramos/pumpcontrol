@@ -149,7 +149,7 @@ enum ConfigKey {
    * be of type `pump_MachineMode`, which represents different modes of
    * operation.
    */
-  CONFIG_MODE = 1,
+  CONFIG_MODE = 101,
 
   /**
    * @brief Key for setting the running time of the pump.

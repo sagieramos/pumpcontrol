@@ -109,21 +109,29 @@ void receive_single_config(uint8_t *data, size_t len) {
 
     switch (static_cast<ConfigKey>(msg.key)) {
     case CONFIG_MODE:
+      DEBUG_SERIAL_PRINTF("Received mode: %d\n", msg.value);
       if (control_data.mode != static_cast<pump_MachineMode>(msg.value)) {
         control_data.mode = static_cast<pump_MachineMode>(msg.value);
         dataChanged = true;
+        DEBUG_SERIAL_PRINTF("Current mode: %d\n", control_data.mode);
       }
       break;
     case CONFIG_RUNNING_TIME:
+      DEBUG_SERIAL_PRINTF("Received running time: %d\n", msg.value);
       if (control_data.time_range.running != static_cast<uint32_t>(msg.value)) {
         control_data.time_range.running = static_cast<uint32_t>(msg.value);
         dataChanged = true;
+        DEBUG_SERIAL_PRINTF("Current running time: %d\n",
+                            control_data.time_range.running);
       }
       break;
     case CONFIG_RESTING_TIME:
+      DEBUG_SERIAL_PRINTF("Received resting time: %d\n", msg.value);
       if (control_data.time_range.resting != static_cast<uint32_t>(msg.value)) {
         control_data.time_range.resting = static_cast<uint32_t>(msg.value);
         dataChanged = true;
+        DEBUG_SERIAL_PRINTF("Current resting time: %d\n",
+                            control_data.time_range.resting);
       }
       break;
     default:
@@ -137,7 +145,8 @@ void receive_single_config(uint8_t *data, size_t len) {
         ws.binaryAll(data, len);
       }
 
-      if (msg.key == 2 || msg.key == 3) {
+      if (msg.key == ConfigKey::CONFIG_RESTING_TIME ||
+          msg.key == ConfigKey::CONFIG_RUNNING_TIME) {
         xSemaphoreGive(controlDataMutex);
         store_time_range();
         return;

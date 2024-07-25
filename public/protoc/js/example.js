@@ -30,7 +30,7 @@ function deserializeData(buffer, expectedTypeIdentifier, proto) {
 }
 
 // Example with Num
-const num = { key: 1, value: 42.42 };
+const num = { key: 102, value: 101009 };
 const serializedNum = serializeData(num, TYPE_IDS.SINGLE_CONFIG_TYPE_ID, Num);
 console.log('Serialized Num:', serializedNum);
 
