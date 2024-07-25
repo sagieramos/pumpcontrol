@@ -3,13 +3,17 @@
 #include "type_id.h"
 
 void receive_control_data(uint8_t *data, size_t len) {
-  pump_ControlData control_data = get_current_control_data();
+  pump_ControlData &control_data = get_current_control_data();
 
   if (deserialize_control_data(control_data, data, len)) {
     if (ws.count() > 0) {
       ws.binaryAll(data, len);
     }
-    store_pump_time_range();
+    DEBUG_SERIAL_PRINTF(
+        "Received Control Data - Mode: %d\tRunning: %d\tResting: %d\n",
+        control_data.mode, control_data.time_range.running,
+        control_data.time_range.resting);
+    store_time_range();
   }
 }
 
@@ -50,7 +54,7 @@ void receive_single_config(uint8_t *data, size_t len) {
     return;
   }
 
-  pump_ControlData control_data = get_current_control_data();
+  pump_ControlData &control_data = get_current_control_data();
 
   switch (msg.key) {
   case 1:
@@ -71,14 +75,14 @@ void receive_single_config(uint8_t *data, size_t len) {
   }
 
   if (msg.key == 2 || msg.key == 3) {
-    store_pump_time_range();
+    store_time_range();
   }
 }
 
 void recieve_pump_time_range(uint8_t *data, size_t len) {
   pump_TimeRange time_range = pump_TimeRange_init_zero;
   if (deserialize_time_range(time_range, data, len)) {
-    pump_ControlData control_data = get_current_control_data();
+    pump_ControlData &control_data = get_current_control_data();
     control_data.time_range = time_range;
 
     DEBUG_SERIAL_PRINTF("Received Time Range - Running: %d\tResting: %d\n",
@@ -86,8 +90,7 @@ void recieve_pump_time_range(uint8_t *data, size_t len) {
     DEBUG_SERIAL_PRINTF("Current Time Range - Running: %d\tResting: %d\n",
                         control_data.time_range.running,
                         control_data.time_range.resting);
-    DEBUG_SERIAL_PRINTF("Current Control Mode: %d\n", control_data.mode);
-    store_pump_time_range();
+    store_time_range();
 
     if (ws.count() > 0) {
       ws.binaryAll(data, len);

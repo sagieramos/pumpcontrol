@@ -5,9 +5,6 @@
 #include "network.h"
 #include <transcode_pump_control.h>
 
-constexpr uint32_t TIME_ON(40 * 60000);
-constexpr uint32_t TIME_OFF(20 * 60000);
-
 constexpr int FLOAT_SIGNAL_PIN = 21;  // Float signal pin
 constexpr int PUMP_RELAY_PIN = 12;    // Relay pin for pump
 constexpr uint8_t MAGIC_NUMBER = 123; // Magic number for EEPROM data validity
@@ -17,9 +14,11 @@ constexpr size_t EEPROM_SIZE_CTL = sizeof(pump_TimeRange) + MAGIC_NUMBER_SIZE;
 extern TaskHandle_t runMachineTask;
 
 void send_control_data(const size_t client_id = 0);
-void store_pump_time_range(const pump_TimeRange *time_range);
-void store_pump_time_range();
+
+void store_time_range();
+
 void runMachine(void *parameter);
+
 pump_ControlData &get_current_control_data();
 
 /**

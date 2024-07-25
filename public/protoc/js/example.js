@@ -106,8 +106,8 @@ const controlData = {
     mode: MachineMode.AUTO,
     is_running: true,
     time_range: {
-        running: 830000,
-        resting: 970000
+        running: 200000,
+        resting: 100000
     }
 };
 

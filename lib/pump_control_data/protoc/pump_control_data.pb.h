@@ -43,9 +43,9 @@ extern "C" {
 
 /* Initializer values for message structs */
 #define pump_TimeRange_init_default                                            \
-  { 0, 0 }
+  { 2400000U, 1200000U }
 #define pump_ControlData_init_default                                          \
-  { _pump_MachineMode_MIN, 0, false, pump_TimeRange_init_default }
+  { _pump_MachineMode_MAX, 0, true, pump_TimeRange_init_default }
 #define pump_TimeRange_init_zero                                               \
   { 0, 0 }
 #define pump_ControlData_init_zero                                             \

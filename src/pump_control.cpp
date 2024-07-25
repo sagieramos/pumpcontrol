@@ -6,92 +6,72 @@
 
 TaskHandle_t runMachineTask = NULL;
 
-void set_default_control_data(pump_ControlData *control_data) {
-  control_data->mode = pump_MachineMode_AUTO;
-  control_data->has_time_range = true;
-  control_data->time_range.running = TIME_ON;
-  control_data->time_range.resting = TIME_OFF;
-}
-
-void set_default_pump_time_range(pump_TimeRange *time_range) {
-  time_range->running = TIME_ON;
-  time_range->resting = TIME_OFF;
-}
-
+// Get the current control data
 pump_ControlData &get_current_control_data() {
-  static pump_ControlData control_data = pump_ControlData_init_zero;
+  static pump_ControlData control_data = pump_ControlData_init_default;
   return control_data;
 }
 
-void store_time_range(pump_TimeRange *time_range) {
+// Store time range in EEPROM
+void store_time_range() {
+  pump_ControlData &control_data = get_current_control_data();
   DEBUG_SERIAL_PRINTF("Storing Time Range - Running: %d\tResting: %d\n",
-                      time_range->running, time_range->resting);
+                      control_data.time_range.running,
+                      control_data.time_range.resting);
   EEPROM.begin(EEPROM_SIZE_CTL);
-  EEPROM.put(MAGIC_NUMBER_SIZE, *time_range);
+  EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
   EEPROM.commit();
   EEPROM.end();
 }
 
+// Initialize EEPROM with pump controller settings
 void init_EEPROM_pump_controller() {
-  pump_TimeRange time_range = pump_TimeRange_init_zero;
   pump_ControlData &control_data = get_current_control_data();
-  control_data.has_time_range = true;
 
   EEPROM.begin(EEPROM_SIZE_CTL);
-
-  uint32_t readMagicNumber;
+  uint8_t readMagicNumber;
   EEPROM.get(0, readMagicNumber);
+
   if (readMagicNumber == MAGIC_NUMBER) {
-    EEPROM.get(MAGIC_NUMBER_SIZE, time_range);
-    control_data.time_range = time_range;
+    EEPROM.get(MAGIC_NUMBER_SIZE, control_data.time_range);
+    DEBUG_SERIAL_PRINTF("Magic number found: %d\n", readMagicNumber);
     DEBUG_SERIAL_PRINTF("Read Time Range - Running: %d\tResting: %d\n",
-                        time_range.running, time_range.resting);
-    EEPROM.end();
+                        control_data.time_range.running,
+                        control_data.time_range.resting);
   } else {
-    set_default_pump_time_range(&time_range);
-    control_data.time_range = time_range;
-    store_time_range(&time_range);
+    DEBUG_SERIAL_PRINTF("Magic number not found: %d\n", readMagicNumber);
+
+    EEPROM.put(0, MAGIC_NUMBER);
+    EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
+    EEPROM.commit();
   }
+
+  EEPROM.end();
 }
 
-void store_pump_time_range(const pump_TimeRange *time_range) {
-  pump_ControlData &control_data = get_current_control_data();
-  control_data.time_range = *time_range;
-  store_time_range(&control_data.time_range);
-}
-
-void store_pump_time_range() {
-  pump_ControlData &control_data = get_current_control_data();
-  store_time_range(&control_data.time_range);
-}
-
+// Switch the pump state (ON/OFF)
 bool switch_pump(bool state) {
   static bool pumpState = false;
 
   if (state != pumpState) {
     pumpState = state;
-    if (state) {
-      digitalWrite(PUMP_RELAY_PIN, HIGH);
-    } else {
-      digitalWrite(PUMP_RELAY_PIN, LOW);
-    }
+    digitalWrite(PUMP_RELAY_PIN, state ? HIGH : LOW);
     DEBUG_SERIAL_PRINTLN(state ? "Pump is ON" : "Pump is OFF");
-
     return true;
   }
 
   return false;
 }
 
-void controlPumpState(bool triger_auto_pump) {
+// Control pump state based on mode and signal
+void controlPumpState(bool trigger_auto_pump) {
   pump_ControlData &ctrl = get_current_control_data();
-
   bool pumpStateChanged = false;
   static unsigned long lastChangeTime = 0;
 
   switch (ctrl.mode) {
-  case pump_MachineMode::pump_MachineMode_AUTO: {
-    if (triger_auto_pump) {
+  case pump_MachineMode_AUTO: {
+    if (trigger_auto_pump) {
       unsigned long currentTime = getCurrentTimeMs();
       unsigned long signalTime = currentTime - lastChangeTime;
 
@@ -113,16 +93,17 @@ void controlPumpState(bool triger_auto_pump) {
         pumpStateChanged = true;
       }
     }
-  } break;
+    break;
+  }
 
-  case pump_MachineMode::pump_MachineMode_POWER_ON:
+  case pump_MachineMode_POWER_ON:
     if (switch_pump(true)) { // Turn Pump ON
       ctrl.is_running = true;
       pumpStateChanged = true;
     }
     break;
 
-  case pump_MachineMode::pump_MachineMode_POWER_OFF:
+  case pump_MachineMode_POWER_OFF:
     if (switch_pump(false)) { // Turn Pump OFF
       ctrl.is_running = false;
       pumpStateChanged = true;
@@ -136,14 +117,18 @@ void controlPumpState(bool triger_auto_pump) {
 
   if (pumpStateChanged) {
     Num msg;
-    pump_ControlData &control_data = get_current_control_data();
     msg.key = 4;
-    msg.value = static_cast<float>(control_data.is_running);
+    msg.value = static_cast<float>(ctrl.is_running);
+
     uint8_t buffer[128];
     size_t buffer_size = sizeof(buffer);
     serialize_num(msg, buffer, &buffer_size, SINGLE_CONFIG_TYPE_ID,
                   send_binary_data);
-    pumpStateChanged = false;
+
+    // Send the data (use a separate function for sending if necessary)
+    if (ws.count() > 0) {
+      ws.binaryAll(buffer, buffer_size);
+    }
   }
 
 #ifndef PRODUCTION
@@ -155,14 +140,13 @@ void controlPumpState(bool triger_auto_pump) {
 #endif
 }
 
+// Task to run the machine
 void runMachine(void *parameter) {
   (void)parameter;
   pinMode(FLOAT_SIGNAL_PIN, INPUT);
   pinMode(PUMP_RELAY_PIN, OUTPUT);
   digitalWrite(PUMP_RELAY_PIN, LOW);
 
-  pump_ControlData &control_data = get_current_control_data();
-  control_data.mode = pump_MachineMode_AUTO;
   init_EEPROM_pump_controller();
 
   for (;;) {
@@ -178,10 +162,11 @@ void runMachine(void *parameter) {
   }
 }
 
+// Send control data to the specified client
 void send_control_data(const size_t client_id) {
-  if (client_id == 0) {
+  if (client_id == 0)
     return;
-  }
+
   uint8_t buffer[1024];
   size_t buffer_size = sizeof(buffer);
 
@@ -191,20 +176,22 @@ void send_control_data(const size_t client_id) {
                       control_data.mode, control_data.is_running,
                       control_data.time_range.running,
                       control_data.time_range.resting);
+
   size_t encoded_size;
   bool status = serialize_control_data(control_data, buffer, &buffer_size,
                                        CONTROL_DATA_TYPE_ID);
+
 #ifndef PRODUCTION
   if (status) {
     for (size_t i = 0; i < encoded_size; i++) {
       DEBUG_SERIAL_PRINTF("%02X ", buffer[i]);
     }
 
-    // Deserialize the data
+    // Deserialize the data for verification
     pump_ControlData control_data_deserialized;
     if (deserialize_control_data(control_data_deserialized, buffer,
                                  encoded_size)) {
-      DEBUG_SERIAL_PRINTLN("Deserialized data..............................:");
+      DEBUG_SERIAL_PRINTLN("Deserialized data:");
       DEBUG_SERIAL_PRINTF("Mode: %d\n", control_data_deserialized.mode);
       DEBUG_SERIAL_PRINTF("Running: %d\n",
                           control_data_deserialized.is_running);
@@ -219,10 +206,12 @@ void send_control_data(const size_t client_id) {
   }
 #endif
 
-  if (status && client_id == 0) {
-    ws.binaryAll(buffer, encoded_size);
-  } else if (status) {
-    ws.binary(client_id, buffer, encoded_size);
+  if (status) {
+    if (client_id == 0) {
+      ws.binaryAll(buffer, encoded_size);
+    } else {
+      ws.binary(client_id, buffer, encoded_size);
+    }
   } else {
     DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
   }
