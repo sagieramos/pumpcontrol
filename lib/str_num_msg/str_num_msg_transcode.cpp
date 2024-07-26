@@ -78,26 +78,26 @@ bool pb_decode_string(pb_istream_t *stream, const pb_field_t *field,
  * @param key The key to set in the message.
  * @param msg Pointer to the Num message to initialize.
  */
-void create_num(float number, uint32_t key, Num *msg) {
-  *msg = Num_init_zero;
-  msg->key = key;
-  msg->value = number;
+void create_num(float number, uint32_t key, Num &msg) {
+  msg = Num_init_zero;
+  msg.key = key;
+  msg.value = number;
 }
 
 // Create Str message
 /**
- * @brief Initializes a Strnum message with the provided string and key.
+ * @brief Initializes a Str message with the provided string and key.
  *
  * @param str The string to set in the message.
  * @param key The key to set in the message.
- * @param msg Pointer to the Strnum message to initialize.
+ * @param msg Pointer to the Str message to initialize.
  */
-void create_str(const char *str, uint32_t key, Strnum *msg) {
-  *msg = Strnum_init_zero;
-  msg->key = key;
+void create_str(const char *str, uint32_t key, Str &msg) {
+  msg = Str_init_zero;
+  msg.key = key;
   if (str != NULL) {
-    msg->str.funcs.encode = &pb_encode_string;
-    msg->str.arg = (void *)str;
+    msg.value.funcs.encode = &pb_encode_string;
+    msg.value.arg = (void *)str;
   }
 }
 
@@ -111,13 +111,13 @@ void create_str(const char *str, uint32_t key, Strnum *msg) {
  * @param key The key to set in the message.
  * @param msg Pointer to the Strnum message to initialize.
  */
-void create_strnum(const char *str, float num, uint32_t key, Strnum *msg) {
-  *msg = Strnum_init_zero;
-  msg->key = key;
-  msg->num = num;
+void create_strnum(const char *str, float num, uint32_t key, Strnum &msg) {
+  msg = Strnum_init_zero;
+  msg.key = key;
+  msg.num = num;
   if (str != NULL) {
-    msg->str.funcs.encode = &pb_encode_string;
-    msg->str.arg = (void *)str;
+    msg.str.funcs.encode = &pb_encode_string;
+    msg.str.arg = (void *)str;
   }
 }
 
@@ -128,10 +128,10 @@ void create_strnum(const char *str, float num, uint32_t key, Strnum *msg) {
  * @param strum The Strnum data to set in the message.
  * @param msg Pointer to the Strnumlist message to initialize.
  */
-void create_strnumlst(const Strnum *strum, Strnumlist *msg) {
-  *msg = Strnumlist_init_zero;
-  msg->str_nums.funcs.encode = &pb_encode_strnum;
-  msg->str_nums.arg = (void *)strum;
+void create_strnumlst(const Strnum *strum, Strnumlist &msg) {
+  msg = Strnumlist_init_zero;
+  msg.str_nums.funcs.encode = &pb_encode_strnum;
+  msg.str_nums.arg = (void *)strum;
 }
 
 // Serialize Num message
@@ -147,7 +147,7 @@ void create_strnumlst(const Strnum *strum, Strnumlist *msg) {
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
-                   uint8_t type_id, strnum_codec_callback cb) {
+                   uint8_t type_id, strnum_codec_callback_t cb) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
   bool status = pb_encode(&stream, Num_fields, &msg);
@@ -172,7 +172,7 @@ bool serialize_num(const Num &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
-                     strnum_codec_callback cb) {
+                     strnum_codec_callback_t cb) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   bool status = pb_decode(&stream, Num_fields, &msg);
   if (status && cb) {
@@ -194,7 +194,7 @@ bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
-                   uint8_t type_id, strnum_codec_callback cb) {
+                   uint8_t type_id, strnum_codec_callback_t cb) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
   bool status = pb_encode(&stream, Str_fields, &msg);
@@ -218,10 +218,12 @@ bool serialize_str(const Str &msg, uint8_t *buffer, size_t *buffer_size,
  *
  * @return True if deserialization was successful, false otherwise.
  */
+
 bool deserialize_str(Str &msg, const uint8_t *buffer, size_t buffer_size,
-                     strnum_codec_callback cb) {
-  msg = Str_init_zero;
+                     strnum_codec_callback_t cb) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
+  msg.value.funcs.decode = &pb_decode_string;
+
   bool status = pb_decode(&stream, Str_fields, &msg);
   if (status && cb) {
     cb((void *)&msg, buffer_size);
@@ -256,7 +258,7 @@ void free_str(Str &msg) {
  * @return True if serialization was successful, false otherwise.
  */
 bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
-                      uint8_t type_id, strnum_codec_callback cb) {
+                      uint8_t type_id, strnum_codec_callback_t cb) {
   buffer[0] = type_id;
   pb_ostream_t stream = pb_ostream_from_buffer(buffer + 1, *buffer_size - 1);
   bool status = pb_encode(&stream, Strnum_fields, &msg);
@@ -281,8 +283,7 @@ bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
  * @return True if deserialization was successful, false otherwise.
  */
 bool deserialize_strnum(Strnum &msg, const uint8_t *buffer, size_t buffer_size,
-                        strnum_codec_callback cb) {
-  msg = Strnum_init_zero;
+                        strnum_codec_callback_t cb) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   msg.str.funcs.decode = &pb_decode_string;
 

@@ -78,7 +78,7 @@ try {
 }
 
 // Example with Strnum
-const strnum = { key: 1, str: "hello", num: 42.42 };
+const strnum = { key: 1, str: "Print the buffer contents and sizes at", num: 42.42 };
 const serializedStrnum = serializeData(strnum, TYPE_IDS.STR_NUM_TYPE_ID, Strnum);
 console.log('Serialized Strnum:', serializedStrnum);
 

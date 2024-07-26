@@ -3,6 +3,7 @@
 #include "type_id.h"
 
 void receive_control_data(uint8_t *data, size_t len) {
+  DEBUG_SERIAL_PRINTF("Received `control_data` message of length %u\n", len);
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
@@ -58,32 +59,39 @@ void void_action(uint8_t *data, size_t len) {
 }
 
 void receive_strnum(uint8_t *data, size_t len) {
+  DEBUG_SERIAL_PRINTF("Received `strnum` message of length %u\n", len);
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
   }
   Strnum msg = Strnum_init_zero;
   if (deserialize_strnum(msg, data, len)) {
-    DEBUG_SERIAL_PRINTF("Received string: %s\n", msg.str);
+    DEBUG_SERIAL_PRINTF("Received string: %s\n", (const char *)msg.str.arg);
     DEBUG_SERIAL_PRINTF("Received number: %f\n", msg.num);
     DEBUG_SERIAL_PRINTF("Received key: %u\n", msg.key);
 
     free_strnum(msg);
+  } else {
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize string and number message");
   }
 }
 
 void receive_str(uint8_t *data, size_t len) {
+  DEBUG_SERIAL_PRINTF("Received `str` message of length %u\n", len);
   Str msg = Str_init_zero;
   if (deserialize_str(msg, data, len)) {
-    DEBUG_SERIAL_PRINTF("Received string: %s\n", msg.value);
+    DEBUG_SERIAL_PRINTF("Received string: %s\n", (const char *)msg.value.arg);
     DEBUG_SERIAL_PRINTF("Received key: %u\n", msg.key);
 
     free_str(msg);
+  } else {
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize string message");
   }
 }
 
 // void receive_num(uint8_t *data, size_t len)
 void receive_single_config(uint8_t *data, size_t len) {
+  DEBUG_SERIAL_PRINTF("Received `num` message of length %u\n", len);
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
@@ -187,7 +195,7 @@ void recieve_pump_time_range(uint8_t *data, size_t len) {
     xSemaphoreGive(controlDataMutex);
   }
 }
-
+// Function index matches the type_id defined in type_id.h
 MsgHandler receive_ptr[] = {
     void_action,            // Placeholder for index 0
     receive_single_config,  // Handle single configuration updates
