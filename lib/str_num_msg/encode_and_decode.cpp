@@ -15,7 +15,7 @@
  * @return True if encoding was successful, false otherwise.
  */
 bool encode_string(pb_ostream_t *stream, const pb_field_t *field,
-                      void *const *arg) {
+                   void *const *arg) {
   const char *str = (const char *)(*arg);
   if (!pb_encode_tag_for_field(stream, field)) {
     return false;
@@ -33,8 +33,7 @@ bool encode_string(pb_ostream_t *stream, const pb_field_t *field,
  *
  * @return True if decoding was successful, false otherwise.
  */
-bool decode_string(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg) {
+bool decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   size_t str_len = stream->bytes_left;
   char *str = (char *)malloc(str_len + 1);
   if (!str) {
@@ -68,60 +67,4 @@ bool pb_encode_strnum(pb_ostream_t *stream, const pb_field_t *field,
     return false;
   }
   return pb_encode_submessage(stream, Strnum_fields, msg);
-}
-
-/* callback function to encode a stringlist message
- * @param stream The stream to write to.
- * @param field The field descriptor for the stringlist message.
- * @param arg The stringlist message to encode.
- *
- * @return True if encoding was successful, false otherwise.
-*/
-
-bool pb_encode_stringlist(pb_ostream_t *stream, const pb_field_t *field,
-                      void *const *arg) {
-  const Stringlist *msg = (const Stringlist *)(*arg);
-  if (!pb_encode_tag_for_field(stream, field)) {
-    return false;
-  }
-  return pb_encode_submessage(stream, Stringlist_fields, msg);
-}
-
-bool pb_encode_strnumlist(pb_ostream_t *stream, const pb_field_t *field,
-                      void *const *arg) {
-  const Strnumlist *msg = (const Strnumlist *)(*arg);
-  if (!pb_encode_tag_for_field(stream, field)) {
-    return false;
-  }
-  return pb_encode_submessage(stream, Strnumlist_fields, msg);
-}
-
-bool pb_decode_stringlist(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg) {
-  Stringlist *msg = (Stringlist *)malloc(sizeof(Stringlist));
-  if (!msg) {
-    return false;
-  }
-  *msg = Stringlist_init_zero;
-  if (!pb_decode(stream, Stringlist_fields, msg)) {
-    free(msg);
-    return false;
-  }
-  *arg = msg;
-  return true;
-}
-
-bool pb_decode_strnumlist(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg) {
-  Strnumlist *msg = (Strnumlist *)malloc(sizeof(Strnumlist));
-  if (!msg) {
-    return false;
-  }
-  *msg = Strnumlist_init_zero;
-  if (!pb_decode(stream, Strnumlist_fields, msg)) {
-    free(msg);
-    return false;
-  }
-  *arg = msg;
-  return true;
 }

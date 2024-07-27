@@ -1,5 +1,8 @@
 #include "main_test.h"
 #include "str_num_msg_transcode.h"
+#include <pb.h>
+#include <pb_decode.h>
+#include <pb_encode.h>
 #include <stdio.h>
 
 // Test serializing a Str message
@@ -40,7 +43,7 @@ void test_serialize_str() {
 void test_deserialize_str() {
   const char *test_str = "Hello, World!";
   Str msg = Str_init_zero;
-  //create_str(test_str, 100, msg);
+  // create_str(test_str, 100, msg);
   create_str("Hello, World!", 100, msg);
 
   uint8_t buffer[128];
@@ -107,47 +110,78 @@ void test_serialize_deserialize_strnum() {
   TEST_ASSERT_NULL(msg_out.str.arg);
 }
 
-// Test serializing and deserializing a strnumlst message
-void test_serialize_deserialize_strnumlst() {
-  const char *test_str = "Hello, World!";
-  float test_num = 450.0f;
-  uint32_t test_key = 40;
-  Strnum msg[3];
-  create_strnum(test_str, test_num, test_key, msg[0]);
-   create_strnum(test_str, test_num, test_key, msg[1]);
-   create_strnum(test_str, test_num, test_key, msg[2]);
+// Test serializing and deserialiasing a Auth message
+void test_serialize_deserialize_auth() {
+  Auth msg = Auth_init_zero;
+  const char *test_id = "imuwahen";
+  const char *test_pass = "password";
 
-  Strnumlist msg_lst;
-  create_strnumlst(msg, msg_lst);
+  create_auth(test_id, test_pass, msg);
 
-  uint8_t buffer[128];
+  uint8_t buffer[555];
   size_t buffer_size = sizeof(buffer);
-  uint8_t type_id = 2;
+  uint8_t type_id = 4;
 
-  TEST_ASSERT_TRUE(
-      serialize_strnumlst(&msg_lst, buffer, &buffer_size, type_id));
-  printf("size of buffer after strnumlst serialization: %ld\n", buffer_size);
-  for (int i = 0; i < sizeof(buffer); i++) {
-    printf("%x ", buffer[i]);
-  }
-  printf("\n");
+  TEST_ASSERT_TRUE(serialize_auth(msg, buffer, &buffer_size, type_id, NULL));
 
- Strnumlist msg_lst_out = Strnumlist_init_zero;
-  TEST_ASSERT_TRUE(deserialize_strnumlst(msg_lst_out, buffer, buffer_size));
+  Auth msg_out = Auth_init_zero;
+  TEST_ASSERT_TRUE(deserialize_auth(msg_out, buffer, buffer_size, NULL));
 
-Strnum *msg_out = (Strnum *)msg_lst_out.strnums.arg;
+  TEST_ASSERT_EQUAL_STRING(test_id, msg_out.id.arg);
+  TEST_ASSERT_EQUAL_STRING(test_pass, msg_out.pass.arg);
 
-printf("Message values is: %s\n", (const char *)msg_out[1].str.arg);
-
-for (size_t i = 0; i < 3; i++) {
-    printf("Element %zu: key=%u, num=%f, str=%s\n", i, msg_out[i].key, msg_out[i].num, (const char *)msg_out[i].str.arg);
+  free_auth(msg_out);
 }
 
-/*   for (int i = 0; i < 2; i++) {
-    printf("msg_out[%d].key: %d\n", i, msg_out[i].key);
-    TEST_ASSERT_EQUAL_UINT32(msg[i].key, msg_out[i].key);
-    TEST_ASSERT_EQUAL_FLOAT(msg[i].num, msg_out[i].num);
-    TEST_ASSERT_EQUAL_STRING((const char *)msg[i].str.arg,
-                             (const char *)msg_out[i].str.arg);
-  }  */
+bool encode_repeated_field(pb_ostream_t *stream, const pb_field_iter_t *field,
+                           void *const *arg) {
+  uint64_t *values = (uint64_t *)*arg; // Access the array of values
+  size_t count =
+      field->array_size; // Use field->array_size for the number of elements
+
+  for (size_t i = 0; i < count; ++i) {
+    if (!pb_encode_varint(stream, values[i])) {
+      return false; // Handle encoding error
+    }
+  }
+  return true;
+}
+
+bool decode_repeated_field(pb_istream_t *stream, const pb_field_iter_t *field,
+                           void **arg) {
+  uint64_t *values =
+      (uint64_t *)*arg; // Access the array to store decoded values
+  size_t index = 0;
+
+  while (stream->bytes_left) {
+    if (index >= field->array_size) {
+      return false; // Handle overflow if more values are read than expected
+    }
+
+    if (!pb_decode_varint(stream, &values[index])) {
+      return false; // Handle decoding error
+    }
+
+    ++index;
+  }
+  return true;
+}
+
+// Test serializing and deserializing a Numlist message
+void test_serialize_deserialize_numlist() {
+
+  float test_values[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+  Numlist msg = Numlist_init_zero;
+
+  uint8_t buffer[128];
+  pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+
+  bool status = pb_encode(&stream, Numlist_fields, &msg);
+  if (status) {
+    printf("Encoding successful\n");
+  } else {
+    printf("Encoding failed: %s\n", PB_GET_ERROR(&stream));
+  }
+
+  TEST_ASSERT_TRUE(status);
 }

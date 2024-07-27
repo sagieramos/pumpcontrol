@@ -14,8 +14,6 @@ void create_num(float number, uint32_t key, Num &msg) {
   msg.value = number;
 }
 
-
-
 // Create Str message
 /**
  * @brief Initializes a Str message with the provided string and key.
@@ -53,19 +51,42 @@ void create_strnum(const char *str, float num, uint32_t key, Strnum &msg) {
   }
 }
 
+// Create Auth message
+/**
+ * @brief Initializes an Auth message with the provided username and password.
+ *
+ * @param id The username to set in the message.
+ * @param pass The password to set in the message.
+ * @param msg The Auth message to initialize.
+ */
 
-void create_stringlist(const char *str[], size_t num_strs, Stringlist &msg) {
-  msg = Stringlist_init_zero;
-  for(size_t i = 0; i < num_strs; i++) {
-    msg.strs.funcs.encode = &encode_string;
-    msg.strs.arg = (void *)str[i];
+void create_auth(const char *id, const char *pass, Auth &msg) {
+  msg = Auth_init_zero;
+  if (id != NULL) {
+    msg.id.funcs.encode = &encode_string;
+    msg.id.arg = (void *)id;
+  }
+  if (pass != NULL) {
+    msg.pass.funcs.encode = &encode_string;
+    msg.pass.arg = (void *)pass;
   }
 }
 
-void create_strnumlist(const Strnum *strum, Strnumlist &msg) {
-  msg = Strnumlist_init_zero;
-  msg.strnums.funcs.encode = &pb_encode_strnum;
-  msg.strnums.arg = (void *)strum;
+// Free memory for Auth message
+/**
+ * @brief Frees memory allocated for an Auth message.
+ *
+ * @param msg The Auth message to free.
+ */
+void free_auth(Auth &msg) {
+  if (msg.id.arg) {
+    free(msg.id.arg);
+    msg.id.arg = NULL;
+  }
+  if (msg.pass.arg) {
+    free(msg.pass.arg);
+    msg.pass.arg = NULL;
+  }
 }
 
 // Free memory for Str message
@@ -81,30 +102,15 @@ void free_str(Str &msg) {
   }
 }
 
-void free_stringlist(Stringlist &msg) {
-  if (msg.strs.arg) {
-    free(msg.strs.arg);
-    msg.strs.arg = NULL;
-  }
-}
-
-void free_strnumlist(Strnumlist &msg) {
-  if (msg.strnums.arg) {
-    free(msg.strnums.arg);
-    msg.strnums.arg = NULL;
-  }
-}
-
-
-// Create Strnumlist message
+// Free memory for Strnum message
 /**
- * @brief Initializes a Strnumlist message with the provided Strnum data.
+ * @brief Frees memory allocated for a Strnum message.
  *
- * @param strum The Strnum data to set in the message.
- * @param msg Pointer to the Strnumlist message to initialize.
+ * @param msg The Strnum message to free.
  */
-void create_strnumlst(const Strnum *strum, Strnumlist &msg) {
-  msg = Strnumlist_init_zero;
-  msg.strnums.funcs.encode = &pb_encode_strnum;
-  msg.strnums.arg = (void *)strum;
+void free_strnum(Strnum &msg) {
+  if (msg.str.arg) {
+    free(msg.str.arg);
+    msg.str.arg = NULL;
+  }
 }

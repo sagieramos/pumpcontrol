@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define MAX_DATA_LENGTH 1024
+
 /**
  * @typedef MsgHandler
  * @brief Type alias for a function pointer that handles messages.
@@ -130,6 +132,22 @@ constexpr uint8_t CONTROL_DATA_TYPE_ID = 0x04;
 constexpr uint8_t PUMP_TIME_RANGE_TYPE_ID = 0x05;
 
 /**
+ * @def AUTH_TYPE_ID
+ * @brief Type ID for authentication messages.
+ *
+ * This constant represents the type ID used for messages that contain
+ * authentication data. It is used to identify messages that contain
+ * authentication information during serialization and deserialization.
+ *
+ * usage:
+ * - This type ID should be used when serializing messages that contain
+ * authentication data.
+ * - It helps in routing the messages to appropriate handlers based on their
+ * type.
+ */
+constexpr uint8_t AUTH_TYPE_ID = 0x06;
+
+/**
  * @enum ConfigKey
  * @brief Enum representing the configuration keys for pump control settings.
  *
@@ -141,6 +159,7 @@ constexpr uint8_t PUMP_TIME_RANGE_TYPE_ID = 0x05;
  *       message types or configuration parameters. Ensure that the keys used
  *       in messages match these defined values to avoid unexpected behavior.
  */
+
 enum ConfigKey {
   /**
    * @brief Key for setting the pump mode.

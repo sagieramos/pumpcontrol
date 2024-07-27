@@ -1,4 +1,4 @@
-import { Num, Numlist, Str, Strlist, Strnum, Strnumlist } from './str_num_msg.js';
+import { Num, Str, Strnum, Numlist, Auth } from './str_num_msg.js';
 import { ControlData, TimeRange, MachineMode } from './pump_control_data.js';
 import { TYPE_IDS } from './type_ids.js';
 
@@ -10,7 +10,8 @@ const TYPE_IDENTIFIER_NUM = 0x01;
     STR_TYPE_ID: 0x02,
     STR_NUM_TYPE_ID: 0x03,
     CONTROL_DATA_TYPE_ID: 0x04,
-    PUMP_TIME_RANGE_TYPE_ID: 0x05
+    PUMP_TIME_RANGE_TYPE_ID: 0x05,
+    AUTH_TYPE_ID: 0x06
 }; */
 
 function serializeData(data, typeIdentifier, proto) {
@@ -42,16 +43,32 @@ try {
 }
 
 // Example with Numlist
-const numlist = { numbers: [{ key: 1, value: 42.42 }, { key: 2, value: 24.24 }] };
-const serializedNumlist = serializeData(numlist, TYPE_IDENTIFIER_NUM, Numlist);
+const numlist = { value: [1, 2, 3, 4, 5] };
+const serializedNumlist = serializeData(numlist, TYPE_IDS.SINGLE_CONFIG_TYPE_ID, Numlist);
 console.log('Serialized Numlist:', serializedNumlist);
 
 try {
-    const deserializedNumlist = deserializeData(serializedNumlist, TYPE_IDENTIFIER_NUM, Numlist);
+    const deserializedNumlist = deserializeData(serializedNumlist, TYPE_IDS.SINGLE_CONFIG_TYPE_ID, Numlist);
     console.log('Deserialized Numlist:', deserializedNumlist);
 } catch (error) {
     console.error('Failed to deserialize Numlist:', error);
 }
+
+// Example with Auth
+const auth = { id: "imuwahen", pass: "password" };
+const serializedAuth = serializeData(auth, TYPE_IDS.AUTH_TYPE_ID, Auth);
+// Convert the buffer to a hex string
+const hexStrin = serializedAuth.toString('hex').toUpperCase();
+console.log('Serialized Auth (Hex):', hexStrin);
+console.log('Serialized Auth:', serializedAuth);
+
+try {
+    const deserializedAuth = deserializeData(serializedAuth, TYPE_IDS.AUTH_TYPE_ID, Auth);
+    console.log('Deserialized Auth:', deserializedAuth);
+} catch (error) {
+    console.error('Failed to deserialize Auth:', error);
+}
+
 
 // Example with Str
 const str = { key: 1, value: "hello" };
@@ -65,17 +82,6 @@ try {
     console.error('Failed to deserialize Str:', error);
 }
 
-// Example with Strlist
-const strlist = { Str: ["hello", "world"] };
-const serializedStrlist = serializeData(strlist, TYPE_IDS.STR_TYPE_ID, Strlist);
-console.log('Serialized Strlist:', serializedStrlist);
-
-try {
-    const deserializedStrlist = deserializeData(serializedStrlist, TYPE_IDS.STR_TYPE_ID, Strlist);
-    console.log('Deserialized Strlist:', deserializedStrlist);
-} catch (error) {
-    console.error('Failed to deserialize Strlist:', error);
-}
 
 // Example with Strnum
 const strnum = { key: 1, str: "Print the buffer contents and sizes at", num: 42.42 };
@@ -87,18 +93,6 @@ try {
     console.log('Deserialized Strnum:', deserializedStrnum);
 } catch (error) {
     console.error('Failed to deserialize Strnum:', error);
-}
-
-// Example with Strnumlist
-const strnumlist = { strnum: [{ key: 1, str: "hello", num: 42.42 }, { key: 2, str: "world", num: 24.24 }] };
-const serializedStrnumlist = serializeData(strnumlist, TYPE_IDENTIFIER_NUM, Strnumlist);
-console.log('Serialized Strnumlist:', serializedStrnumlist);
-
-try {
-    const deserializedStrnumlist = deserializeData(serializedStrnumlist, TYPE_IDENTIFIER_NUM, Strnumlist);
-    console.log('Deserialized Strnumlist:', deserializedStrnumlist);
-} catch (error) {
-    console.error('Failed to deserialize Strnumlist:', error);
 }
 
 // Example with ControlData

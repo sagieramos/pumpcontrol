@@ -22,7 +22,7 @@ typedef void (*strnum_codec_callback_t)(void *data, size_t len);
  * @return True if encoding was successful, false otherwise.
  */
 bool encode_string(pb_ostream_t *stream, const pb_field_t *field,
-                      void *const *arg);
+                   void *const *arg);
 
 /**
  * @brief callback function to encode a Strnum message.
@@ -45,8 +45,7 @@ bool pb_encode_strnum(pb_ostream_t *stream, const pb_field_t *field,
  *
  * @return True if decoding was successful, false otherwise.
  */
-bool decode_string(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg);
+bool decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
 // Functions for creating messages
 
@@ -79,12 +78,13 @@ void create_str(const char *str, uint32_t key, Str &msg);
 void create_strnum(const char *str, float num, uint32_t key, Strnum &msg);
 
 /**
- * @brief Initializes a Strnumlist message with a list of Strnum messages.
+ * @brief Initializes an Auth message with the provided username and password.
  *
- * @param strum Pointer to the Strnum list to include in the message.
- * @param msg The Strnumlist message to initialize.
+ * @param username The username to set in the message.
+ * @param password The password to set in the message.
+ * @param msg Pointer to the Auth message to initialize.
  */
-void create_strnumlst(const Strnum *strum, Strnumlist &msg);
+void create_auth(const char *id, const char *pass, Auth &msg);
 
 /**
  * @brief Serializes a Num message into a buffer.
@@ -167,31 +167,6 @@ bool serialize_strnum(Strnum &msg, uint8_t *buffer, size_t *buffer_size,
 bool deserialize_strnum(Strnum &msg, const uint8_t *buffer, size_t buffer_size,
                         strnum_codec_callback_t cb = NULL);
 
-/**
- * @brief Serializes a Strnumlist message into a buffer.
- *
- * @param msg The Strnumlist message to serialize.
- * @param buffer The buffer to store the serialized data.
- * @param buffer_size Pointer to the size of the buffer.
- * @param type_id The type ID to prefix the message with.
- *
- * @return True if serialization was successful, false otherwise.
- */
-bool serialize_strnumlst(const Strnumlist *msg, uint8_t *buffer,
-                         size_t *buffer_size, uint8_t type_id);
-
-/**
- * @brief Deserializes a Strnumlist message from a buffer.
- *
- * @param msg The Strnumlist message to deserialize into.
- * @param buffer The buffer containing the serialized data.
- * @param buffer_size The size of the buffer.
- *
- * @return True if deserialization was successful, false otherwise.
- */
-bool deserialize_strnumlst(Strnumlist &msg, const uint8_t *buffer,
-                           size_t buffer_size);
-
 // Free memory for Strnum message
 /**
  * @brief Frees memory allocated for a Strnum message.
@@ -212,13 +187,42 @@ void free_strnum(Strnum &msg);
  */
 void free_str(Str &msg);
 
+/**
+ * @brief Serializes an Auth message to a buffer.
+ *
+ * @param msg The Auth message to serialize.
+ * @param buffer The buffer to store the serialized data.
+ * @param buffer_size Pointer to the size of the buffer.
+ * @param type_id The type ID to prefix the message with.
+ * @param cb Optional callback function to call after serialization.
+ *
+ * @return True if serialization was successful, false otherwise.
+ */
+
+bool serialize_auth(const Auth &msg, uint8_t *buffer, size_t *buffer_size,
+                    uint8_t type_id, strnum_codec_callback_t cb);
+
+/**
+ * @brief Deserializes an Auth message from a buffer.
+ *
+ * @param msg The Auth message to deserialize into.
+ * @param buffer The buffer containing the serialized data.
+ * @param buffer_size The size of the buffer.
+ * @param cb Optional callback function to call after deserialization.
+ *
+ * @return True if deserialization was successful, false otherwise.
+ */
+
+bool deserialize_auth(Auth &msg, const uint8_t *buffer, size_t buffer_size,
+                      strnum_codec_callback_t cb = NULL);
+
 /* callback function to encode a stringlist message
  * @param stream The stream to write to.
  * @param field The field descriptor for the stringlist message.
  * @param arg The stringlist message to encode.
  *
  * @return True if encoding was successful, false otherwise.
-*/
+ */
 
 /**
  * @brief callback function to decode a string from a protobuf message.
@@ -229,13 +233,13 @@ void free_str(Str &msg);
  *
  * @return True if decoding was successful, false otherwise.
  */
-bool decode_string(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg);
+bool decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg);
 
-bool pb_encode_stringlist(pb_ostream_t *stream, const pb_field_t *field,
-                      void *const *arg);
-bool pb_decode_stringlist(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg);
-bool pb_decode_strnumlist(pb_istream_t *stream, const pb_field_t *field,
-                      void **arg);
+/**
+ * @brief Frees memory allocated for an Auth message.
+ *
+ * @param msg The Auth message to free.
+ */
+void free_auth(Auth &msg);
+
 #endif

@@ -195,14 +195,31 @@ void recieve_pump_time_range(uint8_t *data, size_t len) {
     xSemaphoreGive(controlDataMutex);
   }
 }
+
+void recieve_auth(uint8_t *data, size_t len) {
+  if (data == NULL || len == 0) {
+    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    return;
+  }
+  Auth msg = Auth_init_zero;
+  if (deserialize_auth(msg, data, len, NULL)) {
+    DEBUG_SERIAL_PRINTF("Received ID: %s\n", (const char *)msg.id.arg);
+    DEBUG_SERIAL_PRINTF("Received Password: %s\n", (const char *)msg.pass.arg);
+
+    free_auth(msg);
+  } else {
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize auth message");
+  }
+}
 // Function index matches the type_id defined in type_id.h
 MsgHandler receive_ptr[] = {
-    void_action,            // Placeholder for index 0
-    receive_single_config,  // Handle single configuration updates
-    receive_str,            // Handle string messages
-    receive_strnum,         // Handle string and number messages
-    receive_control_data,   // Handle control data
-    recieve_pump_time_range // Handle pump time range
+    void_action,             // Placeholder for index 0
+    receive_single_config,   // Handle single configuration updates
+    receive_str,             // Handle string messages
+    receive_strnum,          // Handle string and number messages
+    receive_control_data,    // Handle control data
+    recieve_pump_time_range, // Handle pump time range
+    recieve_auth             // Handle auth message
 };
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len) {
@@ -210,8 +227,23 @@ void receive_msg_and_perform_action(uint8_t *data, size_t len) {
     DEBUG_SERIAL_PRINTLN("Invalid data received");
     return;
   }
+  // print the time, type_id, and time
+  DEBUG_SERIAL_PRINTLN();
+  DEBUG_SERIAL_PRINTF("Received message of length %u\n", len);
+  DEBUG_SERIAL_PRINTF("Type ID: %u\n", data[0]);
+  unsigned long current_time = getCurrentTimeMs();
+  if (len > MAX_DATA_LENGTH) {
+    DEBUG_SERIAL_PRINTF("Data length exceeds maximum allowed length: %zu\n",
+                        len);
+    return;
+  }
+
   if (data[0] < sizeof(receive_ptr) / sizeof(receive_ptr[0])) {
     receive_ptr[data[0]](data, len);
+    DEBUG_SERIAL_PRINTF("Handled message with type ID: %u in \n", data[0]);
+    unsigned long time_taken = getCurrentTimeMs() - current_time;
+    DEBUG_SERIAL_PRINTF("Time taken to process message: %lu ms\n", time_taken);
+
   } else {
     DEBUG_SERIAL_PRINTF("Invalid action index: %u\n", data[0]);
   }

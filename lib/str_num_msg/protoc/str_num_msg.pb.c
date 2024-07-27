@@ -15,16 +15,10 @@ PB_BIND(Numlist, Numlist, AUTO)
 PB_BIND(Str, Str, AUTO)
 
 
-PB_BIND(Strlist, Strlist, AUTO)
-
-
-PB_BIND(Stringlist, Stringlist, AUTO)
-
-
 PB_BIND(Strnum, Strnum, AUTO)
 
 
-PB_BIND(Strnumlist, Strnumlist, AUTO)
+PB_BIND(Auth, Auth, AUTO)
 
 
 
