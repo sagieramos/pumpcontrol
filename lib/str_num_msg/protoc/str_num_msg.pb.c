@@ -18,6 +18,9 @@ PB_BIND(Str, Str, AUTO)
 PB_BIND(Strlist, Strlist, AUTO)
 
 
+PB_BIND(Stringlist, Stringlist, AUTO)
+
+
 PB_BIND(Strnum, Strnum, AUTO)
 
 

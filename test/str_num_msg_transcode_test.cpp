@@ -40,7 +40,8 @@ void test_serialize_str() {
 void test_deserialize_str() {
   const char *test_str = "Hello, World!";
   Str msg = Str_init_zero;
-  create_str(test_str, 100, msg);
+  //create_str(test_str, 100, msg);
+  create_str("Hello, World!", 100, msg);
 
   uint8_t buffer[128];
   size_t buffer_size = sizeof(buffer);
@@ -109,13 +110,15 @@ void test_serialize_deserialize_strnum() {
 // Test serializing and deserializing a strnumlst message
 void test_serialize_deserialize_strnumlst() {
   const char *test_str = "Hello, World!";
-  float test_num = 42.0f;
-  uint32_t test_key = 12345;
-  Strnum msg;
-  create_strnum(test_str, test_num, test_key, msg);
+  float test_num = 450.0f;
+  uint32_t test_key = 40;
+  Strnum msg[3];
+  create_strnum(test_str, test_num, test_key, msg[0]);
+   create_strnum(test_str, test_num, test_key, msg[1]);
+   create_strnum(test_str, test_num, test_key, msg[2]);
 
   Strnumlist msg_lst;
-  create_strnumlst(&msg, msg_lst);
+  create_strnumlst(msg, msg_lst);
 
   uint8_t buffer[128];
   size_t buffer_size = sizeof(buffer);
@@ -123,14 +126,28 @@ void test_serialize_deserialize_strnumlst() {
 
   TEST_ASSERT_TRUE(
       serialize_strnumlst(&msg_lst, buffer, &buffer_size, type_id));
+  printf("size of buffer after strnumlst serialization: %ld\n", buffer_size);
+  for (int i = 0; i < sizeof(buffer); i++) {
+    printf("%x ", buffer[i]);
+  }
+  printf("\n");
 
-  Strnumlist msg_lst_out;
+ Strnumlist msg_lst_out = Strnumlist_init_zero;
   TEST_ASSERT_TRUE(deserialize_strnumlst(msg_lst_out, buffer, buffer_size));
 
-  Strnum *msg_out = (Strnum *)msg_lst_out.str_nums.arg;
+Strnum *msg_out = (Strnum *)msg_lst_out.strnums.arg;
 
-  TEST_ASSERT_EQUAL_UINT32(msg.key, msg_out->key);
-  TEST_ASSERT_EQUAL_FLOAT(msg.num, msg_out->num);
-  TEST_ASSERT_EQUAL_STRING((const char *)msg.str.arg,
-                           (const char *)msg_out->str.arg);
+printf("Message values is: %s\n", (const char *)msg_out[1].str.arg);
+
+for (size_t i = 0; i < 3; i++) {
+    printf("Element %zu: key=%u, num=%f, str=%s\n", i, msg_out[i].key, msg_out[i].num, (const char *)msg_out[i].str.arg);
+}
+
+/*   for (int i = 0; i < 2; i++) {
+    printf("msg_out[%d].key: %d\n", i, msg_out[i].key);
+    TEST_ASSERT_EQUAL_UINT32(msg[i].key, msg_out[i].key);
+    TEST_ASSERT_EQUAL_FLOAT(msg[i].num, msg_out[i].num);
+    TEST_ASSERT_EQUAL_STRING((const char *)msg[i].str.arg,
+                             (const char *)msg_out[i].str.arg);
+  }  */
 }

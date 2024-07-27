@@ -21,7 +21,7 @@ typedef void (*strnum_codec_callback_t)(void *data, size_t len);
  *
  * @return True if encoding was successful, false otherwise.
  */
-bool pb_encode_string(pb_ostream_t *stream, const pb_field_t *field,
+bool encode_string(pb_ostream_t *stream, const pb_field_t *field,
                       void *const *arg);
 
 /**
@@ -45,7 +45,7 @@ bool pb_encode_strnum(pb_ostream_t *stream, const pb_field_t *field,
  *
  * @return True if decoding was successful, false otherwise.
  */
-bool pb_decode_string(pb_istream_t *stream, const pb_field_t *field,
+bool decode_string(pb_istream_t *stream, const pb_field_t *field,
                       void **arg);
 
 // Functions for creating messages
@@ -212,4 +212,30 @@ void free_strnum(Strnum &msg);
  */
 void free_str(Str &msg);
 
+/* callback function to encode a stringlist message
+ * @param stream The stream to write to.
+ * @param field The field descriptor for the stringlist message.
+ * @param arg The stringlist message to encode.
+ *
+ * @return True if encoding was successful, false otherwise.
+*/
+
+/**
+ * @brief callback function to decode a string from a protobuf message.
+ *
+ * @param stream The stream to read from.
+ * @param field The field descriptor for the string.
+ * @param arg Pointer to where the decoded string should be stored.
+ *
+ * @return True if decoding was successful, false otherwise.
+ */
+bool decode_string(pb_istream_t *stream, const pb_field_t *field,
+                      void **arg);
+
+bool pb_encode_stringlist(pb_ostream_t *stream, const pb_field_t *field,
+                      void *const *arg);
+bool pb_decode_stringlist(pb_istream_t *stream, const pb_field_t *field,
+                      void **arg);
+bool pb_decode_strnumlist(pb_istream_t *stream, const pb_field_t *field,
+                      void **arg);
 #endif

@@ -15,7 +15,11 @@ message Str {
 }
 
 message Strlist {
-  repeated string Str = 1;
+  repeated Str strings = 1;
+}
+
+message Stringlist {
+  repeated string strs = 1;
 }
 
 message Strnum {
@@ -25,7 +29,7 @@ message Strnum {
 }
 
 message Strnumlist {
-  repeated Strnum str_nums = 1;
+  repeated Strnum strnums = 1;
 }
 
 
