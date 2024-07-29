@@ -16,7 +16,7 @@ extern AsyncWebServer server;
 
 constexpr uint8_t DNS_PORT = 53; // DNS server port
 constexpr uint8_t MAX_CLIENTS =
-    4; // Maximum number of clients that can be AUTHENTICATED
+    8; // Maximum number of clients that can be AUTHENTICATED
 constexpr size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
 constexpr size_t SESSION_TIMEOUT = 60000; // 1 minute
 constexpr const char *TOKEN_ATTR = "_imuwahen";
@@ -103,6 +103,9 @@ enum AuthStatus {
 };
 
 enum authAction { LOGIN, LOGOUT, CHECK };
+
+ClientSession *getSessionFromRequest(const String &cookieHeader,
+                                     ClientSession *authClients);
 
 AuthStatus authSession(ClientSession *authClients,
                        AsyncWebServerRequest *request, ClientSession &session,

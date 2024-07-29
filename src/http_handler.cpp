@@ -46,7 +46,6 @@ void handleLogout(AsyncWebServerRequest *request) {
 
 void handleLogin(AsyncWebServerRequest *request) {
   if (request->hasParam("pin", true)) {
-    String pin = request->getParam("pin", true)->value();
     ClientSession session;
     AuthStatus auth = authSession(authClients, request, session, LOGIN);
 

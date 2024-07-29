@@ -61,7 +61,11 @@ void setup() {
 
   // Handle WebSocket events
   ws.onEvent(onWsEvent);
-  server.addHandler(&ws);
+
+  server.addHandler(&ws).setFilter([](AsyncWebServerRequest *request) {
+    DEBUG_SERIAL_PRINTF("Checking auth for ws: %s\n", request->url().c_str());
+    return authSession(authClients, request, CHECK) == ACTIVE;
+  });
 
   // Serve static files with appropriate MIME types and CORS headers
   // And routes

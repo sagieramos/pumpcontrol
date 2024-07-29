@@ -15,8 +15,10 @@ void send_binary_data(void *data, size_t len) {
 
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
+  size_t client_id = client->id();
+
   if (type == WS_EVT_CONNECT) {
-    size_t client_id = client->id();
+    ws.cleanupClients();
     DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
                         client_id);
 
@@ -40,7 +42,7 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
   } else if (type == WS_EVT_PONG) {
 
   } else if (WS_EVT_DATA) {
-    DEBUG_SERIAL_PRINTF("Websocket data received: %u\n", client->id());
+    DEBUG_SERIAL_PRINTF("Websocket data received: %u\n", client_id);
     receive_msg_and_perform_action(data, len);
   } else {
     DEBUG_SERIAL_PRINTLN("Websocket event not handled");
