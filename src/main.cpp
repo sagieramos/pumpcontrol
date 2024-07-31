@@ -1,6 +1,7 @@
 #include "main.h"
 #include "network.h"
 #include "pump_control.h"
+#include "sensors.h"
 
 struct StaticFile {
   const char *path;
@@ -46,7 +47,28 @@ void setup() {
 
   pinMode(LED_BUILTIN, OUTPUT);
 
-  xTaskCreate(runMachine, "Pump Controller", 4096, NULL, 1, &runMachineTask);
+  if (xTaskCreate(runMachine, "Pump Controller", 4096, NULL, 1,
+                  &runMachineTask) != pdPASS) {
+    DEBUG_SERIAL_PRINTLN("Failed to create pump controller task");
+  } else {
+    DEBUG_SERIAL_PRINTLN("Pump controller task created successfully");
+  }
+
+  if (xTaskCreate(read_voltage_task, "ReadVoltageTask", 10000, NULL, 1,
+                  &readVoltageTask) != pdPASS) {
+    DEBUG_SERIAL_PRINTLN("Failed to create read voltage task");
+  } else {
+    DEBUG_SERIAL_PRINTLN("Read voltage task created successfully");
+  }
+
+  if (xTaskCreate(send_voltage_task, "SendVoltageTask", 10000, NULL, 1,
+                  &sendVoltageTask) != pdPASS) {
+    DEBUG_SERIAL_PRINTLN("Failed to create send voltage task");
+  } else {
+    DEBUG_SERIAL_PRINTLN("Send voltage task created successfully");
+  }
+
+  // void voltage_sensor_init();
 
   // Setup WiFi AP and DNS
   setupWifiAP();

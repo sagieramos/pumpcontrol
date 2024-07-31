@@ -1,4 +1,6 @@
+#include "network.h"
 #include "pump_control.h"
+#include "sensors.h"
 #include "str_num_msg_transcode.h"
 #include "type_id.h"
 
@@ -92,28 +94,29 @@ void receive_str(uint8_t *data, size_t len) {
 // void receive_num(uint8_t *data, size_t len)
 void receive_single_config(uint8_t *data, size_t len) {
   DEBUG_SERIAL_PRINTF("Received `num` message of length %u\n", len);
+
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
   }
 
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
-    Num msg = Num_init_zero;
+  Num msg = Num_init_zero;
 
-    if (!deserialize_num(msg, data, len)) {
-      DEBUG_SERIAL_PRINTLN("Failed to deserialize number message");
-      xSemaphoreGive(controlDataMutex);
-      return;
-    }
+  if (!deserialize_num(msg, data, len)) {
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize number message");
+    return;
+  }
 
-    if (msg.key == 0) {
-      DEBUG_SERIAL_PRINTLN("Received message with key 0, ignoring");
-      xSemaphoreGive(controlDataMutex);
-      return;
-    }
+  if (msg.key == 0 || msg.key >= ConfigKey::CONFIG_KEY_MAX) {
+    DEBUG_SERIAL_PRINTF("Invalid key: %d\n", msg.key);
+    return;
+  }
 
+  bool dataChanged = false;
+
+  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE &&
+      dataChanged) {
     pump_ControlData &control_data = get_current_control_data();
-    bool dataChanged = false;
 
     switch (static_cast<ConfigKey>(msg.key)) {
     case CONFIG_MODE:
@@ -148,6 +151,8 @@ void receive_single_config(uint8_t *data, size_t len) {
       return;
     }
 
+    xSemaphoreGive(controlDataMutex);
+
     if (dataChanged) {
       if (ws.count() > 0) {
         ws.binaryAll(data, len);
@@ -155,16 +160,27 @@ void receive_single_config(uint8_t *data, size_t len) {
 
       if (msg.key == ConfigKey::CONFIG_RESTING_TIME ||
           msg.key == ConfigKey::CONFIG_RUNNING_TIME) {
-        xSemaphoreGive(controlDataMutex);
         store_time_range();
-        return;
       }
     }
+  }
+}
 
-    xSemaphoreGive(controlDataMutex);
+void recieve_min_voltage(uint8_t *data, size_t len) {
+  if (data == NULL || len == 0) {
+    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    return;
+  }
+  Num msg = Num_init_zero;
+  if (deserialize_num(msg, data, len)) {
+    DEBUG_SERIAL_PRINTF("Received min voltage: %f\n", msg.value);
+    if (store_min_voltage(msg.value)) {
+      if (ws.count() > 0) {
+        ws.binaryAll(data, len);
+      }
+    }
   } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in receive_single_config()");
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize min voltage message");
   }
 }
 
@@ -219,7 +235,8 @@ MsgHandler receive_ptr[] = {
     receive_strnum,          // Handle string and number messages
     receive_control_data,    // Handle control data
     recieve_pump_time_range, // Handle pump time range
-    recieve_auth             // Handle auth message
+    recieve_auth,            // Handle auth message
+    recieve_min_voltage      // Handle min voltage message
 };
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len) {

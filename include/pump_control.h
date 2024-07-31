@@ -5,23 +5,30 @@
 #include "network.h"
 #include <transcode_pump_control.h>
 
+#define PUMP_DELAY pdMS_TO_TICKS(5000)
+
 constexpr int FLOAT_SIGNAL_PIN = 21;  // Float signal pin
 constexpr int PUMP_RELAY_PIN = 12;    // Relay pin for pump
 constexpr uint8_t MAGIC_NUMBER = 123; // Magic number for EEPROM data validity
 constexpr size_t MAGIC_NUMBER_SIZE = sizeof(MAGIC_NUMBER);
-constexpr size_t EEPROM_SIZE_CTL = sizeof(pump_TimeRange) + MAGIC_NUMBER_SIZE;
+constexpr size_t EEPROM_SIZE_CTL =
+    sizeof(pump_TimeRange) + MAGIC_NUMBER_SIZE + sizeof(float);
 
 extern TaskHandle_t runMachineTask;
+extern float min_voltage;
 
 void send_control_data(const size_t client_id = 0);
 
 void store_time_range();
+void switch_pump(bool state);
 
 void runMachine(void *parameter);
 
 pump_ControlData &get_current_control_data();
 
 extern SemaphoreHandle_t controlDataMutex;
+extern TimerHandle_t delayTimer;
+extern bool pumpState;
 
 /**
  * @brief Processes a message and performs an action based on the first byte of

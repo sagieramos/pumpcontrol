@@ -139,7 +139,8 @@ let binaryBuffer1 = Buffer.from(hexString1, 'hex');
 let decodedControlData1 = deserializeData(binaryBuffer1, TYPE_IDS.CONTROL_DATA_TYPE_ID, ControlData);
 console.log('Decoded ControlData:', decodedControlData1);
 
-let hexStringNum = "01 08 04 15 00 00 80 3F".replace(/ /g, '');
-let binaryBufferNum = Buffer.from(hexStringNum, 'hex');
-let decodedControlDataNum = deserializeData(binaryBufferNum, TYPE_IDS.SINGLE_CONFIG_TYPE_ID, Num);
-console.log('Decoded num:', decodedControlDataNum);
+//let hexStringNum = "01 08 04 15 00 00 80 3F".replace(/ /g, '');
+let hexStringNum6 = "01 08 01 15 00 00 48 43".replace(/ /g, '');
+let binaryBufferNum6 = Buffer.from(hexStringNum6, 'hex');
+let decodedControlDataNum6 = deserializeData(binaryBufferNum6, TYPE_IDS.SINGLE_CONFIG_TYPE_ID, Num);
+console.log('Decoded num:', decodedControlDataNum6);

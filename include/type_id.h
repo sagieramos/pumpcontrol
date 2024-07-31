@@ -58,6 +58,7 @@ constexpr uint8_t VOID_TYPE_ID = 0x00;
  * in the `receive_ptr` array.
  */
 constexpr uint8_t SINGLE_CONFIG_TYPE_ID = 0x01;
+constexpr uint8_t NUM_TYPE_ID = 0x01;
 
 /**
  * @def STR_TYPE_ID
@@ -160,7 +161,51 @@ constexpr uint8_t AUTH_TYPE_ID = 0x06;
  *       in messages match these defined values to avoid unexpected behavior.
  */
 
+/**
+ * @def VOLTAGE_TYPE_ID
+ * @brief Type ID for voltage sensor messages.
+ *
+ * This constant represents the type ID used for messages that contain voltage
+ * sensor data. It is used to identify messages that contain voltage sensor
+ * information during serialization and deserialization.
+ *
+ * usage:
+ * - This type ID should be used when serializing messages that contain voltage
+ * sensor data.
+ * - It helps in routing the messages to appropriate handlers based on their
+ * type.
+ */
+
+constexpr uint8_t VOLTAGE_TYPE_ID = 0x07;
+
+/**
+ * @def POWER_TYPE_ID
+ * @brief Type ID for power control messages.
+ *
+ * This constant represents the type ID used for messages that contain power
+ * control data. It is used to identify messages that contain power control
+ * information during serialization and deserialization.
+ *
+ * usage:
+ * - This type ID should be used when serializing messages that contain power
+ * control data.
+ * - It helps in routing the messages to appropriate handlers based on their
+ * type.
+ */
+
+enum VoltageKey { VOLTAGE, MIN_VOLTAGE, MAX_VOLTAGE };
+
+constexpr uint8_t POWER_TYPE_ID = 0x08;
+
+enum PowerKey {
+  POWER_READY = 1,
+  POWER_ON,
+  POWER_OFF,
+};
+
 enum ConfigKey {
+  VOLTAGE_SENSOR = 1,
+
   /**
    * @brief Key for setting the pump mode.
    *
@@ -195,7 +240,16 @@ enum ConfigKey {
    * The value should be of type `float`, where a value of `1.0` represents
    * that the pump is running, and `0.0` represents that it is not running.
    */
-  CONFIG_RUNNING_STATE
+  CONFIG_RUNNING_STATE,
+
+  /**
+   * @brief Maximum value for configuration keys.
+   *
+   * This value represents the maximum key value used for configuration
+   * parameters. It is used to validate incoming messages and ensure that the
+   * keys are within the expected range.
+   */
+  CONFIG_KEY_MAX
 };
 
 #endif // TYPE_ID_H

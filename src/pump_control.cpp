@@ -1,11 +1,15 @@
 #include "pump_control.h"
 #include "network.h"
+#include "sensors.h"
 #include "type_id.h"
 #include <EEPROM.h>
 #include <str_num_msg_transcode.h>
 
 TaskHandle_t runMachineTask = NULL;
 SemaphoreHandle_t controlDataMutex = NULL;
+
+bool pumpState = false;
+TimerHandle_t delayTimer = NULL;
 
 // Get the current control data
 pump_ControlData &get_current_control_data() {
@@ -21,7 +25,6 @@ void store_time_range() {
     EEPROM.begin(EEPROM_SIZE_CTL);
     pump_TimeRange stored_time_range = pump_TimeRange_init_zero;
     EEPROM.get(MAGIC_NUMBER_SIZE, stored_time_range);
-    EEPROM.end();
 
     bool time_range_changed =
         (stored_time_range.running != control_data.time_range.running) ||
@@ -32,17 +35,14 @@ void store_time_range() {
                           control_data.time_range.running,
                           control_data.time_range.resting);
 
-      // Store the new time range in EEPROM
-      EEPROM.begin(EEPROM_SIZE_CTL);
       EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
       EEPROM.commit();
-      EEPROM.end();
-
       DEBUG_SERIAL_PRINTLN("Time Range updated in EEPROM");
     } else {
       DEBUG_SERIAL_PRINTLN("Time Range is unchanged, not updating EEPROM");
     }
 
+    EEPROM.end();
     xSemaphoreGive(controlDataMutex);
   } else {
     DEBUG_SERIAL_PRINTLN(
@@ -86,123 +86,49 @@ void init_EEPROM_pump_controller() {
   }
 }
 
-// Switch the pump state (ON/OFF)
-bool switch_pump(bool state) {
-  static bool pumpState = false;
-
-  if (state != pumpState) {
-    pumpState = state;
-    digitalWrite(PUMP_RELAY_PIN, state ? HIGH : LOW);
-    DEBUG_SERIAL_PRINTLN(state ? "Pump is ON" : "Pump is OFF");
-    return true;
-  }
-
-  return false;
-}
-
 // Control pump state based on mode and signal
 void controlPumpState(bool trigger_auto_pump) {
   if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
     pump_ControlData &ctrl = get_current_control_data();
-    bool pumpStateChanged = false;
     static unsigned long lastChangeTime = 0;
+    static bool powerOn = false;
 
     switch (ctrl.mode) {
     case pump_MachineMode_AUTO: {
       if (trigger_auto_pump) {
         unsigned long currentTime = getCurrentTimeMs();
         unsigned long signalTime = currentTime - lastChangeTime;
-
-        if (signalTime >= ctrl.time_range.resting) {
+        float voltageReading = 0.0f;
+        readVoltage(voltageReading);
+        if (min_voltage > voltageReading) {
+          powerOn = true;
+        } else if (signalTime >= ctrl.time_range.resting) {
           lastChangeTime = currentTime;
-          if (switch_pump(false)) { // Turn Pump OFF
-            ctrl.is_running = false;
-            pumpStateChanged = true;
-          }
+          powerOn = false;
         } else if (signalTime >= ctrl.time_range.running) {
-          if (switch_pump(true)) { // Keep Pump ON
-            ctrl.is_running = true;
-            pumpStateChanged = true;
-          }
+          powerOn = true;
         }
       } else {
-        if (switch_pump(false)) { // Turn Pump OFF
-          ctrl.is_running = false;
-          pumpStateChanged = true;
-        }
+        powerOn = false;
       }
       break;
     }
 
     case pump_MachineMode_POWER_ON:
-      if (switch_pump(true)) { // Turn Pump ON
-        ctrl.is_running = true;
-        pumpStateChanged = true;
-      }
+      powerOn = true;
       break;
 
     case pump_MachineMode_POWER_OFF:
-      if (switch_pump(false)) { // Turn Pump OFF
-        ctrl.is_running = false;
-        pumpStateChanged = true;
-      }
+      powerOn = false;
       break;
 
     default:
       DEBUG_SERIAL_PRINTLN("Invalid mode");
       break;
     }
-
-    if (pumpStateChanged) {
-      Num msg = Num_init_default;
-      msg.key = ConfigKey::CONFIG_RUNNING_STATE;
-      msg.value = static_cast<float>(ctrl.is_running);
-
-      uint8_t buffer[128];
-      size_t buffer_size = sizeof(buffer);
-      serialize_num(msg, buffer, &buffer_size, SINGLE_CONFIG_TYPE_ID,
-                    send_binary_data);
-
-      // Send the data (use a separate function for sending if necessary)
-      if (ws.count() > 0) {
-        ws.binaryAll(buffer, buffer_size);
-      }
-    }
-
     xSemaphoreGive(controlDataMutex);
 
-#ifndef PRODUCTION
-    if (pumpStateChanged) {
-      DEBUG_SERIAL_PRINTF("Pump state changed in: %lums\n",
-                          getCurrentTimeMs() - lastChangeTime);
-      DEBUG_SERIAL_PRINTF("Pump is %s\n", ctrl.is_running ? "ON" : "OFF");
-    }
-#endif
-  } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in controlPumpState()");
-  }
-}
-
-// Task to run the machine
-void runMachine(void *parameter) {
-  (void)parameter;
-  pinMode(FLOAT_SIGNAL_PIN, INPUT);
-  pinMode(PUMP_RELAY_PIN, OUTPUT);
-  digitalWrite(PUMP_RELAY_PIN, LOW);
-
-  init_EEPROM_pump_controller();
-
-  for (;;) {
-    int signal = 0;
-
-    for (int i = 0; i < 5; i++) {
-      signal += digitalRead(FLOAT_SIGNAL_PIN) == HIGH ? 1 : 0;
-      vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-
-    controlPumpState(signal >= 4);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    switch_pump(powerOn);
   }
 }
 
@@ -264,5 +190,27 @@ void send_control_data(const size_t client_id) {
   } else {
     DEBUG_SERIAL_PRINTLN(
         "Failed to acquire controlDataMutex in send_control_data()");
+  }
+}
+
+// Task to run the machine
+void runMachine(void *parameter) {
+  (void)parameter;
+  pinMode(FLOAT_SIGNAL_PIN, INPUT);
+  pinMode(PUMP_RELAY_PIN, OUTPUT);
+  digitalWrite(PUMP_RELAY_PIN, LOW);
+
+  init_EEPROM_pump_controller();
+
+  for (;;) {
+    int signal = 0;
+
+    for (int i = 0; i < 5; i++) {
+      signal += digitalRead(FLOAT_SIGNAL_PIN) == HIGH ? 1 : 0;
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+
+    controlPumpState(signal >= 4);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
