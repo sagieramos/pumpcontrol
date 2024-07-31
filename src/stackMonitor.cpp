@@ -32,6 +32,6 @@ void stackMonitor(void *pvParameter) {
     }
     DEBUG_SERIAL_PRINTLN();
 
-    vTaskDelay(pdMS_TO_TICKS(2500));
+    vTaskDelay(pdMS_TO_TICKS(3000));
   }
 }

@@ -140,7 +140,7 @@ let decodedControlData1 = deserializeData(binaryBuffer1, TYPE_IDS.CONTROL_DATA_T
 console.log('Decoded ControlData:', decodedControlData1);
 
 //let hexStringNum = "01 08 04 15 00 00 80 3F".replace(/ /g, '');
-let hexStringNum6 = "01 08 01 15 00 00 48 43".replace(/ /g, '');
+let hexStringNum6 = "01 15 33 33 53 C0 ".replace(/ /g, '');
 let binaryBufferNum6 = Buffer.from(hexStringNum6, 'hex');
 let decodedControlDataNum6 = deserializeData(binaryBufferNum6, TYPE_IDS.SINGLE_CONFIG_TYPE_ID, Num);
 console.log('Decoded num:', decodedControlDataNum6);

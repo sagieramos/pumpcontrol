@@ -95,14 +95,12 @@ void controlPumpState(bool trigger_auto_pump) {
 
     switch (ctrl.mode) {
     case pump_MachineMode_AUTO: {
-      if (trigger_auto_pump) {
+      float voltageReading = 0.0f;
+      readVoltage(voltageReading);
+      if (trigger_auto_pump && voltageReading) {
         unsigned long currentTime = getCurrentTimeMs();
         unsigned long signalTime = currentTime - lastChangeTime;
-        float voltageReading = 0.0f;
-        readVoltage(voltageReading);
-        if (min_voltage > voltageReading) {
-          powerOn = true;
-        } else if (signalTime >= ctrl.time_range.resting) {
+        if (signalTime >= ctrl.time_range.resting) {
           lastChangeTime = currentTime;
           powerOn = false;
         } else if (signalTime >= ctrl.time_range.running) {
