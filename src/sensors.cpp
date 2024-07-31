@@ -9,9 +9,9 @@
 TaskHandle_t sendVoltageTask = NULL;
 
 const uint8_t adcPin = 34;
-const float VREF = 3.3; 
+const float VREF = 3.3;
 const int ADC_MAX = 4095;
-const float SCALE_FACTOR = 11.0; 
+const float SCALE_FACTOR = 11.0;
 
 float min_voltage = 0.0f;
 
@@ -32,7 +32,7 @@ bool store_min_voltage(float voltage) {
   DEBUG_SERIAL_PRINTF("Min voltage: %f\n", min_voltage);
   EEPROM.begin(EEPROM_SIZE_CTL);
   EEPROM.put(MAGIC_NUMBER_SIZE + sizeof(pump_TimeRange), voltage);
-  EEPROM.commit(); 
+  EEPROM.commit();
   return true;
 }
 
@@ -70,7 +70,8 @@ void send_voltage_task(void *pvParameter) {
     size_t buffer_size = sizeof(buffer);
     msg.value = reading_voltage;
 
-    if (serialize_num(msg, buffer, &buffer_size, VOLTAGE_TYPE_ID, send_binary_data)) {
+    if (serialize_num(msg, buffer, &buffer_size, VOLTAGE_TYPE_ID,
+                      send_binary_data)) {
       DEBUG_SERIAL_PRINTF("Voltage: %f sent\n", msg.value);
     } else {
       DEBUG_SERIAL_PRINTLN("Failed to serialize voltage");
