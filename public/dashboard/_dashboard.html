@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="_dashboard.css">
 </head>
+
 <body>
     <header class="header-defaut">
         <nav>
@@ -16,25 +18,45 @@
             </div>
         </nav>
     </header>
-    <div id="container">
-        <div id="status">
-            <p><strong>Mode:</strong> <span id="mode">N/A</span></p>
-            <p><strong>Running:</strong> <span id="running">N/A</span></p>
-            <p><strong>Resting:</strong> <span id="resting">N/A</span></p>
+    <div class="hero">
+
+        <div id="container" class="bg-primary">
+            <div id="status">
+                <div class="pump-power-indicator">
+                    <div id="pump-power-indicator"></div>
+                    <div class="pt pt1">
+                        <h2 id="toogle-run-rest">Running Time</h2>
+                        <h3 id="run-rest-ing">120 min.</h3>
+                    </div>
+                </div>
+
+                <div class="pump-power-indicator">
+                    <div><strong>&#9889;</strong> <span id="voltage">220.0 v</span></div>
+                    <div class="pt pt2">
+                        <h2 class="min-volt">Minimum Voltage</h2>
+                        <h3 class="min-volt">200.0V</h3>
+                    </div>
+                </div>
+            </div>
+
+            <canvas id="voltageChart"></canvas>
+
         </div>
-        <div id="controls">
-            <label for="modeInput">Mode:</label>
-            <input type="number" id="modeInput" placeholder="Enter mode">
 
-            <label for="runningInput">Running Time:</label>
-            <input type="number" id="runningInput" placeholder="Enter running time">
-
-            <label for="restingInput">Resting Time:</label>
-            <input type="number" id="restingInput" placeholder="Enter resting time">
-
-            <button id="sendBtn">Send</button>
-        </div>
     </div>
-    <script src="_dashboard.js"></script>
+
+    <footer>
+        <div class="footer-content">
+            <img src="../logo.svg" alt="logo">
+            <p>&copy; 2024 Akowe. All rights reserved.</p>
+        </div>
+    </footer>
+    <script src="./_dashboard.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+          document.body.style.display = 'block';
+        });
+    </script>
 </body>
+
 </html>

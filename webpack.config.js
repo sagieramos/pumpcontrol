@@ -1,9 +1,15 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+import path from 'path';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import { fileURLToPath } from 'url';
+
+// Resolve __dirname in ES module scope
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const subDir = 'dashboard';
 
-module.exports = {
+export default {
   entry: `./public/${subDir}/_${subDir}.js`,
   output: {
     filename: `_${subDir.charAt(0)}bundle.js`,
@@ -13,28 +19,28 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.js$/, // Include .js files
-        exclude: /node_modules/, // Exclude dependencies in node_modules
+        test: /\.js$/,
+        exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env'] // Use preset-env for transpiling
+            presets: ['@babel/preset-env']
           }
         }
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader']
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
       },
       {
         test: /\.html$/,
         use: ['html-loader']
       },
       {
-        test: /\.(png|jpe?g|gif|svg)$/i, // Include image file types
-        type: 'asset/resource', // Use asset/resource to handle images
+        test: /\.(png|jpe?g|gif|svg)$/i,
+        type: 'asset/resource',
         generator: {
-          filename: '[name][ext]' // Keep original file names and extensions
+          filename: '[name][ext]'
         }
       }
     ]
@@ -42,10 +48,10 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: `./public/${subDir}/_${subDir}.html`,
-      filename: `_${subDir}.html`
+      filename: `index.html`
     }),
     new MiniCssExtractPlugin({
-      filename: '[name].[contenthash].css'
+      filename: 'styles.css'
     }),
   ],
   mode: 'production'
