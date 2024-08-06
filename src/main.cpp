@@ -10,8 +10,8 @@ struct StaticFile {
 
 // Array of StaticFile structures
 const StaticFile staticFiles[] = {{"/_lbundle.js", "application/javascript"},
-                                  {"/_lindex.js", "application/javascript"},
-                                  {"/_lstyles.css", "text/css"},
+                                  {"/_login.js", "application/javascript"},
+                                  {"/_login.css", "text/css"},
                                   {"/favicon.ico", "image/x-icon"},
                                   {"/logo.svg", "image/svg+xml"},
                                   {"/warning.svg", "image/svg+xml"},
@@ -75,8 +75,13 @@ void setup() {
   ws.onEvent(onWsEvent);
 
   server.addHandler(&ws).setFilter([](AsyncWebServerRequest *request) {
-    DEBUG_SERIAL_PRINTF("Checking auth for ws: %s\n", request->url().c_str());
-    return authSession(authClients, request, CHECK) == ACTIVE;
+    String url = request->url();
+    DEBUG_SERIAL_PRINTF("Checking auth for ws: %s\n", url.c_str());
+    if (url == "/dashboard") {
+      return authSession(authClients, request, CHECK) == ACTIVE;
+    }
+
+    return false;
   });
 
   // Serve static files with appropriate MIME types and CORS headers

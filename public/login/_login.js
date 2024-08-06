@@ -1,4 +1,4 @@
-import './_lstyles.css';
+import './_login.css';
 
 const APname = 'Akowe_Fountain';
 

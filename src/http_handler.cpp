@@ -7,22 +7,38 @@ ClientSession authClients[MAX_CLIENTS];
 
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType) {
-  if (!SPIFFS.exists(path)) {
-    request->send(404, "text/plain", "File Not Found");
-    DEBUG_SERIAL_PRINTF("File not found: %s\n", path);
+  // Check for the .gz version first
+  String gzPath = String(path) + ".gz";
+  if (SPIFFS.exists(gzPath)) {
+    AsyncWebServerResponse *response =
+        request->beginResponse(SPIFFS, gzPath, contentType);
+    response->addHeader("Content-Encoding", "gzip");
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response->addHeader("Access-Control-Allow-Headers",
+                        "Content-Type, Authorization, X-Requested-With");
+    request->send(response);
     return;
   }
 
-  AsyncWebServerResponse *response =
-      request->beginResponse(SPIFFS, path, contentType);
-  response->addHeader("Access-Control-Allow-Origin", "*");
-  response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  response->addHeader("Access-Control-Allow-Headers",
-                      "Content-Type, Authorization, X-Requested-With");
-  request->send(response);
+  // Fall back to the uncompressed version if .gz is not available
+  if (SPIFFS.exists(path)) {
+    AsyncWebServerResponse *response =
+        request->beginResponse(SPIFFS, path, contentType);
+    response->addHeader("Access-Control-Allow-Origin", "*");
+    response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    response->addHeader("Access-Control-Allow-Headers",
+                        "Content-Type, Authorization, X-Requested-With");
+    request->send(response);
+    return;
+  }
+
+  // If neither the .gz nor the uncompressed file exists, send a 404 response
+  request->send(404, "text/plain", "File Not Found");
+  DEBUG_SERIAL_PRINTF("File not found: %s\n", path);
 }
 
-void handleDashboad(AsyncWebServerRequest *request) {
+void handleDashboard(AsyncWebServerRequest *request) {
   int auth = authSession(authClients, request, CHECK);
   if (auth == ACTIVE) {
     request->send(SPIFFS, "/_dashboard.html", "text/html");
@@ -106,8 +122,8 @@ void handleRequest(AsyncWebServerRequest *request) {
       request->redirect("/dashboard");
       DEBUG_SERIAL_PRINTLN("Already logged in");
     } else {
-      request->send(SPIFFS, "/_lindex.html", "text/html");
-      DEBUG_SERIAL_PRINTLN("Serving _lindex.html");
+      request->send(SPIFFS, "/_login.html", "text/html");
+      DEBUG_SERIAL_PRINTLN("Serving _login.html");
     }
   } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
     // Handle login route
