@@ -19,6 +19,9 @@ void readVoltage(float &voltage) {
   int adcValue = analogRead(adcPin);
   float adcVoltage = adcValue * VREF / ADC_MAX;
   voltage = adcVoltage * SCALE_FACTOR;
+#ifndef PRODUCTION
+  voltage = random(209, 213);
+#endif
 }
 
 // Store minimum voltage to power the pump in EEPROM
@@ -46,6 +49,8 @@ void get_min_voltage(float &voltage) {
     DEBUG_SERIAL_PRINTLN("Setting default min voltage to 200");
     volt = DEFAULT_MIN_VOLTAGE;
   }
+
+  // generate random number between 209 and 213
   voltage = volt;
   DEBUG_SERIAL_PRINTF("Min voltage: %f\n", voltage);
 }

@@ -22,7 +22,7 @@ function serializeData(data, typeIdentifier, proto) {
     return buffer;
 }
 
-function deserializeData(buffer, expectedTypeIdentifier, proto) {
+export function deserializeData(buffer, expectedTypeIdentifier, proto) {
     const typeIdentifier = buffer[0];
     if (typeIdentifier !== expectedTypeIdentifier) {
         throw new Error(`Unexpected type identifier: ${typeIdentifier}`);

@@ -2,6 +2,7 @@
 #include "network.h"
 #include "pump_control.h"
 #include "sensors.h"
+/* #include "esp_task_wdt.h" */
 
 struct StaticFile {
   const char *path;
@@ -9,21 +10,24 @@ struct StaticFile {
 };
 
 // Array of StaticFile structures
-const StaticFile staticFiles[] = {{"/_lbundle.js", "application/javascript"},
-                                  {"/_login.js", "application/javascript"},
-                                  {"/_login.css", "text/css"},
-                                  {"/favicon.ico", "image/x-icon"},
-                                  {"/logo.svg", "image/svg+xml"},
-                                  {"/warning.svg", "image/svg+xml"},
-                                  {"/_dbundle.js", "application/javascript"},
-                                  {"/_dashboard.js", "application/javascript"},
-                                  {"/_dashboard.css", "text/css"}};
+const StaticFile staticFiles[] = {
+    {"/_lbundle.js", "application/javascript"},
+    {"/_login.js", "application/javascript"},
+    {"/_login.css", "text/css"},
+    {"/favicon.ico", "image/x-icon"},
+    {"/logo.svg", "image/svg+xml"},
+    {"/warning.svg", "image/svg+xml"},
+    {"/_dbundle.js", "application/javascript"},
+    {"/_dashboard.js", "application/javascript"},
+    {"/_dashboard.css", "text/css"},
+    {"/217._dbundle.js", "application/javascript"},
+    {"/828._dbundle.js", "application/javascript"},
+    {"/939._dbundle.js", "application/javascript"}};
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
 void setup() {
   DEBUG_SERIAL_BEGIN(115200);
-
   if (!SPIFFS.begin()) {
     DEBUG_SERIAL_PRINTLN("Failed to mount SPIFFS");
     return;
@@ -46,7 +50,7 @@ void setup() {
   DEBUG_SERIAL_PRINTLN();
 
   pinMode(LED_BUILTIN, OUTPUT);
-  if (xTaskCreate(send_voltage_task, "SendVoltageTask", 4096, NULL, 1,
+  if (xTaskCreate(send_voltage_task, "SendVoltageTask", 20000, NULL, 1,
                   &sendVoltageTask) != pdPASS) {
     DEBUG_SERIAL_PRINTLN("Failed to create send voltage task");
   } else {
@@ -73,11 +77,10 @@ void setup() {
 
   // Handle WebSocket events
   ws.onEvent(onWsEvent);
-
   server.addHandler(&ws).setFilter([](AsyncWebServerRequest *request) {
-    String url = request->url();
-    DEBUG_SERIAL_PRINTF("Checking auth for ws: %s\n", url.c_str());
-    if (url == "/dashboard") {
+    String urlPath = request->url();
+    DEBUG_SERIAL_PRINTF("URL Path: %s\n", urlPath.c_str());
+    if (strcmp(urlPath.c_str(), "/ws") == 0) {
       return authSession(authClients, request, CHECK) == ACTIVE;
     }
 

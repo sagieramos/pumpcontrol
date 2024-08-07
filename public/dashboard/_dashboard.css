@@ -67,6 +67,9 @@ span#logo-text {
 
 header {
   padding: 8px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-bottom: 1px solid #03e8f42d;
   /* background: linear-gradient(#141e30, #243b55); */
   background-color: #141e30;
@@ -234,7 +237,7 @@ header {
 }
 
 #voltage {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .pt {
@@ -271,12 +274,10 @@ h2.min-volt {
   text-align: right;
 }
 
-
 canvas {
   max-width: 100%;
   height: 400px;
 }
-
 
 .bg-primary {
   width: 100%;
@@ -296,4 +297,78 @@ canvas {
   border-left: 15px solid transparent;
   border-right: 15px solid transparent; 
   border-bottom: 15px solid #33b864;
+}
+
+
+.lds-ellipsis,
+.lds-ellipsis div {
+  box-sizing: border-box;
+}
+.lds-ellipsis {
+  color: #f28c28;
+  display: inline-block;
+  position: relative;
+  width: 35px;
+  height: 16px;
+  overflow-y: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.lds-ellipsis div {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation-timing-function: cubic-bezier(0, 1, 1, 0);
+}
+.lds-ellipsis div:nth-child(1) {
+  left: 4px;
+  animation: lds-ellipsis1 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(2) {
+  left: 4px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(3) {
+  left: 16px;
+  animation: lds-ellipsis2 0.6s infinite;
+}
+.lds-ellipsis div:nth-child(4) {
+  left: 28px;
+  animation: lds-ellipsis3 0.6s infinite;
+}
+@keyframes lds-ellipsis1 {
+  0% {
+    transform: scale(0);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes lds-ellipsis3 {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(0);
+  }
+}
+@keyframes lds-ellipsis2 {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(12px, 0);
+  }
+}
+
+
+#voltageChart {
+  display: none;
+}
+
+.init-hide {
+  font-size: 0.8rem;
 }

@@ -1,152 +1,150 @@
-
-
-import Chart from 'chart.js/auto'; // Import the main Chart.js library
-import AnnotationPlugin from 'chartjs-plugin-annotation'; 
 import './_dashboard.css';
 
-Chart.register(AnnotationPlugin);
-
-const DATA_COUNT = 21;
-const minVoltCutOff = 120;
-
-// Utility functions
-const Utils = {
-  seconds({ count }) {
-    return Array.from({ length: count }, (_, i) => `${i}s`); // Changed to return numbers only
-  },
-
-  numbers({ count, min, max }) {
-    return Array.from({ length: count }, () => Math.floor(Math.random() * (max - min + 1)) + min);
-  },
-
-  CHART_COLORS: {
-    red: 'rgb(255, 99, 132)',
-    blue: 'rgb(54, 162, 235)'
-  },
-
-  transparentize(color, opacity = 0.5) {
-    const [r, g, b] = color.match(/\d+/g).map(Number);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  }
+const TYPE_IDS = {
+    CUT_OFF_VOLT_ID: 0x04,
+    VOLTAGE_TYPE_ID: 0x07,
 };
 
-// Initial data setup
-const labels = Utils.seconds({ count: DATA_COUNT });
-const data = {
-  labels: labels,
-  datasets: [
-    {
-      label: 'Voltage',
-      data: Array(DATA_COUNT).fill(null),
-      borderColor: Utils.CHART_COLORS.blue,
-      borderWidth: 1,
-      backgroundColor: Utils.transparentize(Utils.CHART_COLORS.red, 0.5),
-      tension: 0.4,
-    },
-  ]
+let Num;
+let updateChart;
+let updateMinVoltCutOff;
+
+const voltage = document.getElementById('voltage');
+const loadingIndicators = document.querySelectorAll('.lds-ellipsis');
+const initHideElements = document.querySelectorAll('.init-hide');
+const minVolt = document.getElementById('min-volt');
+const runRestTimer = document.getElementById('run-rest-timer');
+
+const hideLoadingIndicators = () => {
+    loadingIndicators.forEach((indicator) => {
+        indicator.style.display = 'none';
+    });
+
+    initHideElements.forEach((element) => {
+        element.style.display = 'block';
+    });
 };
 
-const config = {
-  type: 'line',
-  data: data,
-  options: {
-    animation: {
-      duration: 0
-    },
-    responsive: true,
-    plugins: {
-      tooltip: {
-        enabled: true
-      },
-      annotation: {
-        annotations: {
-          line1: {
-            type: 'line',
-            scaleID: 'y',
-            value: minVoltCutOff, // Minimum voltage cutoff value
-            borderColor: 'red',
-            borderWidth: 1,
-            label: {
-              content: 'Min Voltage Cutoff',
-              enabled: true,
-              position: 'top'
+const showLoadingIndicators = () => {
+    loadingIndicators.forEach((indicator) => {
+        indicator.style.display = 'block';
+    });
+
+    initHideElements.forEach((element) => {
+        element.style.display = 'none';
+    });
+};
+
+let ws;
+let isConnected = false; // Track connection status
+
+const deserializeData = async (bufferData) => {
+    const buffer = bufferData;
+    const typeIdentifier = buffer[0];
+
+    if (typeIdentifier === TYPE_IDS.VOLTAGE_TYPE_ID || typeIdentifier === TYPE_IDS.CUT_OFF_VOLT_ID) {
+        try {
+            if (!Num || !updateChart || !updateMinVoltCutOff) {
+                // Lazy load modules
+                const [NumModule, { updateChart: updateChartFunc, updateMinVoltCutOff: updateMinVoltCutOffFunc }] = await Promise.all([
+                    import('../protoc/js/str_num_msg.js'),
+                    import('./chartDisplay.js')
+                ]);
+
+                Num = NumModule.Num;
+                updateChart = updateChartFunc;
+                updateMinVoltCutOff = updateMinVoltCutOffFunc;
+                runRestTimer.style.display = 'block';
+                document.getElementById('voltageChart').style.display = 'block';
             }
-          }
+
+            const numValue = Num.decode(buffer.slice(1));
+            console.log('numValue:', numValue);
+            if (numValue.key === 1) {
+                const cutoffVolt = numValue.value;
+                updateMinVoltCutOff(cutoffVolt, true);
+                minVolt.textContent = `${cutoffVolt}V`;
+                runRestTimer.textContent = "00:00:00";
+            } else if (numValue.key === 0) {
+                const voltageValue = numValue.value;
+                voltage.textContent = `${voltageValue}V`;
+                updateChart(voltageValue);
+            } else {
+                console.log(`Unexpected key: ${numValue.key}`);
+            }
+        } catch (error) {
+            console.error('Failed to deserialize Num:', error);
         }
-      }
-    },
-    interaction: {
-      mode: 'nearest',
-      intersect: false,
-      axis: 'x'
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Time (s)' // Change title as needed
-        },
-        ticks: {
-          callback: function(value) {
-            return value; // Display just the value (e.g., 0, 1, 2, ...)
-          }
-        }
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Voltage (V)'
-        },
-        min: 0,
-        max: 250,
-      }
+    } else {
+        console.log(`Unexpected type identifier: ${typeIdentifier}`);
     }
-  },
 };
 
-const ctx = document.getElementById('voltageChart').getContext('2d');
-const chart = new Chart(ctx, config);
-
-let count = 0;
-let timeCount = 0;
-
-// Function to update chart data
-function updateChart() {
-  const newValue = Math.floor(Math.random() * (230 + 1)); // Random voltage value between 0 and 230
-
-  // Remove the first data point and shift the array
-  if (data.labels.length >= DATA_COUNT) {
-    data.labels.shift();
-    data.datasets.forEach(dataset => {
-      dataset.data.shift();
-    });
-  }
-
-  // Add new data point
-  if (data.labels.length <= count) {
-    timeCount += 1;
-    const currentTime = data.labels.length + timeCount; // Time label without seconds
-    data.labels.push(`${currentTime}s`); // Just add the number
-    data.datasets.forEach(dataset => {
-      dataset.data.push(newValue);
-    });
-  } else {
-    data.datasets.forEach(dataset => {
-      dataset.data[count] = newValue;
-    });
-    count = (count + 1) % DATA_COUNT;
-  }
-
-  // Update the chart
-  chart.update();
+const serializeData = (data, typeIdentifier, messageType) => {
+    const dataBuffer = messageType.encode(data);
+    const buffer = Buffer.alloc(1 + dataBuffer.length);
+    buffer[0] = typeIdentifier;
+    dataBuffer.copy(buffer, 1);
+    return buffer;
 }
 
+const connectWebSocket = () => {
+    ws = new WebSocket('ws://akowe.org/ws');
 
-// Update chart every second
-setInterval(updateChart, 1000);
+    ws.onopen = () => {
+        console.log('Connected to WebSocket server');
+        isConnected = true;
+        // Hide the loading indicator
+        hideLoadingIndicators();
 
-const toogler = document.getElementById('toogle-run-rest');
+        // Start sending a heartbeat message every 5 seconds
+        setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(''); // Send an empty message as a heartbeat
+            }
+        }, 5000);
+    };
 
-toogler.textContent = 'Pause';
+    ws.onmessage = async (event) => {
+        try {
+            // Convert Blob to ArrayBuffer
+            const arrayBuffer = await event.data.arrayBuffer();
+            // Convert ArrayBuffer to Uint8Array
+            const buffer = new Uint8Array(arrayBuffer);
+            deserializeData(buffer);
+        } catch (error) {
+            console.error('Error handling WebSocket message:', error);
+        }
+    };
 
+    ws.onclose = () => {
+        isConnected = false;
+        voltage.textContent = '—';
+        console.log('Disconnected from WebSocket server');
+        // Show the loading indicator
+        showLoadingIndicators();
+    };
 
+    ws.onerror = error => {
+        isConnected = false;
+        voltage.textContent = '—';
+        console.error('WebSocket error:', error);
+        // Show the loading indicator
+        showLoadingIndicators();
+    };
+};
+
+// Check connection status every 5 seconds
+const checkConnection = () => {
+    setInterval(() => {
+        if (!isConnected) {
+            showLoadingIndicators();
+        }
+    }, 5000);
+};
+
+// Initial setup
+setTimeout(() => {
+    connectWebSocket();
+    checkConnection();
+}, 3000);

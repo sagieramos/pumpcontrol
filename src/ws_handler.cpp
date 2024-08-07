@@ -34,7 +34,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     // send min voltage
     Num msg = Num_init_zero;
     msg.key = VoltageKey::MIN_VOLTAGE;
-    msg.value = min_voltage;
+   /*  msg.value = min_voltage; */
+    msg.value = 188.0f;
     buff_size = sizeof(buff);
     if (serialize_num(msg, buff, &buff_size, VOLTAGE_TYPE_ID, NULL)) {
       client->binary(buff, buff_size);
@@ -43,8 +44,6 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
 
   } else if (type == WS_EVT_DISCONNECT) {
-    client->close();
-
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_ERROR) {
     DEBUG_SERIAL_PRINTLN("Websocket error");

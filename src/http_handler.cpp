@@ -7,35 +7,28 @@ ClientSession authClients[MAX_CLIENTS];
 
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType) {
-  // Check for the .gz version first
+  String userAgent = request->header("User-Agent");
+  DEBUG_SERIAL_PRINTF("User-Agent: %s\n", userAgent.c_str());
+  DEBUG_SERIAL_PRINTLN("..........................................");
+  bool isMobile = userAgent.indexOf("Android") != -1 ||
+                  userAgent.indexOf("iPhone") != -1 ||
+                  userAgent.indexOf("iPad") != -1;
+
   String gzPath = String(path) + ".gz";
-  if (SPIFFS.exists(gzPath)) {
+
+  if (!isMobile && SPIFFS.exists(gzPath)) {
+    DEBUG_SERIAL_PRINTF("Serving gzipped file: %s\n", gzPath.c_str());
     AsyncWebServerResponse *response =
         request->beginResponse(SPIFFS, gzPath, contentType);
     response->addHeader("Content-Encoding", "gzip");
-    response->addHeader("Access-Control-Allow-Origin", "*");
-    response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response->addHeader("Access-Control-Allow-Headers",
-                        "Content-Type, Authorization, X-Requested-With");
     request->send(response);
-    return;
+  } else if (SPIFFS.exists(path)) {
+    DEBUG_SERIAL_PRINTF("Serving file: %s\n", path);
+    request->send(SPIFFS, path, contentType);
+  } else {
+    request->send(404, "text/plain", "File Not Found");
+    DEBUG_SERIAL_PRINTF("File not found: %s\n", path);
   }
-
-  // Fall back to the uncompressed version if .gz is not available
-  if (SPIFFS.exists(path)) {
-    AsyncWebServerResponse *response =
-        request->beginResponse(SPIFFS, path, contentType);
-    response->addHeader("Access-Control-Allow-Origin", "*");
-    response->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    response->addHeader("Access-Control-Allow-Headers",
-                        "Content-Type, Authorization, X-Requested-With");
-    request->send(response);
-    return;
-  }
-
-  // If neither the .gz nor the uncompressed file exists, send a 404 response
-  request->send(404, "text/plain", "File Not Found");
-  DEBUG_SERIAL_PRINTF("File not found: %s\n", path);
 }
 
 void handleDashboard(AsyncWebServerRequest *request) {
