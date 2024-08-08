@@ -12,7 +12,7 @@
             display: none;
         }
 
-        .init-hide {
+        #pump-power-indicator {
             display: none;
         }
     </style>
@@ -32,16 +32,16 @@
             <div id="status">
                 <div class="pump-power-indicator">
                     <div id="pump-power-indicator"></div>
+                    <div class="lds-ellipsis">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
                     <div class="pt pt1">
                         <h2 id="toggle-run-rest">Running Time</h2>
                         <div id="run-rest-ing">
                             <h3 class="init-hide" id="run-rest-timer">00:00:00</h3>
-                            <div class="lds-ellipsis">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -51,17 +51,11 @@
                         <h2 class="min-volt">Minimum Voltage</h2>
                         <div class="min-volt">
                             <h3 class="init-hide" id="min-volt">0.00</h3>
-                            <div class="lds-ellipsis">
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                                <div></div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <canvas id="voltageChart"></canvas>
+            <canvas class="hidden" id="voltageChart"></canvas>
         </div>
     </div>
     <footer>

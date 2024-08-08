@@ -364,11 +364,23 @@ canvas {
   }
 }
 
-
-#voltageChart {
-  display: none;
-}
-
 .init-hide {
   font-size: 0.8rem;
 }
+
+#voltageChart {
+  opacity: 1; 
+  transform: scale(1);
+  transition: opacity 0.5s ease, transform 0.5s ease; 
+}
+
+#voltageChart.hidden {
+  opacity: 0; 
+  transform: scale(0.9); 
+}
+
+#voltageChart.visible {
+  opacity: 1; 
+  transform: scale(1); 
+}
+

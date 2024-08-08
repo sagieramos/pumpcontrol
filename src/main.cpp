@@ -50,7 +50,7 @@ void setup() {
   DEBUG_SERIAL_PRINTLN();
 
   pinMode(LED_BUILTIN, OUTPUT);
-  if (xTaskCreate(send_voltage_task, "SendVoltageTask", 20000, NULL, 1,
+  if (xTaskCreate(send_voltage_task, "SendVoltageTask", 4096, NULL, 2,
                   &sendVoltageTask) != pdPASS) {
     DEBUG_SERIAL_PRINTLN("Failed to create send voltage task");
   } else {

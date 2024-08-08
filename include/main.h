@@ -91,6 +91,7 @@ extern TaskHandle_t blinkTaskHandle;
 extern TaskHandle_t dnsTaskHandle;
 extern const byte DNS_PORT;
 extern ClientSession authClients[MAX_CLIENTS];
+extern uint8_t numStations;
 
 enum AuthStatus {
   NOT_ACTIVE,

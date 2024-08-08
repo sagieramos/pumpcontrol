@@ -44,7 +44,7 @@ void get_min_voltage(float &voltage) {
   float volt = 0.0f;
   EEPROM.begin(EEPROM_SIZE_CTL);
   EEPROM.get(MAGIC_NUMBER_SIZE + sizeof(pump_TimeRange), volt);
-  if (volt < 110.0f || volt > 240.0f || isnan(volt)) {
+  if (volt < 110.0f || volt > 250.0f || isnan(volt)) {
     DEBUG_SERIAL_PRINTLN("Invalid min voltage");
     DEBUG_SERIAL_PRINTLN("Setting default min voltage to 200");
     volt = DEFAULT_MIN_VOLTAGE;
@@ -62,15 +62,19 @@ void send_voltage_task(void *pvParameter) {
 
   static float reading_voltage = 0.0f;
 
+  get_min_voltage(min_voltage);
+
   for (;;) {
-    if (ws.count() == 0) {
-      vTaskDelay(pdMS_TO_TICKS(1000));
-      continue;
+    if (ws.count() == 0 || numStations == 0) {
+      DEBUG_SERIAL_PRINTLN("Suspending sendVoltageTask");
+      ws.cleanupClients();
+      vTaskSuspend(NULL);
     }
 
     // Update reading_voltage before sending
     readVoltage(reading_voltage);
 
+    // Prepare the buffer for serialization
     uint8_t buffer[32];
     size_t buffer_size = sizeof(buffer);
     msg.value = reading_voltage;

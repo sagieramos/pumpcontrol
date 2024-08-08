@@ -1,4 +1,5 @@
 #include "main.h"
+#include "network.h"
 #include <WiFi.h>
 
 // Define the custom IP configuration
@@ -11,7 +12,6 @@ uint8_t numStations = 0;
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   DEBUG_SERIAL_PRINTLN("............................................");
-
   switch (event) {
   case ARDUINO_EVENT_WIFI_AP_START:
     DEBUG_SERIAL_PRINTLN("SoftAP started");
@@ -84,6 +84,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
         DEBUG_SERIAL_PRINTLN("DNS Task suspended");
       }
     }
+    ws.cleanupClients();
     break;
 
   default:

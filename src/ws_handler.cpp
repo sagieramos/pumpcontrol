@@ -1,6 +1,7 @@
 #include "main.h"
 #include "network.h"
 #include "pump_control.h"
+#include "sensors.h"
 #include "type_id.h"
 #include <str_num_msg_transcode.h>
 
@@ -34,21 +35,22 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     // send min voltage
     Num msg = Num_init_zero;
     msg.key = VoltageKey::MIN_VOLTAGE;
-   /*  msg.value = min_voltage; */
-    msg.value = 188.0f;
+    msg.value = min_voltage;
     buff_size = sizeof(buff);
     if (serialize_num(msg, buff, &buff_size, VOLTAGE_TYPE_ID, NULL)) {
       client->binary(buff, buff_size);
     }
-
+    if (ws.count() > 0) {
+      if (check_and_resume_task(sendVoltageTask)) {
+        DEBUG_SERIAL_PRINTLN("Resumed sendVoltageTask");
+      }
+    }
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
-
   } else if (type == WS_EVT_DISCONNECT) {
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_ERROR) {
     DEBUG_SERIAL_PRINTLN("Websocket error");
   } else if (type == WS_EVT_PONG) {
-
   } else if (WS_EVT_DATA) {
     DEBUG_SERIAL_PRINTF("Websocket data received: %u\n", client_id);
     receive_msg_and_perform_action(data, len);
