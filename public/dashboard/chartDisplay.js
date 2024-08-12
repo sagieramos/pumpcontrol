@@ -55,6 +55,9 @@ const config = {
             tooltip: {
                 enabled: true
             },
+            legend: {
+                display: false
+            },
             annotation: {
                 annotations: {
                     line1: {

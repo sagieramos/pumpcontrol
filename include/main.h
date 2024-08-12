@@ -17,8 +17,9 @@ extern AsyncWebServer server;
 constexpr uint8_t DNS_PORT = 53; // DNS server port
 constexpr uint8_t MAX_CLIENTS =
     8; // Maximum number of clients that can be AUTHENTICATED
-constexpr size_t TOKEN_LENGTH = 9;        // 8 characters + null terminator
-constexpr size_t SESSION_TIMEOUT = 60000; // 1 minute
+constexpr size_t TOKEN_LENGTH = 9; // 8 characters + null terminator
+constexpr size_t SESSION_TIMEOUT =
+    (59 * 60 * 1000) + (59 * 1000); // 59 minutes and 59 seconds
 constexpr const char *TOKEN_ATTR = "_imuwahen";
 constexpr const char *INDEX_ATTR = "_idx";
 

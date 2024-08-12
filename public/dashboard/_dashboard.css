@@ -6,7 +6,7 @@
 *::after,
 *::before {
   box-sizing: border-box;
-  margin: 0;
+  /*   margin: 0;
   padding: 0;
   font-family: 'Roboto', sans-serif;
   outline: none;
@@ -16,16 +16,15 @@
   box-sizing: border-box;
   overflow-x: hidden;
 
-  /* white-space: nowrap; */
-  /*   
+   white-space: nowrap;
+
   vertical-align: middle;
   line-height: normal;
   list-style: none;
   letter-spacing: inherit;
   word-break: break-word;
   overflow-x: hidden;
-  touch-action: manipulation; 
-  */
+  touch-action: manipulation;  */
 }
 
 html {
@@ -215,25 +214,27 @@ header {
 
 #status {
   display: flex;
-  gap: 20px; /* Space between items, adjust as needed */
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
 }
 
 .pump-power-indicator {
   display: flex;
-  flex-direction: column;
-  gap: 24px;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 24px;
+  padding: 8px 24px;
+  margin-top: 12px;
 }
 
-.pump-power-indicator:first-child {
-  align-items: flex-start;
-}
-
-.pump-power-indicator:last-child {
-  align-items: flex-end;
+.pump-power-indicator-1 {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 8px;
 }
 
 #voltage {
@@ -244,21 +245,15 @@ header {
   font-size: 0.9rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
- 
+
 }
 
-.pt1 {
-  margin-left: 8px;
-}
-
-.pt2 {
-  margin-right: 8px;
+.res-server {
+  margin-bottom: 4px;
 }
 
 .pt>h2 {
   font-weight: 400;
-  font-size: 0.8rem;
 }
 
 .pt>h3 {
@@ -266,17 +261,8 @@ header {
   color: #f28c28;
 }
 
-.min-volt {
-  align-self: flex-end;
-}
-
-h2.min-volt {
-  text-align: right;
-}
-
-canvas {
+canvas#voltageChart {
   max-width: 100%;
-  height: 400px;
 }
 
 .bg-primary {
@@ -287,23 +273,20 @@ canvas {
   margin-bottom: 24px;
   background-color: #e5e5f7;
   opacity: 0.8;
-  background-image: radial-gradient(#444cf7 0.5px, #e5e5f7 0.5px);
   background-size: 10px 10px;
 }
 
 #pump-power-indicator {
   width: 20px;
-  height: 20px; 
+  height: 20px;
   border-left: 15px solid transparent;
-  border-right: 15px solid transparent; 
+  border-right: 15px solid transparent;
   border-bottom: 15px solid #33b864;
 }
 
 
-.lds-ellipsis,
-.lds-ellipsis div {
-  box-sizing: border-box;
-}
+
+
 .lds-ellipsis {
   color: #f28c28;
   display: inline-block;
@@ -315,6 +298,7 @@ canvas {
   justify-content: center;
   align-items: center;
 }
+
 .lds-ellipsis div {
   position: absolute;
   width: 4px;
@@ -323,42 +307,52 @@ canvas {
   background: currentColor;
   animation-timing-function: cubic-bezier(0, 1, 1, 0);
 }
+
 .lds-ellipsis div:nth-child(1) {
   left: 4px;
   animation: lds-ellipsis1 0.6s infinite;
 }
+
 .lds-ellipsis div:nth-child(2) {
   left: 4px;
   animation: lds-ellipsis2 0.6s infinite;
 }
+
 .lds-ellipsis div:nth-child(3) {
   left: 16px;
   animation: lds-ellipsis2 0.6s infinite;
 }
+
 .lds-ellipsis div:nth-child(4) {
   left: 28px;
   animation: lds-ellipsis3 0.6s infinite;
 }
+
 @keyframes lds-ellipsis1 {
   0% {
     transform: scale(0);
   }
+
   100% {
     transform: scale(1);
   }
 }
+
 @keyframes lds-ellipsis3 {
   0% {
     transform: scale(1);
   }
+
   100% {
     transform: scale(0);
   }
 }
+
 @keyframes lds-ellipsis2 {
   0% {
     transform: translate(0, 0);
   }
+
   100% {
     transform: translate(12px, 0);
   }
@@ -368,19 +362,55 @@ canvas {
   font-size: 0.8rem;
 }
 
+.label-btm {
+  color: #33333393;
+}
+
 #voltageChart {
-  opacity: 1; 
+  opacity: 1;
   transform: scale(1);
-  transition: opacity 0.5s ease, transform 0.5s ease; 
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
 #voltageChart.hidden {
-  opacity: 0; 
-  transform: scale(0.9); 
+  opacity: 0;
+  transform: scale(0.9);
 }
 
 #voltageChart.visible {
-  opacity: 1; 
-  transform: scale(1); 
+  opacity: 1;
+  transform: scale(1);
 }
 
+#run-rest-ing {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 0 8px;
+
+}
+
+.run-rest {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+#run-rest-ing.timer {
+  box-sizing: border-box;
+  margin-bottom: 8px;
+}
+
+.value-heading {
+  font-size: 1.2rem;
+}
+
+.value-heading .volt-unit {
+  font-style: italic;
+  font-size: 1rem;
+}
+
+.volt-unit {
+  font-style: italic;
+}

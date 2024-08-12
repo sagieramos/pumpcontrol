@@ -1,5 +1,7 @@
 import './_dashboard.css';
+import './reset.css';
 import { toggleElementVisibility } from './util.js';
+import { Countdown } from './countDown.js';
 
 const TYPE_IDS = {
     CUT_OFF_VOLT_ID: 0x04,
@@ -15,30 +17,19 @@ const voltageChartElement = document.getElementById('voltageChart');
 const loadingIndicators = document.querySelectorAll('.lds-ellipsis');
 const initHideElements = document.querySelectorAll('.init-hide');
 const minVoltElement = document.getElementById('min-volt');
-const runRestTimerElement = document.getElementById('run-rest-timer');
 const pumpPowerIndicator = document.getElementById('pump-power-indicator');
 
 let ws;
 let heartbeat;
+let reconnecting;
 
 const HEARTBEAT_TIMEOUT_MS = 3000;
 
-/**
- * Resets the heartbeat timer.
- */
-const resetHeartbeat = () => {
-    if (heartbeat) {
-        clearTimeout(heartbeat);
-    }
+const countdown = new Countdown('#run-rest-ing', 0);
 
-    heartbeat = setTimeout(() => {
-        console.log('Heartbeat timeout. Reconnecting WebSocket...');
-        if (ws) {
-            showLoadingIndicators();
-            ws.close();
-        }
-    }, HEARTBEAT_TIMEOUT_MS);
-};
+setTimeout(() => {
+    countdown.update(140);
+}, 3000);
 
 /**
  * Hides loading indicators and shows initialized elements.
@@ -67,10 +58,44 @@ const showLoadingIndicators = () => {
         element.style.display = 'none';
     });
 
-    toggleElementVisibility(voltageChartElement, 'hide');
-
     pumpPowerIndicator.style.display = 'none';
 };
+
+const reconnectWebSocket = () => {
+    // Clear any existing reconnection interval
+    if (reconnecting) {
+        clearInterval(reconnecting);
+    }
+
+    reconnecting = setInterval(() => {
+        if (ws.readyState === WebSocket.CLOSED) {
+            console.log('Attempting to reconnect WebSocket...');
+            connectWebSocket();
+        } else {
+            console.log('WebSocket is not closed. Clearing reconnection interval.');
+            clearInterval(reconnecting);
+        }
+    }, 3000);
+}
+
+/**
+ * Resets the heartbeat timer.
+ */
+const resetHeartbeat = () => {
+    if (heartbeat) {
+        clearTimeout(heartbeat);
+    }
+
+    heartbeat = setTimeout(() => {
+        console.log('Heartbeat timeout. Reconnecting WebSocket...');
+        if (ws) {
+            showLoadingIndicators();
+            ws.close();
+            reconnectWebSocket();
+        }
+    }, HEARTBEAT_TIMEOUT_MS);
+};
+
 
 /**
  * Deserializes data from the given buffer and updates UI elements.
@@ -92,7 +117,6 @@ const deserializeData = async (bufferData) => {
                 NumModule = NumModuleImport.Num;
                 updateChartFunction = updateChart;
                 updateMinVoltCutOffFunction = updateMinVoltCutOff;
-                runRestTimerElement.style.display = 'block';
                 document.getElementById('voltageChart').style.display = 'block';
                 toggleElementVisibility(voltageChartElement, 'show');
             }
@@ -102,11 +126,10 @@ const deserializeData = async (bufferData) => {
             if (numValue.key === 1) {
                 const cutoffVolt = numValue.value;
                 updateMinVoltCutOffFunction(cutoffVolt, true);
-                minVoltElement.textContent = `${cutoffVolt}V`;
-                runRestTimerElement.textContent = "00:00:00";
+                minVoltElement.textContent = cutoffVolt;
             } else if (numValue.key === 0) {
                 const voltageValue = numValue.value;
-                voltageElement.textContent = `${voltageValue}V`;
+                voltageElement.textContent = voltageValue;
                 updateChartFunction(voltageValue);
             } else {
                 console.log(`Unexpected key: ${numValue.key}`);
@@ -145,13 +168,15 @@ const connectWebSocket = () => {
     };
 
     ws.onclose = () => {
-        voltageElement.textContent = '—';
+        voltageElement.textContent = '00.0';
         console.log('Disconnected from WebSocket server');
         showLoadingIndicators();
+        reconnectWebSocket();
+
     };
 
     ws.onerror = error => {
-        voltageElement.textContent = '—';
+        voltageElement.textContent = '00.0';
         console.error('WebSocket error:', error);
         showLoadingIndicators();
     };

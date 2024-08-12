@@ -58,5 +58,17 @@ const serializeData = (data, typeIdentifier, messageType) => {
     return buffer;
 };
 
+/**
+ * Convert minutes to a formatted string of hours and minutes (H:MM).
+ * @param {number} totalMinutes - The total number of minutes to convert.
+ * @returns {string} - The formatted time string in H:MM format.
+ */
 
-export { serializeData, toggleElementVisibility };
+const minutesToTime = (totalMinutes) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+}
+
+
+export { serializeData, toggleElementVisibility, minutesToTime };

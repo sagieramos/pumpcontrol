@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akowe — Pump Dashboard</title>
     <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="reset.css">
     <link rel="stylesheet" href="_dashboard.css">
     <style>
         body {
@@ -31,32 +32,81 @@
         <div id="container" class="bg-primary">
             <div id="status">
                 <div class="pump-power-indicator">
-                    <div id="pump-power-indicator"></div>
+                    <div class="value-heading">
+                        <strong>&#9889;</strong>
+                        <span id="voltage">00.0</span>
+                        <span class="volt-unit">V</span>
+                    </div>
+
                     <div class="lds-ellipsis">
                         <div></div>
                         <div></div>
                         <div></div>
                         <div></div>
                     </div>
-                    <div class="pt pt1">
-                        <h2 id="toggle-run-rest">Running Time</h2>
-                        <div id="run-rest-ing">
-                            <h3 class="init-hide" id="run-rest-timer">00:00:00</h3>
+
+                    <div id="pump-power-indicator"></div>
+
+                </div>
+
+                <div class="pump-power-indicator-1">
+
+                    <div class="pt">
+                        <div class="res-server">
+                            <h3 id="machine-mode">AUTO</h3>
                         </div>
+                        <h2 class="label-btm">Machine Mode</h2>
+                    </div>
+
+                    <div class="pt">
+                        <div class="res-server">
+                            <h3> <span id="run-time">0:00</span> <span>/</span>
+                                <span id="run-time">0:00</span>
+                            </h3>
+                        </div>
+                        <h2 class="label-btm" id="toggle-run-rest">Running & Resting Time</h2>
+                    </div>
+
+                    <div class="pt">
+                        <div class="res-server">
+                            <h3>
+                                &#8805;
+                                <span id="min-volt">0.00</span>
+                                <span class="volt-unit"></span>
+                            </h3>
+                        </div>
+                        <h2 class="label-btm">Voltage Range</h2>
                     </div>
                 </div>
-                <div class="pump-power-indicator">
-                    <div><strong>&#9889;</strong> <span id="voltage"></span></div>
-                    <div class="pt pt2">
-                        <h2 class="min-volt">Minimum Voltage</h2>
-                        <div class="min-volt">
-                            <h3 class="init-hide" id="min-volt">0.00</h3>
-                        </div>
-                    </div>
-                </div>
+                <canvas class="hidden" id="voltageChart"></canvas>
             </div>
-            <canvas class="hidden" id="voltageChart"></canvas>
+
+            <div id="run-rest-ing">
+                <div class="run-rest">
+                    <h3>Running</h3>
+                    <canvas class="timer" width="55" height="12"></canvas>
+                </div>
+
+                <canvas class="meter" width="200" height="3"></canvas>
+            </div>
         </div>
+        <div class="bg-primary config">
+            <div>
+                <label for="set-min-volt">Set Voltage Range</label>
+            </div>
+            <div class="config-mode">
+                <label for="mode">Set Machine Mode</label>
+                <select id="mode">
+                    <option value="off">OFF</option>
+                    <option value="on">ON</option>
+                    <option value="auto" selected>AUTO</option>
+                </select>
+            </div>
+            <div class="config-timer">
+                <h3>Set Running and Resting Time</h3>
+            </div>
+        </div>
+    </div>
     </div>
     <footer>
         <div class="footer-content">
@@ -69,7 +119,7 @@
             document.body.style.display = 'block';
         });
     </script>
-    <script src="./_dashboard.js"></script>
+    <script type="module" src="./_dashboard.js"></script>
 </body>
 
 </html>
