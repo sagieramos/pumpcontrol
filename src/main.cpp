@@ -9,20 +9,20 @@ struct StaticFile {
   const char *contentType;
 };
 
+#define APP_JS "application/javascript"
+#define TEXT_CSS "text/css"
+#define IMAGE_SVG "image/svg+xml"
+
 // Array of StaticFile structures
 const StaticFile staticFiles[] = {
-    {"/_lbundle.js", "application/javascript"},
-    {"/_login.js", "application/javascript"},
-    {"/_login.css", "text/css"},
-    {"/favicon.ico", "image/x-icon"},
-    {"/logo.svg", "image/svg+xml"},
-    {"/warning.svg", "image/svg+xml"},
-    {"/_dbundle.js", "application/javascript"},
-    {"/_dashboard.js", "application/javascript"},
-    {"/_dashboard.css", "text/css"},
-    {"/217._dbundle.js", "application/javascript"},
-    {"/828._dbundle.js", "application/javascript"},
-    {"/939._dbundle.js", "application/javascript"}};
+    {"/_lbundle.js", APP_JS},      {"/_login.js", APP_JS},
+    {"/_login.css", TEXT_CSS},     {"/favicon.ico", "image/x-icon"},
+    {"/logo.svg", IMAGE_SVG},      {"/warning.svg", IMAGE_SVG},
+    {"/_dbundle.js", APP_JS},      {"/_dashboard.js", APP_JS},
+    {"/_dashboard.css", TEXT_CSS}, {"/217._dbundle.js", APP_JS},
+    {"/828._dbundle.js", APP_JS},  {"/939._dbundle.js", APP_JS},
+    {"/680._dbundle.js", APP_JS},  {"/27._dbundle.js", APP_JS},
+};
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 

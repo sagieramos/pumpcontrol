@@ -1,5 +1,6 @@
 :root {
   --max-width: 512px;
+  --border-radius: 5px;
 }
 
 *,
@@ -52,6 +53,7 @@ nav {
   justify-content: flex-start;
   gap: 12px;
   align-items: center;
+  padding: 12px;
 }
 
 span#logo-text {
@@ -215,7 +217,7 @@ header {
 #status {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 32px;
   justify-content: center;
   align-items: center;
 }
@@ -227,14 +229,7 @@ header {
   gap: 12px;
   width: 100%;
   padding: 8px 24px;
-  margin-top: 12px;
-}
-
-.pump-power-indicator-1 {
-  display: flex;
-  gap: 12px;
-  width: 100%;
-  padding: 8px;
+  margin-top: 24px;
 }
 
 #voltage {
@@ -248,31 +243,13 @@ header {
 
 }
 
-.res-server {
-  margin-bottom: 4px;
-}
-
-.pt>h2 {
-  font-weight: 400;
-}
-
-.pt>h3 {
-  font-size: 0.8rem;
-  color: #f28c28;
-}
-
-canvas#voltageChart {
-  max-width: 100%;
-}
-
 .bg-primary {
   width: 100%;
   max-width: 768px;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   margin: 0 auto;
   margin-bottom: 24px;
-  background-color: #e5e5f7;
-  opacity: 0.8;
+  background-color: #D3D3D3;
   background-size: 10px 10px;
 }
 
@@ -359,17 +336,22 @@ canvas#voltageChart {
 }
 
 .init-hide {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .label-btm {
-  color: #33333393;
+  color: #333;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 #voltageChart {
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.5s ease, transform 0.5s ease;
+  margin-bottom: 32px;
 }
 
 #voltageChart.hidden {
@@ -413,4 +395,86 @@ canvas#voltageChart {
 
 .volt-unit {
   font-style: italic;
+  font-size: 0.8rem;
+}
+
+.pump-power-indicator-1 {
+  max-width: 768px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 40px;
+  margin: 0 auto;
+}
+
+.indicator {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px;
+  gap: 24px;
+}
+
+.indicator:nth-child(1),
+.indicator:nth-child(2) {
+  flex: 1 1 50%;
+}
+
+.indicator:nth-child(3) {
+  flex: 1 1 100%;
+  background-color: #C0C0C0;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.indicator:nth-child(2) {
+  background-color: #D3D3D3;
+  border-radius: 0 var(--border-radius) 0 0;
+}
+
+.indicator:nth-child(1) {
+  background-color: #F28C28;
+  border-radius: var(--border-radius) 0 0 0;
+}
+
+
+.res-server {
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.styled-button {
+  background-color: transparent; 
+  color: #6c757d;
+  border: 1px solid #6c757d; 
+  border-radius: 4px; 
+  padding: 6px 12px; 
+  font-size: 14px; 
+  cursor: pointer; 
+  transition: color 0.3s, border-color 0.3s, transform 0.2s; 
+  align-self: flex-end;
+}
+
+.styled-button:hover {
+  color: #ffffff;
+  border-color: #5a6268; 
+  background-color: #5a6268; 
+  transform: scale(1.05); 
+}
+
+.styled-button:active {
+  color: #ffffff; 
+  border-color: #343a40; 
+  background-color: #343a40; 
+  transform: scale(0.98);
+}
+
+.styled-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px #6c757d80;
+}
+
+.l-white,
+.r-white {
+  color: #fff;
 }

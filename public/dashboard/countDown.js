@@ -79,19 +79,19 @@ export class Countdown {
         const progressWidth = width * (1 - (remainingSeconds / this.totalSeconds)); // Fill from left to right
 
         // Set styles for the meter
-        this.dateSelectors.meter.lineWidth = height; // Set the height as the thickness of the bar
+        this.dateSelectors.meter.lineWidth = height; 
         this.dateSelectors.meter.fillStyle = '#ecf0f1'; 
 
         // Draw background rectangle
         this.dateSelectors.meter.beginPath();
         this.dateSelectors.meter.rect(0, 0, width, height);
-        this.dateSelectors.meter.fillStyle = '#03e9f4';  // Background color
+        this.dateSelectors.meter.fillStyle = '#F28C28';  // Background color
         this.dateSelectors.meter.fill();
 
         // Draw progress rectangle (loading bar)
         this.dateSelectors.meter.beginPath();
         this.dateSelectors.meter.rect(0, 0, progressWidth, height);
-        this.dateSelectors.meter.fillStyle = '#3498db'; // Progress color
+        this.dateSelectors.meter.fillStyle = '#D3D3D3'; // Progress color
         this.dateSelectors.meter.fill();
     }
 

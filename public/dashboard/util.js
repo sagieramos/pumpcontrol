@@ -70,5 +70,19 @@ const minutesToTime = (totalMinutes) => {
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
 }
 
+/**
+ * Convert milliseconds to a formatted string of hours and minutes (H:MM).
+ * @param {number} totalMilliseconds - The total number of milliseconds to convert.
+ * @returns {string} - The formatted time string in H:MM format.
+ */
 
-export { serializeData, toggleElementVisibility, minutesToTime };
+const millisecondsToTime = (totalMilliseconds) => {
+    const totalSeconds = totalMilliseconds / 1000;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    /* const seconds = Math.floor(totalSeconds % 60); */
+    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+}
+
+
+export { serializeData, toggleElementVisibility, millisecondsToTime };
