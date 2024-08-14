@@ -17,12 +17,12 @@ constexpr size_t EEPROM_SIZE_CTL =
 extern TaskHandle_t runMachineTask;
 extern float min_voltage;
 
-void send_control_data(const size_t client_id = 0);
-
 void store_time_range();
 void switch_pump(bool state);
 
 void runMachine(void *parameter);
+
+void send_all_power_status_and_type(uint32_t clientId);
 
 pump_ControlData &get_current_control_data();
 

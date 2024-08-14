@@ -1,5 +1,7 @@
+#include "dev_or_prod.h"
 #include "main.h"
 #include "network.h"
+#include "sensors.h"
 #include <WiFi.h>
 
 // Define the custom IP configuration
@@ -8,10 +10,10 @@ IPAddress gateway(192, 168, 10,
                   1); // Gateway, typically the same as local_IP for AP mode
 IPAddress subnet(255, 255, 255, 0); // Subnet mask
 
-uint8_t numStations = 0;
-
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   DEBUG_SERIAL_PRINTLN("............................................");
+  uint8_t numStations = WiFi.softAPgetStationNum();
+
   switch (event) {
   case ARDUINO_EVENT_WIFI_AP_START:
     DEBUG_SERIAL_PRINTLN("SoftAP started");
@@ -40,56 +42,25 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
     numStations = WiFi.softAPgetStationNum();
     DEBUG_SERIAL_PRINTF("Stations connected - AP: %d\n", numStations);
-    if (numStations > 0) {
-      if (blinkTaskHandle != NULL) {
-        vTaskSuspend(blinkTaskHandle);
-        DEBUG_SERIAL_PRINTLN("Blink Task suspended");
-      }
-      if (dnsTaskHandle != NULL) {
-        vTaskResume(dnsTaskHandle);
-        DEBUG_SERIAL_PRINTLN("DNS Task resumed");
-      }
-      digitalWrite(LED_BUILTIN, HIGH);
-    } else {
-      if (blinkTaskHandle != NULL) {
-        vTaskResume(blinkTaskHandle);
-        DEBUG_SERIAL_PRINTLN("Blink Task resumed");
-      }
-      if (dnsTaskHandle != NULL) {
-        vTaskSuspend(dnsTaskHandle);
-        DEBUG_SERIAL_PRINTLN("DNS Task suspended");
-      }
-    }
     break;
 
   case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
     numStations = WiFi.softAPgetStationNum();
     DEBUG_SERIAL_PRINTF("Stations disconnected - AP: %d\n", numStations);
-    if (numStations > 0) {
-      if (blinkTaskHandle != NULL) {
-        vTaskSuspend(blinkTaskHandle);
-        DEBUG_SERIAL_PRINTLN("Blink Task suspended");
-      }
-      if (dnsTaskHandle != NULL) {
-        vTaskResume(dnsTaskHandle);
-      }
-      digitalWrite(LED_BUILTIN, HIGH);
-    } else {
-      if (blinkTaskHandle != NULL) {
-        vTaskResume(blinkTaskHandle);
-        DEBUG_SERIAL_PRINTLN("Blink Task resumed");
-      }
-      if (dnsTaskHandle != NULL) {
-        vTaskSuspend(dnsTaskHandle);
-        DEBUG_SERIAL_PRINTLN("DNS Task suspended");
-      }
-    }
-    ws.cleanupClients();
     break;
 
   default:
     DEBUG_SERIAL_PRINTF("[WiFi-event] event: %d\n", event);
+    numStations = WiFi.softAPgetStationNum();
     break;
+  }
+
+  check_and_resume_task(dnsTaskHandle, numStations > 0);
+  check_and_resume_task(blinkTaskHandle, numStations < 1);
+  check_and_resume_task(sendVoltageTask, numStations > 0);
+  ws.cleanupClients();
+  if (numStations > 0) {
+    digitalWrite(LED_PIN, HIGH);
   }
 }
 

@@ -197,11 +197,13 @@ enum VoltageKey { VOLTAGE, MIN_VOLTAGE, MAX_VOLTAGE };
 
 constexpr uint8_t POWER_TYPE_ID = 0x08;
 
-enum PowerKey {
-  POWER_READY = 1,
+enum PowerStatus {
+  POWER_OFF = 0,
+  POWER_READY,
   POWER_ON,
-  POWER_OFF,
 };
+
+constexpr uint8_t POWER_STATUS_ID = 0x09;
 
 enum ConfigKey {
   VOLTAGE_SENSOR = 1,

@@ -23,6 +23,6 @@
 #endif
 
 unsigned int getCurrentTimeMs();
-bool check_and_resume_task(TaskHandle_t task);
+void check_and_resume_task(TaskHandle_t task, bool resumeTask);
 
 #endif // DEV_OR_PROD_H

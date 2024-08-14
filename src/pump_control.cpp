@@ -130,67 +130,6 @@ void controlPumpState(bool trigger_auto_pump) {
   }
 }
 
-// Send control data to the specified client
-void send_control_data(const size_t client_id) {
-  if (client_id == 0) {
-    return;
-  }
-
-  if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
-    uint8_t buffer[1024];
-    size_t buffer_size = sizeof(buffer);
-
-    pump_ControlData control_data = get_current_control_data();
-    DEBUG_SERIAL_PRINTF("Control Data - Mode: %d\tRunning: %d\tTime Range - "
-                        "Running: %d\tResting: %d\n",
-                        control_data.mode, control_data.is_running,
-                        control_data.time_range.running,
-                        control_data.time_range.resting);
-
-    bool status = serialize_control_data(control_data, buffer, &buffer_size,
-                                         CONTROL_DATA_TYPE_ID);
-
-    xSemaphoreGive(controlDataMutex);
-
-    if (status) {
-#ifndef PRODUCTION
-      // Print buffer contents for debugging
-      for (size_t i = 0; i < buffer_size; i++) {
-        DEBUG_SERIAL_PRINTF("%02X ", buffer[i]);
-      }
-
-      // Deserialize for verification
-      pump_ControlData control_data_deserialized;
-      if (deserialize_control_data(control_data_deserialized, buffer,
-                                   buffer_size)) {
-        DEBUG_SERIAL_PRINTLN("Deserialized data:");
-        DEBUG_SERIAL_PRINTF("Mode: %d\n", control_data_deserialized.mode);
-        DEBUG_SERIAL_PRINTF("Running: %d\n",
-                            control_data_deserialized.is_running);
-        DEBUG_SERIAL_PRINTF("Time Range - Running: %d\n",
-                            control_data_deserialized.time_range.running);
-        DEBUG_SERIAL_PRINTF("Time Range - Resting: %d\n",
-                            control_data_deserialized.time_range.resting);
-      } else {
-        DEBUG_SERIAL_PRINTLN("Failed to deserialize control data");
-      }
-      DEBUG_SERIAL_PRINTLN();
-#endif
-
-      if (client_id == 0) {
-        ws.binaryAll(buffer, buffer_size);
-      } else {
-        ws.binary(client_id, buffer, buffer_size);
-      }
-    } else {
-      DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
-    }
-  } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in send_control_data()");
-  }
-}
-
 // Task to run the machine
 void runMachine(void *parameter) {
   (void)parameter;

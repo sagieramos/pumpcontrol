@@ -36,15 +36,12 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     Num msg = Num_init_zero;
     msg.key = VoltageKey::MIN_VOLTAGE;
     msg.value = min_voltage;
-    buff_size = sizeof(buff);
-    if (serialize_num(msg, buff, &buff_size, VOLTAGE_TYPE_ID, NULL)) {
-      client->binary(buff, buff_size);
-    }
-    if (ws.count() > 0) {
-      if (check_and_resume_task(sendVoltageTask)) {
-        DEBUG_SERIAL_PRINTLN("Resumed sendVoltageTask");
-      }
-    }
+    send_num_message(msg, VOLTAGE_TYPE_ID);
+
+    send_all_power_status_and_type(client_id);
+
+    check_and_resume_task(sendVoltageTask, ws.count() > 0);
+
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_DISCONNECT) {
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());

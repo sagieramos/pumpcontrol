@@ -65,9 +65,10 @@ void send_voltage_task(void *pvParameter) {
   get_min_voltage(min_voltage);
 
   for (;;) {
-    if (ws.count() == 0 || numStations == 0) {
-      DEBUG_SERIAL_PRINTLN("Suspending sendVoltageTask");
       ws.cleanupClients();
+
+    if (ws.count() == 0 ) {
+      DEBUG_SERIAL_PRINTLN("Suspending sendVoltageTask");
       vTaskSuspend(NULL);
     }
 
