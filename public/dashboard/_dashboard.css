@@ -335,6 +335,10 @@ header {
   }
 }
 
+.bg-config {
+  padding-bottom: 60px;
+}
+
 .init-hide {
   font-size: 0.9rem;
 }

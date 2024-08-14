@@ -1,6 +1,33 @@
 import { Num, Str, Strnum, Numlist, Auth } from './str_num_msg.js';
 import { ControlData, TimeRange, MachineMode } from './pump_control_data.js';
 import { TYPE_IDS } from './type_ids.js';
+import { Buffer } from 'buffer';
+
+const serializeAndSendData = (data, typeIdentifier, messageType) => {
+    const dataBuffer = messageType.encode(data);
+    const buffer = Buffer.alloc(1 + dataBuffer.length);
+
+    buffer[0] = typeIdentifier;
+    dataBuffer.copy(buffer, 1);
+
+    return buffer;
+};
+
+// Example usage
+const messageType = {
+    encode: (data) => {
+        // Dummy encode function, replace with your actual encoding logic
+        const str = JSON.stringify(data);
+        return Buffer.from(str);
+    }
+};
+
+const testData = { mode: 'Power On' };
+const typeIdentifier = 1;
+const buffer = serializeAndSendData(testData, typeIdentifier, messageType);
+
+console.log(buffer);
+
 
 const TYPE_IDENTIFIER_NUM = 0x01;
 

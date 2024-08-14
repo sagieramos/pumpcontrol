@@ -1,3 +1,5 @@
+import { MachineMode } from '../protoc/js/pump_control_data.js';
+import { Num } from '../protoc/js/str_num_msg.js';
 
 /**
  * Toggles the visibility of a DOM element with a transition effect.
@@ -40,34 +42,87 @@ const toggleElementVisibility = (element, action) => {
     }
 }
 
-
 /**
- * Serializes data into a buffer with a type identifier.
+ * Serializes data into a buffer with a type identifier and sends it over a WebSocket connection.
  * @param {Object} data - The data to serialize.
  * @param {number} typeIdentifier - The type identifier for the data.
  * @param {Object} messageType - The message type for encoding the data.
- * @returns {Buffer} - The serialized buffer.
+ * @param {WebSocket} ws - The WebSocket instance to send the data through.
+ * @throws {Error} If serialization fails or WebSocket is not open.
+ */
+const serializeAndSendData = (data, typeIdentifier, messageType) => {
+    const dataBuffer = messageType.encode(data);
+    const buffer = new ArrayBuffer(1 + dataBuffer.length);
+    const uint8View = new Uint8Array(buffer);
+    uint8View[0] = typeIdentifier;
+    uint8View.set(new Uint8Array(dataBuffer), 1);
+
+    return uint8View;
+};
+
+const KEY_CONFIG = {
+    MIN_VOLT: 1,
+    CONFIG_MODE: 101,
+    CONFIG_RUNNING_TIME: 102,
+    CONFIG_RESTING_TIME: 103,
+};
+
+const TYPE_IDS = {
+    NUM_TYPE_ID: 0x01,
+    CONTROL_DATA_TYPE_ID: 0x04,
+    PUMP_TIME_RANGE_TYPE_ID: 0x05,
+    VOLTAGE_TYPE_ID: 0x07,
+};
+const { POWER_OFF, POWER_ON, AUTO } = MachineMode;
+
+const modeMapping = {
+    [POWER_OFF]: "POWER OFF",
+    [POWER_ON]: "POWER ON",
+    [AUTO]: "AUTOMATE"
+};
+/**
+ * Returns the mode string based on the integer value.
+ * @param {number} intValue - The integer value of the mode.
+ * @returns {string} - The mode string.
  */
 
-
-const serializeData = (data, typeIdentifier, messageType) => {
-    const dataBuffer = messageType.encode(data);
-    const buffer = Buffer.alloc(1 + dataBuffer.length);
-    buffer[0] = typeIdentifier;
-    dataBuffer.copy(buffer, 1);
-    return buffer;
+const getModeString = (intValue) => {
+    return modeMapping[intValue] || "Unknown mode";
 };
 
 /**
- * Convert minutes to a formatted string of hours and minutes (H:MM).
- * @param {number} totalMinutes - The total number of minutes to convert.
- * @returns {string} - The formatted time string in H:MM format.
+ * Handles the change in machine mode and sends the corresponding data.
+ * @param {string} newMode - The new machine mode to set.
  */
+const handleModeChange = (newMode, ws) => {
+    const modeValue = parseInt(newMode, 10);
 
-const minutesToTime = (totalMinutes) => {
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+    console.log('Mode value:', modeValue);
+    if (modeValue < 0 || modeValue > 2) {
+        console.error('Invalid mode:', newMode);
+        return;
+    }
+    const num = { key: KEY_CONFIG.CONFIG_MODE, value: modeValue };
+
+    console.log('Sending mode data:', num);
+
+    try {
+        const buffer = serializeAndSendData(num, TYPE_IDS.NUM_TYPE_ID, Num);
+        ws.send(buffer);
+    } catch (error) {
+        console.error('Failed to serialize and send data:', error);
+    }
+};
+
+const handleVoltageChange = (newVoltage, ws) => {
+    const num = { key: KEY_CONFIG.MIN_VOLT, value: newVoltage };
+
+    try {
+        const buffer = serializeAndSendData(num, TYPE_IDS.VOLTAGE_TYPE_ID, Num);
+        ws.send(buffer);
+    } catch (error) {
+        console.error('Failed to serialize and send data:', error);
+    }
 }
 
 /**
@@ -84,5 +139,10 @@ const millisecondsToTime = (totalMilliseconds) => {
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
 }
 
-
-export { serializeData, toggleElementVisibility, millisecondsToTime };
+export {
+    handleVoltageChange,
+    handleModeChange,
+    toggleElementVisibility,
+    millisecondsToTime, getModeString, KEY_CONFIG,
+    TYPE_IDS
+};

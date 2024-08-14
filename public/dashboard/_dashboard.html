@@ -110,9 +110,26 @@
 
             <!--  -->
         </div>
+
+        <div id="config-group" class="bg-config">
+            <div class="config">
+                <label for="mode">Set Machine Mode</label>
+                <select id="mode">
+                    <option value="0">POWER OFF</option>
+                    <option value="1">POWER ON</option>
+                    <option value="2">AUTOMATE</option>
+                </select>
+            </div>
+            <div class="config">
+                <label for="min-voltage">Set Minimum Operating Voltage (110-230 V):</label>
+                <input type="number" id="min-voltage" min="110" max="230" step="1" placeholder="Enter voltage">
+                <button id="submit-btn">></button>
+                <div class="error-message" id="error-message" style="display: none;">Please enter a value between 110 and 230 volts.</div>
+            </div>
+        </div>
         <!-- 
         <div class="bg-primary config">
-            <div>
+            <div id="config-volt-range">
                 <label for="set-min-volt">Set Voltage Range</label>
             </div>
             <div class="config-mode">
@@ -140,7 +157,7 @@
             document.body.style.display = 'block';
         });
     </script>
-    <script type="module" src="./_dashboard.js"></script>
+    <script src="./_dashboard.js"></script>
 </body>
 
 </html>

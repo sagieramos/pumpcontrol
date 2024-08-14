@@ -114,8 +114,7 @@ void receive_single_config(uint8_t *data, size_t len) {
 
   bool dataChanged = false;
 
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE &&
-      dataChanged) {
+  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
     pump_ControlData &control_data = get_current_control_data();
 
     switch (static_cast<ConfigKey>(msg.key)) {
@@ -163,6 +162,9 @@ void receive_single_config(uint8_t *data, size_t len) {
         store_time_range();
       }
     }
+  } else {
+    DEBUG_SERIAL_PRINTF(
+        "Failed to acquire controlDataMutex in receive_single_config()");
   }
 }
 
@@ -209,6 +211,9 @@ void recieve_pump_time_range(uint8_t *data, size_t len) {
     }
 
     xSemaphoreGive(controlDataMutex);
+  } else {
+    DEBUG_SERIAL_PRINTLN(
+        "Failed to acquire controlDataMutex in recieve_pump_time_range()");
   }
 }
 
@@ -236,7 +241,7 @@ MsgHandler receive_ptr[] = {
     receive_control_data,    // Handle control data
     recieve_pump_time_range, // Handle pump time range
     recieve_auth,            // Handle auth message
-    recieve_min_voltage      // Handle min voltage message
+    recieve_min_voltage,     // Handle min voltage message
 };
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len) {
