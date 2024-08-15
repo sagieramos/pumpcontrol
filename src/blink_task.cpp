@@ -15,9 +15,5 @@ void taskBlink(void *pvParameters) {
 
   for (;;) {
     blink(100, 400);
-    // stackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-    // Serial.print("Blink Task High Water Mark: ");
-    // Serial.println(stackHighWaterMark);
-    // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
   }
 }

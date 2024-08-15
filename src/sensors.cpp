@@ -65,9 +65,9 @@ void send_voltage_task(void *pvParameter) {
   get_min_voltage(min_voltage);
 
   for (;;) {
-      ws.cleanupClients();
+    ws.cleanupClients();
 
-    if (ws.count() == 0 ) {
+    if (ws.count() == 0) {
       DEBUG_SERIAL_PRINTLN("Suspending sendVoltageTask");
       vTaskSuspend(NULL);
     }
@@ -75,17 +75,9 @@ void send_voltage_task(void *pvParameter) {
     // Update reading_voltage before sending
     readVoltage(reading_voltage);
 
-    // Prepare the buffer for serialization
-    uint8_t buffer[32];
-    size_t buffer_size = sizeof(buffer);
     msg.value = reading_voltage;
 
-    if (serialize_num(msg, buffer, &buffer_size, VOLTAGE_TYPE_ID,
-                      send_binary_data)) {
-      DEBUG_SERIAL_PRINTF("Voltage: %f sent\n", msg.value);
-    } else {
-      DEBUG_SERIAL_PRINTLN("Failed to serialize voltage");
-    }
+    send_num_message(msg, VOLTAGE_TYPE_ID);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
   }

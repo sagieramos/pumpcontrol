@@ -4,15 +4,15 @@
 #include "str_num_msg_transcode.h"
 #include "type_id.h"
 
+#define SEMAPHORE_TIMEOUT_MS 1000
+
 void send_num_message(Num value, uint8_t type_id) {
   uint8_t buffer[NUM_BUFFER_SIZE];
   size_t buffer_size = NUM_BUFFER_SIZE;
   if (serialize_num(value, buffer, &buffer_size, type_id, send_binary_data)) {
-    DEBUG_SERIAL_PRINTF("Sent message. key: %d, value: %f\n", value.key,
-                        value.value);
-    DEBUG_SERIAL_PRINTF("Type ID: %d\n", type_id);
-    DEBUG_SERIAL_PRINTF("Buffer size: %d\n", buffer_size);
-    DEBUG_SERIAL_PRINTLN("====================================");
+    DEBUG_SERIAL_PRINTF("Sent Num message. key: %d, value: %f | Type ID: %d | "
+                        "Buffer size: %d\n",
+                        value.key, value.value, type_id, buffer_size);
   } else {
     DEBUG_SERIAL_PRINTF("Failed to serialize power message\n");
   }
@@ -25,7 +25,8 @@ void receive_control_data(uint8_t *data, size_t len) {
     return;
   }
 
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) ==
+      pdTRUE) {
     pump_ControlData &control_data = get_current_control_data();
     pump_ControlData new_control_data = control_data;
 
@@ -44,7 +45,7 @@ void receive_control_data(uint8_t *data, size_t len) {
         }
 
         DEBUG_SERIAL_PRINTF(
-            "Received Control Data - Mode: %d\tRunning: %d\tResting: %d\n",
+            "Received Control Data - Mode: %d\tRunning: %lu\tResting: %lu\n",
             control_data.mode, control_data.time_range.running,
             control_data.time_range.resting);
 
@@ -105,7 +106,6 @@ void receive_str(uint8_t *data, size_t len) {
   }
 }
 
-// void receive_num(uint8_t *data, size_t len)
 void receive_single_config(uint8_t *data, size_t len) {
   DEBUG_SERIAL_PRINTF("Received `num` message of length %u\n", len);
 
@@ -128,34 +128,36 @@ void receive_single_config(uint8_t *data, size_t len) {
 
   bool dataChanged = false;
 
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) ==
+      pdTRUE) {
     pump_ControlData &control_data = get_current_control_data();
 
     switch (static_cast<ConfigKey>(msg.key)) {
     case CONFIG_MODE:
-      DEBUG_SERIAL_PRINTF("Received mode: %d\n", msg.value);
+      DEBUG_SERIAL_PRINTF("Current mode: %d\n", control_data.mode);
       if (control_data.mode != static_cast<pump_MachineMode>(msg.value)) {
         control_data.mode = static_cast<pump_MachineMode>(msg.value);
         dataChanged = true;
-        DEBUG_SERIAL_PRINTF("Current mode: %d\n", control_data.mode);
+
+        DEBUG_SERIAL_PRINTF("Received mode: %d\n", msg.value);
       }
       break;
     case CONFIG_RUNNING_TIME:
-      DEBUG_SERIAL_PRINTF("Received running time: %d\n", msg.value);
+      DEBUG_SERIAL_PRINTF("Current running time: %d\n",
+                          control_data.time_range.running);
       if (control_data.time_range.running != static_cast<uint32_t>(msg.value)) {
         control_data.time_range.running = static_cast<uint32_t>(msg.value);
         dataChanged = true;
-        DEBUG_SERIAL_PRINTF("Current running time: %d\n",
-                            control_data.time_range.running);
+        DEBUG_SERIAL_PRINTF("Received running time: %d\n", msg.value);
       }
       break;
     case CONFIG_RESTING_TIME:
-      DEBUG_SERIAL_PRINTF("Received resting time: %d\n", msg.value);
+      DEBUG_SERIAL_PRINTF("Current resting time: %d\n",
+                          control_data.time_range.resting);
       if (control_data.time_range.resting != static_cast<uint32_t>(msg.value)) {
         control_data.time_range.resting = static_cast<uint32_t>(msg.value);
         dataChanged = true;
-        DEBUG_SERIAL_PRINTF("Current resting time: %d\n",
-                            control_data.time_range.resting);
+        DEBUG_SERIAL_PRINTF("Received resting time: %d\n", msg.value);
       }
       break;
     default:
@@ -182,7 +184,7 @@ void receive_single_config(uint8_t *data, size_t len) {
   }
 }
 
-void recieve_min_voltage(uint8_t *data, size_t len) {
+void receive_min_voltage(uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
@@ -200,12 +202,13 @@ void recieve_min_voltage(uint8_t *data, size_t len) {
   }
 }
 
-void recieve_pump_time_range(uint8_t *data, size_t len) {
+void receive_pump_time_range(uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
   }
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(1000)) == pdTRUE) {
+  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) ==
+      pdTRUE) {
     pump_TimeRange time_range = pump_TimeRange_init_zero;
     if (deserialize_time_range(time_range, data, len)) {
       pump_ControlData &control_data = get_current_control_data();
@@ -227,11 +230,11 @@ void recieve_pump_time_range(uint8_t *data, size_t len) {
     xSemaphoreGive(controlDataMutex);
   } else {
     DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in recieve_pump_time_range()");
+        "Failed to acquire controlDataMutex in receive_pump_time_range()");
   }
 }
 
-void recieve_auth(uint8_t *data, size_t len) {
+void receive_auth(uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
@@ -240,47 +243,38 @@ void recieve_auth(uint8_t *data, size_t len) {
   if (deserialize_auth(msg, data, len, NULL)) {
     DEBUG_SERIAL_PRINTF("Received ID: %s\n", (const char *)msg.id.arg);
     DEBUG_SERIAL_PRINTF("Received Password: %s\n", (const char *)msg.pass.arg);
-
-    free_auth(msg);
   } else {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize auth message");
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize Auth message");
   }
 }
-// Function index matches the type_id defined in type_id.h
-MsgHandler receive_ptr[] = {
-    void_action,             // Placeholder for index 0
-    receive_single_config,   // Handle single configuration updates
-    receive_str,             // Handle string messages
-    receive_strnum,          // Handle string and number messages
-    receive_control_data,    // Handle control data
-    recieve_pump_time_range, // Handle pump time range
-    recieve_auth,            // Handle auth message
-    recieve_min_voltage,     // Handle min voltage message
-};
 
-void receive_msg_and_perform_action(uint8_t *data, size_t len) {
+void receive_msg_and_perform_action(uint8_t *data, size_t len,
+                                    uint8_t msg_type) {
+  DEBUG_SERIAL_PRINTF("Received `msg` of length %u and type: %d\n", len,
+                      msg_type);
+
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received");
-    return;
-  }
-  // print the time, type_id, and time
-  DEBUG_SERIAL_PRINTLN();
-  DEBUG_SERIAL_PRINTF("Received message of length %u\n", len);
-  DEBUG_SERIAL_PRINTF("Type ID: %u\n", data[0]);
-  unsigned long current_time = getCurrentTimeMs();
-  if (len > MAX_DATA_LENGTH) {
-    DEBUG_SERIAL_PRINTF("Data length exceeds maximum allowed length: %zu\n",
-                        len);
+    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
   }
 
-  if (data[0] < sizeof(receive_ptr) / sizeof(receive_ptr[0])) {
-    receive_ptr[data[0]](data, len);
-    DEBUG_SERIAL_PRINTF("Handled message with type ID: %u in \n", data[0]);
-    unsigned long time_taken = getCurrentTimeMs() - current_time;
-    DEBUG_SERIAL_PRINTF("Time taken to process message: %lu ms\n", time_taken);
+  void (*receive_ptr[])(uint8_t *, size_t) = {
+      void_action,             // 0
+      receive_single_config,   // 1
+      receive_str,             // 2
+      receive_strnum,          // 3
+      receive_control_data,    // 4
+      receive_pump_time_range, // 5
+      receive_auth,            // 6
+      receive_min_voltage,     // 7
+  };
 
-  } else {
-    DEBUG_SERIAL_PRINTF("Invalid action index: %u\n", data[0]);
+  const uint8_t len_msg_types = sizeof(receive_ptr) / sizeof(receive_ptr[0]);
+
+  if (msg_type >= len_msg_types) {
+    DEBUG_SERIAL_PRINTF("Unhandled message type: %d\n", msg_type);
+    return;
   }
+
+  receive_ptr[msg_type](data, len);
 }

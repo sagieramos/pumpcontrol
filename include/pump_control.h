@@ -48,6 +48,7 @@ extern bool pumpState;
  * bounds of the function pointer array. If the index is out of bounds, a debug
  * message indicating an invalid action index is printed.
  */
-void receive_msg_and_perform_action(uint8_t *data, size_t len);
+void receive_msg_and_perform_action(uint8_t *data, size_t len,
+                                    uint8_t msg_type);
 
 #endif // PUMP_CONTROL_H

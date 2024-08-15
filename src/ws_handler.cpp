@@ -28,8 +28,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
     pump_ControlData ctr = get_current_control_data();
 
-    serialize_control_data(ctr, buff, &buff_size, CONTROL_DATA_TYPE_ID);
-
+    if (serialize_control_data(ctr, buff, &buff_size, CONTROL_DATA_TYPE_ID)) {
+      DEBUG_SERIAL_PRINTF(
+          "Sent control data. Mode: %lu ms, Running: %lu ms, Resting: %d\n",
+          ctr.mode, ctr.time_range.running, ctr.time_range.resting);
+    } else {
+      DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
+    }
     client->binary(buff, buff_size);
 
     // send min voltage
@@ -44,13 +49,14 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_DISCONNECT) {
+    check_and_resume_task(sendVoltageTask, ws.count() > 0);
     DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_ERROR) {
     DEBUG_SERIAL_PRINTLN("Websocket error");
   } else if (type == WS_EVT_PONG) {
   } else if (WS_EVT_DATA) {
     DEBUG_SERIAL_PRINTF("Websocket data received: %u\n", client_id);
-    receive_msg_and_perform_action(data, len);
+    receive_msg_and_perform_action(data, len, data[0]);
   } else {
     DEBUG_SERIAL_PRINTLN("Websocket event not handled");
   }

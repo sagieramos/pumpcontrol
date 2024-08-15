@@ -57,7 +57,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
 
   check_and_resume_task(dnsTaskHandle, numStations > 0);
   check_and_resume_task(blinkTaskHandle, numStations < 1);
-  check_and_resume_task(sendVoltageTask, numStations > 0);
+  check_and_resume_task(sendVoltageTask, numStations > 0 && ws.count() > 0);
   ws.cleanupClients();
   if (numStations > 0) {
     digitalWrite(LED_PIN, HIGH);

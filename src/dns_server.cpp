@@ -10,6 +10,6 @@ void dnsTask(void *pvParameters) {
 
   for (;;) {
     dnsServer.processNextRequest();
-    vTaskDelay(pdMS_TO_TICKS(10));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }
