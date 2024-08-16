@@ -6,6 +6,7 @@
 #define DEFAULT_MIN_VOLTAGE 200.0f
 
 extern TaskHandle_t sendVoltageTask;
+extern float min_voltage;
 
 void readVoltage(float &voltage);
 bool store_min_voltage(float min_voltage);

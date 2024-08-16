@@ -41,9 +41,9 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     Num msg = Num_init_zero;
     msg.key = VoltageKey::MIN_VOLTAGE;
     msg.value = min_voltage;
-    send_num_message(msg, VOLTAGE_TYPE_ID);
+    send_num_message_to_a_client(msg, NUM_TYPE_ID, client);
 
-    send_all_power_status_and_type(client_id);
+    send_all_power_status_and_type(client);
 
     check_and_resume_task(sendVoltageTask, ws.count() > 0);
 

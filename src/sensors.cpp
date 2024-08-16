@@ -31,6 +31,7 @@ bool store_min_voltage(float voltage) {
     DEBUG_SERIAL_PRINTLN("Min voltage should be between 110 and 240");
     return false;
   }
+
   min_voltage = voltage;
   DEBUG_SERIAL_PRINTF("Min voltage: %f\n", min_voltage);
   EEPROM.begin(EEPROM_SIZE_CTL);
@@ -58,6 +59,7 @@ void get_min_voltage(float &voltage) {
 void send_voltage_task(void *pvParameter) {
   (void)pvParameter;
   Num msg = Num_init_zero;
+  msg.key = VoltageKey::VOLTAGE;
   pinMode(adcPin, INPUT);
 
   static float reading_voltage = 0.0f;
@@ -77,7 +79,7 @@ void send_voltage_task(void *pvParameter) {
 
     msg.value = reading_voltage;
 
-    send_num_message(msg, VOLTAGE_TYPE_ID);
+    send_num_message(msg, NUM_TYPE_ID);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
   }

@@ -26,21 +26,36 @@ import { Num } from '../protoc/js/str_num_msg.js';
  * // Hide the element
  * toggleElementVisibility(voltageChart, 'hide');
  */
-const toggleElementVisibility = (element, action) => {
-    if (element) {
-        if (action === 'show') {
+const toggleElementVisibility = (element, action = 'toggle') => {
+    if (!element || !(element instanceof Element)) {
+        console.error('Invalid element provided.');
+        return;
+    }
+
+    switch (action) {
+        case 'show':
             element.classList.remove('hidden');
             element.classList.add('visible');
-        } else if (action === 'hide') {
+            break;
+        case 'hide':
             element.classList.remove('visible');
             element.classList.add('hidden');
-        } else {
-            console.error('Invalid action. Use "show" or "hide".');
-        }
-    } else {
-        console.error('Element is not provided or is invalid.');
+            break;
+        case 'toggle':
+            if (element.classList.contains('hidden')) {
+                element.classList.remove('hidden');
+                element.classList.add('visible');
+            } else {
+                element.classList.remove('visible');
+                element.classList.add('hidden');
+            }
+            break;
+        default:
+            console.error('Invalid action. Use "show", "hide", or "toggle".');
+            break;
     }
-}
+};
+
 
 /**
  * Serializes data into a buffer with a type identifier and sends it over a WebSocket connection.
@@ -60,19 +75,27 @@ const serializeAndSendData = (data, typeIdentifier, messageType) => {
     return uint8View;
 };
 
+const VOLT_RECEIVE_FROM_SERVER = {
+   VOLTAGE: 0,
+   MIN_VOLTAGE: 1,
+   MAX_VOLTAGE: 2
+}
+
 const KEY_CONFIG = {
-    MIN_VOLT: 1,
     CONFIG_MODE: 101,
     CONFIG_RUNNING_TIME: 102,
     CONFIG_RESTING_TIME: 103,
+    MIN_VOLT: 105,
 };
 
 const TYPE_IDS = {
     NUM_TYPE_ID: 0x01,
     CONTROL_DATA_TYPE_ID: 0x04,
     PUMP_TIME_RANGE_TYPE_ID: 0x05,
-    VOLTAGE_TYPE_ID: 0x07,
+    POWER_TYPE_ID: 0x08, //receive only
+    POWER_STATUS_ID: 0x09, //receive only
 };
+
 const { POWER_OFF, POWER_ON, AUTO } = MachineMode;
 
 const modeMapping = {
@@ -80,6 +103,7 @@ const modeMapping = {
     [POWER_ON]: "POWER ON",
     [AUTO]: "AUTOMATE"
 };
+
 /**
  * Returns the mode string based on the integer value.
  * @param {number} intValue - The integer value of the mode.
@@ -118,7 +142,7 @@ const handleVoltageChange = (newVoltage, ws) => {
     const num = { key: KEY_CONFIG.MIN_VOLT, value: newVoltage };
 
     try {
-        const buffer = serializeAndSendData(num, TYPE_IDS.VOLTAGE_TYPE_ID, Num);
+        const buffer = serializeAndSendData(num, TYPE_IDS.NUM_TYPE_ID, Num);
         ws.send(buffer);
     } catch (error) {
         console.error('Failed to serialize and send data:', error);
@@ -144,5 +168,5 @@ export {
     handleModeChange,
     toggleElementVisibility,
     millisecondsToTime, getModeString, KEY_CONFIG,
-    TYPE_IDS
+    TYPE_IDS, VOLT_RECEIVE_FROM_SERVER
 };

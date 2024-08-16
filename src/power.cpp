@@ -128,23 +128,24 @@ void switch_pump(bool state) {
   pumpState = state;
 }
 
-void send_serialized_message(Num &value, uint8_t type_id, uint32_t clientId) {
+void send_serialized_message(Num &value, uint8_t type_id,
+                             AsyncWebSocketClient *client) {
   uint8_t buffer[NUM_BUFFER_SIZE];
   size_t buffer_size = NUM_BUFFER_SIZE;
   if (serialize_num(value, buffer, &buffer_size, type_id)) {
-    ws.binary(clientId, buffer, buffer_size);
+    client->binary(buffer, buffer_size);
     DEBUG_SERIAL_PRINTF("Sent message. key: %d, value: %f\n", value.key,
                         value.value);
     DEBUG_SERIAL_PRINTF("Type ID: %d\n", type_id);
     DEBUG_SERIAL_PRINTF("Buffer size: %d\n", buffer_size);
-    DEBUG_SERIAL_PRINTF("Client ID: %d\n", clientId);
+    DEBUG_SERIAL_PRINTF("Client ID: %d\n", client->id());
     DEBUG_SERIAL_PRINTLN("====================================");
   } else {
     DEBUG_SERIAL_PRINTF("Failed to serialize power message\n");
   }
 }
 
-void send_all_power_status_and_type(uint32_t clientId) {
-  send_serialized_message(power, POWER_TYPE_ID, clientId);
-  send_serialized_message(power_status, POWER_STATUS_ID, clientId);
+void send_all_power_status_and_type(AsyncWebSocketClient *client) {
+  send_serialized_message(power, POWER_TYPE_ID, client);
+  send_serialized_message(power_status, POWER_STATUS_ID, client);
 }

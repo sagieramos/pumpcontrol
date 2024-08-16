@@ -245,6 +245,15 @@ enum ConfigKey {
   CONFIG_RUNNING_STATE,
 
   /**
+   * @brief Key for setting the minimum voltage threshold.
+   *
+   * This key is used to set the minimum voltage threshold for the pump. The
+   * value should be of type `float` representing the minimum voltage level
+   * required for the pump to operate.
+   */
+  CONFIG_MIN_VOLTAGE,
+
+  /**
    * @brief Maximum value for configuration keys.
    *
    * This value represents the maximum key value used for configuration

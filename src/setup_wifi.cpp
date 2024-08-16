@@ -11,7 +11,7 @@ IPAddress gateway(192, 168, 10,
 IPAddress subnet(255, 255, 255, 0); // Subnet mask
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
-  DEBUG_SERIAL_PRINTLN("............................................");
+  DEBUG_SERIAL_PRINTLN("............................");
   uint8_t numStations = WiFi.softAPgetStationNum();
 
   switch (event) {
@@ -65,7 +65,6 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
 }
 
 void setupWifiAP() {
-  WiFi.disconnect(true);
   // Attach WiFi event handler
   WiFi.onEvent(WiFiEvent);
   // Set up the access point IP settings

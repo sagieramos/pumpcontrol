@@ -22,7 +22,7 @@ void switch_pump(bool state);
 
 void runMachine(void *parameter);
 
-void send_all_power_status_and_type(uint32_t clientId);
+void send_all_power_status_and_type(AsyncWebSocketClient *client);
 
 pump_ControlData &get_current_control_data();
 

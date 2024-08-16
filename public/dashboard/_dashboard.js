@@ -3,10 +3,10 @@ import './reset.css';
 import {
     toggleElementVisibility, millisecondsToTime,
     handleVoltageChange,
-    handleModeChange, 
+    handleModeChange,
     getModeString,
-    TYPE_IDS,
-    KEY_CONFIG
+    KEY_CONFIG,
+    VOLT_RECEIVE_FROM_SERVER
 } from './util.js';
 import { Countdown } from './countDown.js';
 import { ControlData, TimeRange } from '../protoc/js/pump_control_data.js';
@@ -28,13 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const styledButton = document.querySelectorAll('.styled-button')
     const minVoltInput = document.getElementById('min-voltage');
     const modeConfig = document.getElementById('mode');
-    
 
     let ws;
     let heartbeat;
     let reconnecting;
+    let wsError = false;
 
-    const HEARTBEAT_TIMEOUT_MS = 3000;
+    const HEARTBEAT_TIMEOUT_MS = 2000;
 
     const countdown = new Countdown('#run-rest-ing', 0);
 
@@ -42,22 +42,61 @@ document.addEventListener('DOMContentLoaded', () => {
         countdown.update(140);
     }, 3000);
 
+    const loadModules = async() => {
+        if (!NumModule || !updateChartFunction || !updateMinVoltCutOffFunction) {
+            const [NumModuleImport, { updateChart, updateMinVoltCutOff }] = await Promise.all([
+                import('../protoc/js/str_num_msg.js'),
+                import('./chartDisplay.js')
+            ]);
+
+            NumModule = NumModuleImport.Num;
+            updateChartFunction = updateChart;
+            updateMinVoltCutOffFunction = updateMinVoltCutOff;
+
+            document.getElementById('voltageChart').style.display = 'block';
+            toggleElementVisibility(voltageChartElement, 'show');
+        }
+    }
+
+    const handleKeyAction = (key, value) => {
+        switch (key) {
+            case VOLT_RECEIVE_FROM_SERVER.VOLTAGE:
+                voltageElement.textContent = value;
+                updateChartFunction(value);
+                break;
+            case VOLT_RECEIVE_FROM_SERVER.MIN_VOLTAGE:
+            case KEY_CONFIG.MIN_VOLT:
+                updateMinVoltCutOffFunction(value, true);
+                minVoltElement.textContent = value;
+                minVoltInput.value = value;
+                break;
+            case KEY_CONFIG.CONFIG_MODE:
+                modeElement.textContent = getModeString(value);
+                modeConfig.value = value;
+                break;
+            default:
+                console.log(`Unexpected key: ${key}`);
+        }
+    }
+
+    const handleSingleConfig = (buffer) => {
+        try {
+            const numValue = NumModule.decode(buffer.slice(1));
+            console.log('numValue:', numValue);
+            const { key, value } = numValue;
+            handleKeyAction(key, value);
+        } catch (error) {
+            console.error('Failed to deserialize Num:', error);
+        }
+    };
+
     /**
      * Hides loading indicators and shows initialized elements.
      */
     const hideLoadingIndicators = () => {
-        loadingIndicators.forEach((indicator) => {
-            indicator.style.display = 'none';
-        });
-
-        initHideElements.forEach((element) => {
-            element.style.display = 'block';
-        });
-
-        styledButton.forEach((button) => {
-            button.style.display = 'block';
-        });
-
+        updateVisibility(loadingIndicators, 'none');
+        updateVisibility(initHideElements, 'block');
+        updateVisibility(styledButton, 'block');
         pumpPowerIndicator.style.display = 'block';
     };
 
@@ -65,25 +104,31 @@ document.addEventListener('DOMContentLoaded', () => {
      * Shows loading indicators and hides initialized elements.
      */
     const showLoadingIndicators = () => {
-        loadingIndicators.forEach((indicator) => {
-            indicator.style.display = 'block';
-        });
-
-        initHideElements.forEach((element) => {
-            element.style.display = 'none';
-        });
-
-        styledButton.forEach((button) => {
-            button.style.display = 'none';
-        });
-
+        updateVisibility(loadingIndicators, 'block');
+        updateVisibility(initHideElements, 'none');
+        updateVisibility(styledButton, 'none');
         pumpPowerIndicator.style.display = 'none';
+    };
+
+    /**
+     * Updates the display style of a list of elements.
+     * @param {NodeListOf<HTMLElement>} elements - The elements to update.
+     * @param {string} displayValue - The display value to set.
+     */
+    const updateVisibility = (elements, displayValue) => {
+        elements.forEach(element => {
+            element.style.display = displayValue;
+        });
     };
 
     const reconnectWebSocket = () => {
         // Clear any existing reconnection interval
         if (reconnecting) {
             clearInterval(reconnecting);
+        }
+
+        if (wsError) {
+            return;
         }
 
         reconnecting = setInterval(() => {
@@ -113,6 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 reconnectWebSocket();
             }
         }, HEARTBEAT_TIMEOUT_MS);
+    };
+
+    const voidHandler = (buffer) => {
+        const typeIdentifier = buffer[0];
+        console.log(`No handler for type identifier: ${typeIdentifier}`);
     };
 
     const handleControlData = (buffer) => {
@@ -145,55 +195,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const handlers = [
+        voidHandler,    // Index 0
+        handleSingleConfig,    // Index 1
+        voidHandler,    // Index 2
+        voidHandler,    // Index 3
+        handleControlData,  // Index 4
+        voidHandler,    // Index 5
+        voidHandler,    // Index 6
+    ];
+
     /**
      * Deserializes data from the given buffer and updates UI elements.
      * @param {Uint8Array} bufferData - The data buffer to deserialize.
      */
     const deserializeData = async (bufferData) => {
-        const buffer = bufferData;
-        const typeIdentifier = buffer[0];
+        const typeIdentifier = bufferData[0];
+        console.log('Type identifier from deserialize:', typeIdentifier);
 
-        if (typeIdentifier === TYPE_IDS.VOLTAGE_TYPE_ID || typeIdentifier === TYPE_IDS.NUM_TYPE_ID) {
-            try {
-                if (!NumModule || !updateChartFunction || !updateMinVoltCutOffFunction) {
-                    // Lazy load modules
-                    const [NumModuleImport, { updateChart, updateMinVoltCutOff }] = await Promise.all([
-                        import('../protoc/js/str_num_msg.js'),
-                        import('./chartDisplay.js')
-                    ]);
+        await loadModules();
 
-                    NumModule = NumModuleImport.Num;
-                    updateChartFunction = updateChart;
-                    updateMinVoltCutOffFunction = updateMinVoltCutOff;
-                    document.getElementById('voltageChart').style.display = 'block';
-                    toggleElementVisibility(voltageChartElement, 'show');
-                }
-
-                const numValue = NumModule.decode(buffer.slice(1));
-                console.log('numValue:', numValue);
-                const { key, value } = numValue;
-                if (key === 1) {
-                    const cutoffVolt = value;
-                    updateMinVoltCutOffFunction(cutoffVolt, true);
-                    minVoltElement.textContent = cutoffVolt;
-                    minVoltInput.value = cutoffVolt;
-                } else if (key === 0) {
-                    const voltageValue = value;
-                    voltageElement.textContent = voltageValue;
-                    updateChartFunction(voltageValue);
-                } else if (key === KEY_CONFIG.CONFIG_MODE) {
-                    modeElement.textContent = getModeString(value);
-                    modeConfig.value = value;
-                } else {
-                    console.log(`Unexpected key: ${numValue.key}`);
-                }
-            } catch (error) {
-                console.error('Failed to deserialize Num:', error);
-            }
-        } else if (typeIdentifier === TYPE_IDS.CONTROL_DATA_TYPE_ID) {
-            handleControlData(buffer);
+        if (handlers[typeIdentifier]) {
+            handlers[typeIdentifier](bufferData);
         } else {
-            console.log(`Unexpected type identifier: ${typeIdentifier}`);
+            console.log(`No handler for type identifier: ${typeIdentifier}`);
         }
     };
 
@@ -234,6 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
             voltageElement.textContent = '00.0';
             console.error('WebSocket error:', error);
             showLoadingIndicators();
+            wsError = true;
         };
     };
 
