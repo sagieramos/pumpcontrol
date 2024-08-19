@@ -5,6 +5,7 @@ import {
     handleVoltageChange,
     handleModeChange,
     getModeString,
+    handleTimeRangeChange,
     KEY_CONFIG,
     VOLT_RECEIVE_FROM_SERVER
 } from './util.js';
@@ -29,6 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const minVoltInput = document.getElementById('min-voltage');
     const modeConfig = document.getElementById('mode');
 
+    const runningTime = document.getElementById('running-time').value;
+    const restingTime = document.getElementById('resting-time').value;
+
     let ws;
     let heartbeat;
     let reconnecting;
@@ -42,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         countdown.update(140);
     }, 3000);
 
-    const loadModules = async() => {
+    const loadModules = async () => {
         if (!NumModule || !updateChartFunction || !updateMinVoltCutOffFunction) {
             const [NumModuleImport, { updateChart, updateMinVoltCutOff }] = await Promise.all([
                 import('../protoc/js/str_num_msg.js'),
@@ -89,6 +93,26 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to deserialize Num:', error);
         }
     };
+
+    const insertTimeRange = (timeRangeObj) => {
+        const { running, resting } = timeRangeObj;
+
+        runTimeElement.textContent = millisecondsToTime(running);
+        //runningTime.value = ((running / 1000) / 60).toString();
+
+        restTimeElement.textContent = millisecondsToTime(resting);
+        //restingTime.value = ((resting / 1000) / 60).toString();
+    }
+
+    const handleTimeRange = (buffer) => {
+        try {
+            const timeRange = TimeRange.decode(buffer.slice(1));
+            console.log('timeRange:', timeRange);
+            insertTimeRange(timeRange);
+        } catch (error) {
+            console.error('Failed to deserialize TimeRange:', error);
+        }
+    }
 
     /**
      * Hides loading indicators and shows initialized elements.
@@ -176,8 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const { running, resting } = time_range;
 
             // Update the UI elements
-            runTimeElement.textContent = millisecondsToTime(running);
-            restTimeElement.textContent = millisecondsToTime(resting);
+            /* 
+                        runTimeElement.textContent = millisecondsToTime(running);
+                        restTimeElement.textContent = millisecondsToTime(resting); */
+
+            insertTimeRange(time_range);
 
             // Update the countdown and indicator based on running state
             if (is_running) {
@@ -201,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
         voidHandler,    // Index 2
         voidHandler,    // Index 3
         handleControlData,  // Index 4
-        voidHandler,    // Index 5
+        handleTimeRange,    // Index 5
         voidHandler,    // Index 6
     ];
 
@@ -265,18 +292,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const minVoltageInput = document.getElementById('min-voltage');
     const errorMessage = document.getElementById('error-message');
-    const submitBtn = document.getElementById('submit-btn');
 
-    submitBtn.addEventListener('click', () => {
-        const voltage = parseInt(minVoltageInput.value, 10);
+    document.addEventListener('click', (event) => {
+        const { target } = event;
 
-        if (isNaN(voltage) || voltage < 110 || voltage > 230) {
-            errorMessage.style.display = 'block';
-        } else {
-            errorMessage.style.display = 'none';
-            console.log('Minimum operating voltage set to:', voltage);
-            handleVoltageChange(voltage, ws);
-            errorMessage.style.display = 'none';
+        if (target.matches('#submit-btn-min-volt')) {
+            const voltage = parseInt(minVoltageInput.value, 10);
+
+            if (isNaN(voltage) || voltage < 110 || voltage > 230) {
+                errorMessage.style.display = 'block';
+            } else {
+                console.log('Minimum operating voltage set to:', voltage);
+                handleVoltageChange(voltage, ws);
+                errorMessage.style.display = 'none';
+            }
+        } else if (target.matches('#submit-time-range-btn')) {
+
+            /*             const [runningHours, runningMinutes] = runningTime.split(':').map(Number);
+                        const [restingHours, restingMinutes] = restingTime.split(':').map(Number);
+            
+                        const runningMs = ((runningHours * 60) + runningMinutes) * 60000;
+                        const restingMs = ((restingHours * 60) + restingMinutes) * 60000; */
+
+            const runningMs = parseInt(runningTime.value, 10) * 1000 * 60;
+            const restingMs = parseInt(restingTime.value, 10) * 1000 * 60;
+
+            handleTimeRangeChange(runningMs, restingMs, ws);
         }
     });
 

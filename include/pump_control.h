@@ -17,7 +17,8 @@ constexpr size_t EEPROM_SIZE_CTL =
 extern TaskHandle_t runMachineTask;
 extern float min_voltage;
 
-void store_time_range();
+void store_time_range(bool check_changed = true);
+bool is_valid_time_range(const pump_TimeRange &time_range);
 void switch_pump(bool state);
 
 void runMachine(void *parameter);

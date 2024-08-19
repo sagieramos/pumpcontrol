@@ -1,4 +1,4 @@
-import { MachineMode } from '../protoc/js/pump_control_data.js';
+import { MachineMode, TimeRange } from '../protoc/js/pump_control_data.js';
 import { Num } from '../protoc/js/str_num_msg.js';
 
 /**
@@ -149,6 +149,16 @@ const handleVoltageChange = (newVoltage, ws) => {
     }
 }
 
+const handleTimeRangeChange = (running, resting, ws) => {
+    const value = { running, resting };
+    try {
+        const buffer = serializeAndSendData(value, TYPE_IDS.PUMP_TIME_RANGE_TYPE_ID, TimeRange);
+        ws.send(buffer);
+    } catch (error) {
+        console.error('Failed to serialize and send data:', error);
+    }
+}
+
 /**
  * Convert milliseconds to a formatted string of hours and minutes (H:MM).
  * @param {number} totalMilliseconds - The total number of milliseconds to convert.
@@ -167,6 +177,7 @@ export {
     handleVoltageChange,
     handleModeChange,
     toggleElementVisibility,
-    millisecondsToTime, getModeString, KEY_CONFIG,
+    millisecondsToTime, getModeString, 
+    handleTimeRangeChange, KEY_CONFIG,
     TYPE_IDS, VOLT_RECEIVE_FROM_SERVER
 };

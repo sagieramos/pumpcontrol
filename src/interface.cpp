@@ -65,7 +65,7 @@ void receive_control_data(uint8_t *data, size_t len) {
 
         xSemaphoreGive(controlDataMutex);
 
-        store_time_range();
+        store_time_range(false);
 
         return;
       } else {
@@ -257,27 +257,48 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
     DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
     return;
   }
+
+  pump_TimeRange time_range = pump_TimeRange_init_zero;
+  if (!deserialize_time_range(time_range, data, len)) {
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize time range message");
+    return;
+  }
+
+  if (!is_valid_time_range(time_range)) {
+    DEBUG_SERIAL_PRINTLN("Invalid time range received");
+    return;
+  }
+
+  // Attempt to take the semaphore
   if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) ==
       pdTRUE) {
-    pump_TimeRange time_range = pump_TimeRange_init_zero;
-    if (deserialize_time_range(time_range, data, len)) {
-      pump_ControlData &control_data = get_current_control_data();
-      control_data.time_range = time_range;
+    pump_ControlData &control_data = get_current_control_data();
 
-      DEBUG_SERIAL_PRINTF("Received Time Range - Running: %d\tResting: %d\n",
-                          time_range.running, time_range.resting);
-      DEBUG_SERIAL_PRINTF("Current Time Range - Running: %d\tResting: %d\n",
-                          control_data.time_range.running,
-                          control_data.time_range.resting);
-      if (ws.count() > 0) {
-        ws.binaryAll(data, len);
-      }
+    // Check if the new time_range is the same as the current one
+    if (control_data.time_range.running == time_range.running &&
+        control_data.time_range.resting == time_range.resting) {
+      DEBUG_SERIAL_PRINTLN("Received Time Range is the same as the current "
+                           "range. No update required.");
       xSemaphoreGive(controlDataMutex);
-      store_time_range();
       return;
     }
 
+    // Update control data with the new time range
+    control_data.time_range = time_range;
+
+    DEBUG_SERIAL_PRINTF("Received Time Range - Running: %ld\tResting: %ld\n",
+                        time_range.running, time_range.resting);
+    DEBUG_SERIAL_PRINTF("Current Time Range - Running: %ld\tResting: %ld\n",
+                        control_data.time_range.running,
+                        control_data.time_range.resting);
+
+    if (ws.count() > 0) {
+      ws.binaryAll(data, len);
+    }
+
+    // Release the semaphore after the work is done
     xSemaphoreGive(controlDataMutex);
+    store_time_range();
   } else {
     DEBUG_SERIAL_PRINTLN(
         "Failed to acquire controlDataMutex in receive_pump_time_range()");

@@ -1,16 +1,3 @@
-// Example conversion
-
-// Original CommonJS code
-// const encodings = require('protocol-buffers-encodings');
-// const varint = encodings.varint;
-// const skip = encodings.skip;
-// module.exports = {
-//   MachineMode,
-//   TimeRange,
-//   ControlData
-// };
-
-// Converted ES module code
 import encodings from 'protocol-buffers-encodings';
 const varint = encodings.varint;
 const skip = encodings.skip;
@@ -57,54 +44,47 @@ function defineTimeRange() {
     return length;
   }
 
-  function encode(obj, buf, offset) {
-    if (!offset) offset = 0;
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+  function encode(obj, arr = new Uint8Array(encodingLength(obj)), offset = 0) {
+    let view = new DataView(arr.buffer);
     let oldOffset = offset;
     if (defined(obj.running)) {
-      buf[offset++] = 8;
-      encodings.varint.encode(obj.running, buf, offset);
-      offset += encodings.varint.encode.bytes;
+      arr[offset++] = 8;
+      offset += encodings.varint.encode(obj.running, arr, offset);
     }
     if (defined(obj.resting)) {
-      buf[offset++] = 16;
-      encodings.varint.encode(obj.resting, buf, offset);
-      offset += encodings.varint.encode.bytes;
+      arr[offset++] = 16;
+      offset += encodings.varint.encode(obj.resting, arr, offset);
     }
     encode.bytes = offset - oldOffset;
-    return buf;
+    return arr;
   }
 
-  function decode(buf, offset, end) {
-    if (!offset) offset = 0;
-    if (!end) end = buf.length;
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid");
+  function decode(arr, offset = 0, end = arr.length) {
+    let view = new DataView(arr.buffer);
     let oldOffset = offset;
     let obj = {
       running: 0,
       resting: 0
     };
-    while (true) {
-      if (end <= offset) {
-        decode.bytes = offset - oldOffset;
-        return obj;
-      }
-      let prefix = varint.decode(buf, offset);
+    while (offset < end) {
+      let prefix = varint.decode(arr, offset);
       offset += varint.decode.bytes;
       let tag = prefix >> 3;
       switch (tag) {
         case 1:
-          obj.running = encodings.varint.decode(buf, offset);
+          obj.running = encodings.varint.decode(arr, offset);
           offset += encodings.varint.decode.bytes;
           break;
         case 2:
-          obj.resting = encodings.varint.decode(buf, offset);
+          obj.resting = encodings.varint.decode(arr, offset);
           offset += encodings.varint.decode.bytes;
           break;
         default:
-          offset = skip(prefix & 7, buf, offset);
+          offset = skip(prefix & 7, arr, offset);
       }
     }
+    decode.bytes = offset - oldOffset;
+    return obj;
   }
 }
 
@@ -131,72 +111,64 @@ function defineControlData() {
     return length;
   }
 
-  function encode(obj, buf, offset) {
-    if (!offset) offset = 0;
-    if (!buf) buf = Buffer.allocUnsafe(encodingLength(obj));
+  function encode(obj, arr = new Uint8Array(encodingLength(obj)), offset = 0) {
+    let view = new DataView(arr.buffer);
     let oldOffset = offset;
     if (defined(obj.mode)) {
-      buf[offset++] = 8;
-      encodings.enum.encode(obj.mode, buf, offset);
-      offset += encodings.enum.encode.bytes;
+      arr[offset++] = 8;
+      offset += encodings.enum.encode(obj.mode, arr, offset);
     }
     if (defined(obj.is_running)) {
-      buf[offset++] = 16;
-      encodings.bool.encode(obj.is_running, buf, offset);
-      offset += encodings.bool.encode.bytes;
+      arr[offset++] = 16;
+      offset += encodings.bool.encode(obj.is_running, arr, offset);
     }
     if (defined(obj.time_range)) {
-      buf[offset++] = 26;
-      varint.encode(TimeRange.encodingLength(obj.time_range), buf, offset);
+      arr[offset++] = 26;
+      varint.encode(TimeRange.encodingLength(obj.time_range), arr, offset);
       offset += varint.encode.bytes;
-      TimeRange.encode(obj.time_range, buf, offset);
+      TimeRange.encode(obj.time_range, arr, offset);
       offset += TimeRange.encode.bytes;
     }
     encode.bytes = offset - oldOffset;
-    return buf;
+    return arr;
   }
 
-  function decode(buf, offset, end) {
-    if (!offset) offset = 0;
-    if (!end) end = buf.length;
-    if (!(end <= buf.length && offset <= buf.length)) throw new Error("Decoded message is not valid");
+  function decode(arr, offset = 0, end = arr.length) {
+    let view = new DataView(arr.buffer);
     let oldOffset = offset;
     let obj = {
       mode: 0,
       is_running: false,
       time_range: null
     };
-    while (true) {
-      if (end <= offset) {
-        decode.bytes = offset - oldOffset;
-        return obj;
-      }
-      let prefix = varint.decode(buf, offset);
+    while (offset < end) {
+      let prefix = varint.decode(arr, offset);
       offset += varint.decode.bytes;
       let tag = prefix >> 3;
       switch (tag) {
         case 1:
-          obj.mode = encodings.enum.decode(buf, offset);
+          obj.mode = encodings.enum.decode(arr, offset);
           offset += encodings.enum.decode.bytes;
           break;
         case 2:
-          obj.is_running = encodings.bool.decode(buf, offset);
+          obj.is_running = encodings.bool.decode(arr, offset);
           offset += encodings.bool.decode.bytes;
           break;
         case 3:
-          let len = varint.decode(buf, offset);
+          let len = varint.decode(arr, offset);
           offset += varint.decode.bytes;
-          obj.time_range = TimeRange.decode(buf, offset, offset + len);
+          obj.time_range = TimeRange.decode(arr, offset, offset + len);
           offset += TimeRange.decode.bytes;
           break;
         default:
-          offset = skip(prefix & 7, buf, offset);
+          offset = skip(prefix & 7, arr, offset);
       }
     }
+    decode.bytes = offset - oldOffset;
+    return obj;
   }
 }
 
 function defined(val) {
   return val !== null && val !== undefined && (typeof val !== 'number' || !isNaN(val));
 }
-

@@ -18,63 +18,90 @@ pump_ControlData &get_current_control_data() {
 }
 
 // Store time range in EEPROM
-void store_time_range() {
-  if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
-    pump_ControlData &control_data = get_current_control_data();
-
-    EEPROM.begin(EEPROM_SIZE_CTL);
-    pump_TimeRange stored_time_range = pump_TimeRange_init_zero;
-    EEPROM.get(MAGIC_NUMBER_SIZE, stored_time_range);
-
-    bool time_range_changed =
-        (stored_time_range.running != control_data.time_range.running) ||
-        (stored_time_range.resting != control_data.time_range.resting);
-
-    if (time_range_changed) {
-      DEBUG_SERIAL_PRINTF("Storing Time Range - Running: %d\tResting: %d\n",
-                          control_data.time_range.running,
-                          control_data.time_range.resting);
-
-      EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
-      EEPROM.commit();
-      DEBUG_SERIAL_PRINTLN("Time Range updated in EEPROM");
-    } else {
-      DEBUG_SERIAL_PRINTLN("Time Range is unchanged, not updating EEPROM");
-    }
-
-    EEPROM.end();
-    xSemaphoreGive(controlDataMutex);
-  } else {
+void store_time_range(bool check_changed) {
+  if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) != pdTRUE) {
     DEBUG_SERIAL_PRINTLN(
         "Failed to acquire controlDataMutex in store_time_range()");
+    return;
   }
+
+  pump_ControlData &control_data = get_current_control_data();
+  EEPROM.begin(EEPROM_SIZE_CTL);
+
+  bool time_range_changed = true; // Assume change by default
+
+  if (check_changed) {
+    pump_TimeRange stored_time_range;
+    EEPROM.get(MAGIC_NUMBER_SIZE, stored_time_range);
+
+    time_range_changed =
+        (stored_time_range.running != control_data.time_range.running) ||
+        (stored_time_range.resting != control_data.time_range.resting);
+  }
+
+  if (time_range_changed) {
+    DEBUG_SERIAL_PRINTF("Storing Time Range - Running: %ld\tResting: %ld\n",
+                        control_data.time_range.running,
+                        control_data.time_range.resting);
+
+    EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
+    EEPROM.commit();
+    DEBUG_SERIAL_PRINTLN("Time Range updated in EEPROM");
+  } else {
+    DEBUG_SERIAL_PRINTLN("Time Range is unchanged, not updating EEPROM");
+  }
+
+  EEPROM.end();
+  xSemaphoreGive(controlDataMutex);
+}
+
+bool is_valid_time_range(const pump_TimeRange &time_range) {
+  const long min_time = 600000;  // 10 minutes in milliseconds
+  const long max_time = 7200000; // 2 hours in milliseconds
+
+  return (time_range.running >= min_time && time_range.running <= max_time &&
+          time_range.resting >= min_time && time_range.resting <= max_time);
 }
 
 // Initialize EEPROM with pump controller settings
 void init_EEPROM_pump_controller() {
+  // Create the semaphore
   controlDataMutex = xSemaphoreCreateMutex();
   if (controlDataMutex == NULL) {
     DEBUG_SERIAL_PRINTLN("Failed to create semaphore");
     esp_deep_sleep_start();
   }
+
+  // Attempt to take the semaphore
   if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
-    pump_ControlData &control_data = get_current_control_data();
+    pump_ControlData control_data = get_current_control_data();
 
     EEPROM.begin(EEPROM_SIZE_CTL);
+
     uint8_t readMagicNumber;
     EEPROM.get(0, readMagicNumber);
 
+    pump_TimeRange pump_time_range = pump_TimeRange_init_default;
+
     if (readMagicNumber == MAGIC_NUMBER) {
-      EEPROM.get(MAGIC_NUMBER_SIZE, control_data.time_range);
+      EEPROM.get(MAGIC_NUMBER_SIZE, pump_time_range);
       DEBUG_SERIAL_PRINTF("Magic number found: %d\n", readMagicNumber);
-      DEBUG_SERIAL_PRINTF("Read Time Range - Running: %d\tResting: %d\n",
-                          control_data.time_range.running,
-                          control_data.time_range.resting);
+      DEBUG_SERIAL_PRINTF("Read Time Range - Running: %ld\tResting: %ld\n",
+                          pump_time_range.running, pump_time_range.resting);
+
+      // Validate and set time range
+      if (is_valid_time_range(pump_time_range)) {
+        control_data.time_range = pump_time_range;
+      } else {
+        DEBUG_SERIAL_PRINTLN("Invalid time range, using default values");
+        control_data.time_range = pump_TimeRange_init_default;
+      }
     } else {
       DEBUG_SERIAL_PRINTF("Magic number not found: %d\n", readMagicNumber);
 
+      // Store default values and magic number
       EEPROM.put(0, MAGIC_NUMBER);
-      EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
+      EEPROM.put(MAGIC_NUMBER_SIZE, pump_time_range);
       EEPROM.commit();
     }
 
