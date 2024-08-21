@@ -336,7 +336,20 @@ header {
 }
 
 .bg-config {
-  padding-bottom: 60px;
+  padding: 12px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99;
+  background-color: rgba(0, 0, 0, 0.5); 
+}
+
+.config {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .init-hide {
@@ -438,6 +451,7 @@ header {
 
 .indicator:nth-child(1) {
   background-color: #F28C28;
+
   border-radius: var(--border-radius) 0 0 0;
 }
 
@@ -448,28 +462,28 @@ header {
 }
 
 .styled-button {
-  background-color: transparent; 
+  background-color: transparent;
   color: #6c757d;
-  border: 1px solid #6c757d; 
-  border-radius: 4px; 
-  padding: 6px 12px; 
-  font-size: 14px; 
-  cursor: pointer; 
-  transition: color 0.3s, border-color 0.3s, transform 0.2s; 
+  border: 1px solid #6c757d;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.3s, border-color 0.3s, transform 0.2s;
   align-self: flex-end;
 }
 
 .styled-button:hover {
   color: #ffffff;
-  border-color: #5a6268; 
-  background-color: #5a6268; 
-  transform: scale(1.05); 
+  border-color: #5a6268;
+  background-color: #5a6268;
+  transform: scale(1.05);
 }
 
 .styled-button:active {
-  color: #ffffff; 
-  border-color: #343a40; 
-  background-color: #343a40; 
+  color: #ffffff;
+  border-color: #343a40;
+  background-color: #343a40;
   transform: scale(0.98);
 }
 
@@ -481,4 +495,62 @@ header {
 .l-white,
 .r-white {
   color: #fff;
+}
+
+select {
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  -ms-appearance:none;
+  appearance:none;
+  outline:0;
+  box-shadow:none;
+  border:0!important;
+  background: #5c6664;
+  background-image: none;
+  flex: 1;
+  padding: 0 .5em;
+  color:#333;
+  cursor:pointer;
+  font-size: 1em;
+  font-family: 'Open Sans', sans-serif;
+}
+select::-ms-expand {
+  display: none;
+}
+.select {
+  position: relative;
+  display: flex;
+  width: 20em;
+  height: 3em;
+  line-height: 3;
+  background: #C0C0C0;
+  overflow: hidden;
+  border-radius: .25em;
+}
+.select::after {
+  content: '\25BC';
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 1em;
+  background: #2b2e2e;
+  cursor:pointer;
+  pointer-events:none;
+  transition:.25s all ease;
+}
+.select:hover::after {
+  color: #F28C28;
+}
+
+.tui-timepicker {
+  border-radius: var(--border-radius);
+  margin-top: 24px;
+}
+
+.set-time-range {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
 }

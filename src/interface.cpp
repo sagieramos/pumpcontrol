@@ -298,7 +298,7 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
 
     // Release the semaphore after the work is done
     xSemaphoreGive(controlDataMutex);
-    store_time_range();
+    store_time_range(false);
   } else {
     DEBUG_SERIAL_PRINTLN(
         "Failed to acquire controlDataMutex in receive_pump_time_range()");

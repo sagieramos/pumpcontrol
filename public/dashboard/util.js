@@ -56,6 +56,22 @@ const toggleElementVisibility = (element, action = 'toggle') => {
     }
 };
 
+/**
+ * Adds a type identifier to a buffer and returns a new buffer.
+ * @param {number} typeId - The type identifier to add.
+ * @param {ArrayBuffer} dataBuffer - The existing data buffer to prepend the type identifier to.
+ * @returns {ArrayBuffer} - The new buffer with the type identifier added.
+ */
+const addTypeIdToBuffer = (typeId, dataBuffer) => {
+    const buffer = new ArrayBuffer(1 + dataBuffer.byteLength);
+    const uint8View = new Uint8Array(buffer);
+    uint8View[0] = typeId;
+    uint8View.set(new Uint8Array(dataBuffer), 1);
+    
+    return buffer;
+  }
+  
+
 
 /**
  * Serializes data into a buffer with a type identifier and sends it over a WebSocket connection.
@@ -67,12 +83,9 @@ const toggleElementVisibility = (element, action = 'toggle') => {
  */
 const serializeAndSendData = (data, typeIdentifier, messageType) => {
     const dataBuffer = messageType.encode(data);
-    const buffer = new ArrayBuffer(1 + dataBuffer.length);
-    const uint8View = new Uint8Array(buffer);
-    uint8View[0] = typeIdentifier;
-    uint8View.set(new Uint8Array(dataBuffer), 1);
+    const buffer = addTypeIdToBuffer(typeIdentifier, dataBuffer);
 
-    return uint8View;
+    return buffer;
 };
 
 const VOLT_RECEIVE_FROM_SERVER = {
@@ -152,8 +165,11 @@ const handleVoltageChange = (newVoltage, ws) => {
 const handleTimeRangeChange = (running, resting, ws) => {
     const value = { running, resting };
     try {
-        const buffer = serializeAndSendData(value, TYPE_IDS.PUMP_TIME_RANGE_TYPE_ID, TimeRange);
-        ws.send(buffer);
+        const buffer = TimeRange.encode(value);
+        const typeId = TYPE_IDS.PUMP_TIME_RANGE_TYPE_ID;
+        const bufferWithTypeId = addTypeIdToBuffer(typeId, buffer);
+
+        ws.send(bufferWithTypeId);
     } catch (error) {
         console.error('Failed to serialize and send data:', error);
     }
@@ -173,11 +189,27 @@ const millisecondsToTime = (totalMilliseconds) => {
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
 }
 
+const getHoursAndMinutes = (totalMilliseconds) => {
+    const totalSeconds = totalMilliseconds / 1000;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    return { hours, minutes };
+}
+
+const getMilliseconds = ({ hours, minutes }) => {
+    const hoursToMilliseconds = hours * 60 * 60 * 1000;
+    const minutesToMilliseconds = minutes * 60 * 1000;
+    return hoursToMilliseconds + minutesToMilliseconds;
+};
+
 export {
     handleVoltageChange,
     handleModeChange,
     toggleElementVisibility,
-    millisecondsToTime, getModeString, 
+    millisecondsToTime, 
+    getHoursAndMinutes,
+    getMilliseconds,
+    getModeString, 
     handleTimeRangeChange, KEY_CONFIG,
     TYPE_IDS, VOLT_RECEIVE_FROM_SERVER
 };

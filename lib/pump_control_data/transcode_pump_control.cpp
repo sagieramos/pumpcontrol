@@ -1,4 +1,5 @@
 #include "./transcode_pump_control.h"
+#include "dev_or_prod.h"
 #include <pb_decode.h>
 #include <pb_encode.h>
 
@@ -77,16 +78,15 @@ bool serialize_time_range(const pump_TimeRange &time_range, uint8_t *buffer,
  */
 bool deserialize_time_range(pump_TimeRange &time_range, const uint8_t *buffer,
                             size_t buffer_size, pump_codec_callback_t cb) {
-  if (buffer_size == 0) {
-    return false;
-  }
-  time_range = pump_TimeRange_init_zero;
-
   pb_istream_t istream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   bool status = pb_decode(&istream, pump_TimeRange_fields, &time_range);
 
   if (cb && status) {
-    cb(static_cast<void *>(&time_range), sizeof(time_range));
+    cb((void *)buffer, buffer_size);
+  }
+
+  if (!status) {
+    DEBUG_SERIAL_PRINTF("Decoding failed: %s\n", PB_GET_ERROR(&istream));
   }
 
   return status;

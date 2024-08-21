@@ -43,11 +43,13 @@ const TYPE_IDENTIFIER_NUM = 0x01;
 
 function serializeData(data, typeIdentifier, proto) {
     const dataBuffer = proto.encode(data);
-    const buffer = Buffer.alloc(1 + dataBuffer.length);
-    buffer[0] = typeIdentifier;
-    dataBuffer.copy(buffer, 1);
-    return buffer;
-}
+    const buffer = new ArrayBuffer(1 + dataBuffer.length);
+    const uint8View = new Uint8Array(buffer);
+    uint8View[0] = typeIdentifier;
+    uint8View.set(new Uint8Array(dataBuffer), 1);
+
+    return uint8View;
+};
 
 export function deserializeData(buffer, expectedTypeIdentifier, proto) {
     const typeIdentifier = buffer[0];
@@ -132,29 +134,19 @@ const controlData = {
     }
 };
 
-const serializedControlData = serializeData(controlData, TYPE_IDS.CONTROL_DATA_TYPE_ID, ControlData);
-console.log('Serialized ControlData:', serializedControlData);
-
-try {
-    const deserializedControlData = deserializeData(serializedControlData, TYPE_IDS.CONTROL_DATA_TYPE_ID, ControlData);
-    console.log('Deserialized ControlData:', deserializedControlData);
-}
-catch (error) {
-    console.error('Failed to deserialize ControlData:', error);
-}
 
 // Example with TimeRange
 const timeRange = { running: 5000, resting: 10000 };
-const serializedTimeRange = serializeData(timeRange, TYPE_IDS.PUMP_TIME_RANGE_TYPE_ID, TimeRange);
-console.log('Serialized TimeRange:', serializedTimeRange);
 
-try {
-    const deserializedTimeRange = deserializeData(serializedTimeRange, TYPE_IDS.PUMP_TIME_RANGE_TYPE_ID, TimeRange);
-    console.log('Deserialized TimeRange:', deserializedTimeRange);
-}
-catch (error) {
-    console.error('Failed to deserialize TimeRange:', error);
-}
+// Encode the timeRange object
+const encodedTimeRange = TimeRange.encode(timeRange);
+
+console.log('Encoded TimeRange:', encodedTimeRange);
+
+// Decode the encoded data back into an object
+const decodedTimeRange = TimeRange.decode(encodedTimeRange);
+
+console.log('Decoded TimeRange:', decodedTimeRange);
 
 let hexString = "01 08 02 1A 09 08 80 BE 92 01 10 80 9F 49".replace(/ /g, '');
 let binaryBuffer = Buffer.from(hexString, 'hex');

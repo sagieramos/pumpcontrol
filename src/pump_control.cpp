@@ -56,11 +56,15 @@ void store_time_range(bool check_changed) {
 }
 
 bool is_valid_time_range(const pump_TimeRange &time_range) {
-  const long min_time = 600000;  // 10 minutes in milliseconds
-  const long max_time = 7200000; // 2 hours in milliseconds
+  const long min_time = 300000;          // 5 minutes in milliseconds
+  const long max_time_running = 7200000; // 2 hours in milliseconds
 
-  return (time_range.running >= min_time && time_range.running <= max_time &&
-          time_range.resting >= min_time && time_range.resting <= max_time);
+  const long max_time_resting = 86400000; // 24 hours in milliseconds
+
+  return (time_range.running >= min_time &&
+          time_range.running <= max_time_running &&
+          time_range.resting >= min_time &&
+          time_range.resting <= max_time_resting);
 }
 
 // Initialize EEPROM with pump controller settings
@@ -74,7 +78,7 @@ void init_EEPROM_pump_controller() {
 
   // Attempt to take the semaphore
   if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
-    pump_ControlData control_data = get_current_control_data();
+    pump_ControlData &control_data = get_current_control_data();
 
     EEPROM.begin(EEPROM_SIZE_CTL);
 

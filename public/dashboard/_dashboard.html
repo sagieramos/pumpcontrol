@@ -65,7 +65,7 @@
             </div>
         </div>
 
-        <div class="config">
+        <div>
             <!-- comeback -->
 
             <div class="pump-power-indicator-1">
@@ -102,9 +102,7 @@
                         </h3>
                     </div>
                     <div class="label-btm">
-                        <h2>Running & Resting Time (mm:hh)<br><br>Note: This setting is only applicable and responsive
-                            <br>when the machine is set to AUTOMATE mode
-                        </h2>
+                        <h2>Running & Resting Time (mm:hh)</h2>
                         <button class="styled-button">></button>
                     </div>
                 </div>
@@ -113,7 +111,8 @@
             <!--  -->
         </div>
 
-        <div id="config-group" class="bg-config">
+        <div id="config-group" class="bg-config bg-primary">
+            <button id="cancel-config-ui">X</button>
             <div class="config">
                 <label for="mode">Set Machine Mode</label>
                 <select id="mode">
@@ -125,41 +124,28 @@
             <div class="config">
                 <label for="min-voltage">Set Minimum Operating Voltage (110-230 V):</label>
                 <input type="number" id="min-voltage" min="110" max="230" step="1" placeholder="Enter voltage">
-                <button id="submit-btn-min-volt">></button>
+                <button class="styled-button" id="submit-btn-min-volt">></button>
                 <div class="error-message" id="error-message" style="display: none;">Please enter a value between 110
                     and 230 volts.</div>
             </div>
             <div class="config">
-                <div>
-                    <label for="running-time">Running Time:</label>
-                    <input type="text" id="running-time" class="timepicker">
-                </div>
+                <p>This setting is only applicable and responsive
+                    <br>when the machine is set to AUTOMATE mode
+                </p>
+                <div class="set-time-range">
+                    <div>
+                        <p>Set Running Time</p>
+                        <div id="running-time"></div>
+                    </div>
 
-                <div>
-                    <label for="resting-time">Resting Time:</label>
-                    <input type="text" id="resting-time" class="timepicker">
+                    <div>
+                        <p>Set Resting Time</p>
+                        <div id="resting-time"></div>
+                    </div>
                 </div>
-
-                <button id="submit-time-range-btn">Set Time Range</button>
+                <button class="styled-button" id="submit-time-range-btn">Submit</button>
             </div>
         </div>
-        <!-- 
-        <div class="bg-primary config">
-            <div id="config-volt-range">
-                <label for="set-min-volt">Set Voltage Range</label>
-            </div>
-            <div class="config-mode">
-                <label for="mode">Set Machine Mode</label>
-                <select id="mode">
-                    <option value="off">OFF</option>
-                    <option value="on">ON</option>
-                    <option value="auto" selected>AUTO</option>
-                </select>
-            </div>
-            <div class="config-timer">
-                <h3>Set Running and Resting Time</h3>
-            </div>
-        </div> -->
     </div>
     </div>
     <footer>

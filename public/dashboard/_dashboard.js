@@ -1,16 +1,17 @@
 import './_dashboard.css';
 import './reset.css';
 import {
-    toggleElementVisibility, millisecondsToTime,
-    handleVoltageChange,
+    toggleElementVisibility, getHoursAndMinutes, getMilliseconds,
+    handleVoltageChange, handleTimeRangeChange,
     handleModeChange,
     getModeString,
-    handleTimeRangeChange,
     KEY_CONFIG,
     VOLT_RECEIVE_FROM_SERVER
 } from './util.js';
 import { Countdown } from './countDown.js';
 import { ControlData, TimeRange } from '../protoc/js/pump_control_data.js';
+import TimePicker from 'tui-time-picker';
+import 'tui-time-picker/dist/tui-time-picker.css';
 
 let NumModule;
 let updateChartFunction;
@@ -30,9 +31,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const minVoltInput = document.getElementById('min-voltage');
     const modeConfig = document.getElementById('mode');
 
-    const runningTime = document.getElementById('running-time').value;
-    const restingTime = document.getElementById('resting-time').value;
-
     let ws;
     let heartbeat;
     let reconnecting;
@@ -41,6 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const HEARTBEAT_TIMEOUT_MS = 2000;
 
     const countdown = new Countdown('#run-rest-ing', 0);
+
+    const timePickerObj = {
+        initialHour: 0,
+        initialMinute: 0,
+        inputType: 'spinbox',
+        showMeridiem: false,
+    };
+
+    const timeRangeBegin = { hour: 0, minute: 5 };
+    const timeRangeEnd = { hour: 23, minute: 59 };
+    const timeRangeEndRunning = { hour: 2, minute: 0 };
+
+    const timePickerRunning = new TimePicker('#running-time', timePickerObj);
+    timePickerRunning.setRange(timeRangeBegin, timeRangeEndRunning);
+
+    const timePickerResting = new TimePicker('#resting-time', timePickerObj);
+    timePickerResting.setRange(timeRangeBegin, timeRangeEnd);
 
     setTimeout(() => {
         countdown.update(140);
@@ -96,12 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const insertTimeRange = (timeRangeObj) => {
         const { running, resting } = timeRangeObj;
+        const { hours: runningHours, minutes: runningMinutes } = getHoursAndMinutes(running);
+        const { hours: restingHours, minutes: restingMinutes } = getHoursAndMinutes(resting);
 
-        runTimeElement.textContent = millisecondsToTime(running);
-        //runningTime.value = ((running / 1000) / 60).toString();
-
-        restTimeElement.textContent = millisecondsToTime(resting);
-        //restingTime.value = ((resting / 1000) / 60).toString();
+        runTimeElement.textContent = `${runningHours}:${runningMinutes.toString().padStart(2, '0')}`;
+        restTimeElement.textContent = `${restingHours}:${restingMinutes.toString().padStart(2, '0')}`;
+        timePickerRunning.setTime(runningHours, runningMinutes, false);
+        timePickerResting.setTime(restingHours, restingMinutes, false);
     }
 
     const handleTimeRange = (buffer) => {
@@ -292,6 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const minVoltageInput = document.getElementById('min-voltage');
     const errorMessage = document.getElementById('error-message');
+    const configGropus = document.getElementById('config-groups');
 
     document.addEventListener('click', (event) => {
         const { target } = event;
@@ -307,17 +324,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorMessage.style.display = 'none';
             }
         } else if (target.matches('#submit-time-range-btn')) {
+            const runningMs = getMilliseconds({ 
+                hours: timePickerRunning.getHour(), 
+                minutes: timePickerRunning.getMinute()
+            });
+            const restingMs = getMilliseconds({ 
+                hours: timePickerResting.getHour(), 
+                minutes: timePickerResting.getMinute()
+            });
 
-            /*             const [runningHours, runningMinutes] = runningTime.split(':').map(Number);
-                        const [restingHours, restingMinutes] = restingTime.split(':').map(Number);
-            
-                        const runningMs = ((runningHours * 60) + runningMinutes) * 60000;
-                        const restingMs = ((restingHours * 60) + restingMinutes) * 60000; */
-
-            const runningMs = parseInt(runningTime.value, 10) * 1000 * 60;
-            const restingMs = parseInt(restingTime.value, 10) * 1000 * 60;
+            console.log('Running time:', runningMs);
+            console.log('Resting time:', restingMs);
 
             handleTimeRangeChange(runningMs, restingMs, ws);
+        } else if (target.matches('#cancel-config-ui')) {
+            configGropus.style.display = 'none';
         }
     });
 

@@ -44,9 +44,11 @@ bool deserialize_num(Num &msg, const uint8_t *buffer, size_t buffer_size,
                      strnum_codec_callback_t cb) {
   pb_istream_t stream = pb_istream_from_buffer(buffer + 1, buffer_size - 1);
   bool status = pb_decode(&stream, Num_fields, &msg);
+
   if (status && cb) {
     cb((void *)buffer, buffer_size);
   }
+
   return status;
 }
 

@@ -1,2 +1,2 @@
-sudo npx protocol-buffers protoc/str_num_msg.proto -o  public/protoc/str_num_msg.js
+npx protocol-buffers protoc/pump_control_data.proto -o  public/pump_control_data.js
 
