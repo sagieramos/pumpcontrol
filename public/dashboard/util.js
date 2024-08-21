@@ -67,10 +67,10 @@ const addTypeIdToBuffer = (typeId, dataBuffer) => {
     const uint8View = new Uint8Array(buffer);
     uint8View[0] = typeId;
     uint8View.set(new Uint8Array(dataBuffer), 1);
-    
+
     return buffer;
-  }
-  
+}
+
 
 
 /**
@@ -89,9 +89,9 @@ const serializeAndSendData = (data, typeIdentifier, messageType) => {
 };
 
 const VOLT_RECEIVE_FROM_SERVER = {
-   VOLTAGE: 0,
-   MIN_VOLTAGE: 1,
-   MAX_VOLTAGE: 2
+    VOLTAGE: 0,
+    MIN_VOLTAGE: 1,
+    MAX_VOLTAGE: 2
 }
 
 const KEY_CONFIG = {
@@ -202,14 +202,27 @@ const getMilliseconds = ({ hours, minutes }) => {
     return hoursToMilliseconds + minutesToMilliseconds;
 };
 
+/**
+ * Updates the display style of a list of elements.
+ * @param {NodeListOf<HTMLElement>} elements - The elements to update.
+ * @param {string} displayValue - The display value to set.
+ */
+const updateVisibility = (elements, displayValue) => {
+    elements.forEach(element => {
+        element.style.display = displayValue;
+    });
+};
+
 export {
     handleVoltageChange,
     handleModeChange,
     toggleElementVisibility,
-    millisecondsToTime, 
+    millisecondsToTime,
     getHoursAndMinutes,
     getMilliseconds,
-    getModeString, 
-    handleTimeRangeChange, KEY_CONFIG,
+    getModeString,
+    handleTimeRangeChange,
+    updateVisibility,
+    KEY_CONFIG,
     TYPE_IDS, VOLT_RECEIVE_FROM_SERVER
 };

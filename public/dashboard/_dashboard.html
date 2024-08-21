@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
     <title>Akowe — Pump Dashboard</title>
     <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="reset.css">
@@ -76,7 +76,7 @@
                     </div>
                     <div class="label-btm">
                         <h2 class="l-white">Machine Mode</h2>
-                        <button class="styled-button">></button>
+                        <button class="styled-button open-config">></button>
                     </div>
                 </div>
 
@@ -90,7 +90,7 @@
                     </div>
                     <div class="label-btm">
                         <h2>Voltage Range</h2>
-                        <button class="styled-button">></button>
+                        <button class="styled-button open-config">></button>
                     </div>
 
                 </div>
@@ -103,7 +103,7 @@
                     </div>
                     <div class="label-btm">
                         <h2>Running & Resting Time (mm:hh)</h2>
-                        <button class="styled-button">></button>
+                        <button class="styled-button open-config">></button>
                     </div>
                 </div>
             </div>
@@ -111,39 +111,41 @@
             <!--  -->
         </div>
 
-        <div id="config-group" class="bg-config bg-primary">
-            <button id="cancel-config-ui">X</button>
-            <div class="config">
-                <label for="mode">Set Machine Mode</label>
-                <select id="mode">
-                    <option value="0">POWER OFF</option>
-                    <option value="1">POWER ON</option>
-                    <option value="2">AUTOMATE</option>
-                </select>
-            </div>
-            <div class="config">
-                <label for="min-voltage">Set Minimum Operating Voltage (110-230 V):</label>
-                <input type="number" id="min-voltage" min="110" max="230" step="1" placeholder="Enter voltage">
-                <button class="styled-button" id="submit-btn-min-volt">></button>
-                <div class="error-message" id="error-message" style="display: none;">Please enter a value between 110
-                    and 230 volts.</div>
-            </div>
-            <div class="config">
-                <p>This setting is only applicable and responsive
-                    <br>when the machine is set to AUTOMATE mode
-                </p>
-                <div class="set-time-range">
-                    <div>
-                        <p>Set Running Time</p>
-                        <div id="running-time"></div>
-                    </div>
-
-                    <div>
-                        <p>Set Resting Time</p>
-                        <div id="resting-time"></div>
-                    </div>
+        <div id="config-group" class="bg-config">
+            <div class="bg-config-inner">
+                <button class="styled-button" id="cancel-config-ui">X</button>
+                <div class="config">
+                    <label for="mode">Set Machine Mode</label>
+                    <select id="mode">
+                        <option value="0">POWER OFF</option>
+                        <option value="1">POWER ON</option>
+                        <option value="2">AUTOMATE</option>
+                    </select>
                 </div>
-                <button class="styled-button" id="submit-time-range-btn">Submit</button>
+                <div class="config">
+                    <label for="min-voltage">Set Minimum Operating Voltage (110-230 V):</label>
+                    <input type="number" id="min-voltage" min="110" max="230" step="1" placeholder="Enter voltage">
+                    <button class="styled-button" id="submit-btn-min-volt">></button>
+                    <div class="error-message" id="error-message" style="display: none;">Please enter a value between
+                        110
+                        and 230 volts.</div>
+                </div>
+                <div class="config">
+                    <p class="note">This setting is only applicable and responsive when the machine is set to AUTOMATE
+                        mode</p>
+                    <div class="set-time-range">
+                        <div>
+                            <p>Set Running Time</p>
+                            <div id="running-time"></div>
+                        </div>
+
+                        <div>
+                            <p>Set Resting Time</p>
+                            <div id="resting-time"></div>
+                        </div>
+                    </div>
+                    <button class="styled-button" id="submit-time-range-btn">Submit</button>
+                </div>
             </div>
         </div>
     </div>

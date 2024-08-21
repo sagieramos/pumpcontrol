@@ -5,6 +5,7 @@ import {
     handleVoltageChange, handleTimeRangeChange,
     handleModeChange,
     getModeString,
+    updateVisibility,
     KEY_CONFIG,
     VOLT_RECEIVE_FROM_SERVER
 } from './util.js';
@@ -148,17 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateVisibility(initHideElements, 'none');
         updateVisibility(styledButton, 'none');
         pumpPowerIndicator.style.display = 'none';
-    };
-
-    /**
-     * Updates the display style of a list of elements.
-     * @param {NodeListOf<HTMLElement>} elements - The elements to update.
-     * @param {string} displayValue - The display value to set.
-     */
-    const updateVisibility = (elements, displayValue) => {
-        elements.forEach(element => {
-            element.style.display = displayValue;
-        });
     };
 
     const reconnectWebSocket = () => {
@@ -308,7 +298,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const minVoltageInput = document.getElementById('min-voltage');
     const errorMessage = document.getElementById('error-message');
-    const configGropus = document.getElementById('config-groups');
+    const configGroup = document.getElementById('config-group');
+    const config = configGroup.querySelectorAll('.config');
+    const openConfigButtons = Array.from(document.querySelectorAll('.open-config')); 
 
     document.addEventListener('click', (event) => {
         const { target } = event;
@@ -324,21 +316,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorMessage.style.display = 'none';
             }
         } else if (target.matches('#submit-time-range-btn')) {
-            const runningMs = getMilliseconds({ 
-                hours: timePickerRunning.getHour(), 
+            const runningMs = getMilliseconds({
+                hours: timePickerRunning.getHour(),
                 minutes: timePickerRunning.getMinute()
             });
-            const restingMs = getMilliseconds({ 
-                hours: timePickerResting.getHour(), 
+            const restingMs = getMilliseconds({
+                hours: timePickerResting.getHour(),
                 minutes: timePickerResting.getMinute()
             });
 
-            console.log('Running time:', runningMs);
-            console.log('Resting time:', restingMs);
-
             handleTimeRangeChange(runningMs, restingMs, ws);
-        } else if (target.matches('#cancel-config-ui')) {
-            configGropus.style.display = 'none';
+        }
+        else if (target.matches('.open-config')) { 
+            const index = openConfigButtons.indexOf(target);
+            console.log('Index...................:', index);
+            if (index === -1) return;
+            configGroup.style.display = 'block';
+            updateVisibility(config, 'none');
+            config[index].style.display = 'block';
+        }
+        else if (target.matches('#cancel-config-ui')) {
+            configGroup.style.display = 'none';
         }
     });
 
