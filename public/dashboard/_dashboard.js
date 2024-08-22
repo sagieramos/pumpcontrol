@@ -215,10 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update the countdown and indicator based on running state
             if (is_running) {
                 countdown.update(running / 1000);
-                pumpPowerIndicator.style.backgroundColor = 'green';
+                pumpPowerIndicator.style.color = 'green';
             } else {
                 countdown.update(resting / 1000);
-                pumpPowerIndicator.style.backgroundColor = 'red';
+                pumpPowerIndicator.style.color = 'gray';
             }
 
             modeElement.textContent = getModeString(mode);
@@ -315,6 +315,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleVoltageChange(voltage, ws);
                 errorMessage.style.display = 'none';
             }
+
+            configGroup.style.display = 'none';
         } else if (target.matches('#submit-time-range-btn')) {
             const runningMs = getMilliseconds({
                 hours: timePickerRunning.getHour(),
@@ -326,14 +328,15 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             handleTimeRangeChange(runningMs, restingMs, ws);
+            configGroup.style.display = 'none';
         }
         else if (target.matches('.open-config')) { 
             const index = openConfigButtons.indexOf(target);
             console.log('Index...................:', index);
             if (index === -1) return;
-            configGroup.style.display = 'block';
+            configGroup.style.display = 'flex';
             updateVisibility(config, 'none');
-            config[index].style.display = 'block';
+            config[index].style.display = 'flex';
         }
         else if (target.matches('#cancel-config-ui')) {
             configGroup.style.display = 'none';
@@ -346,6 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.error('WebSocket is not open');
         }
+
+        configGroup.style.display = 'none';
     });
 
     // Initial setup

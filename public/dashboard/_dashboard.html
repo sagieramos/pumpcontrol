@@ -20,6 +20,10 @@
         .styled-button {
             display: none;
         }
+
+        #config-group {
+            display: none;
+        }
     </style>
 </head>
 
@@ -125,7 +129,7 @@
                 <div class="config">
                     <label for="min-voltage">Set Minimum Operating Voltage (110-230 V):</label>
                     <input type="number" id="min-voltage" min="110" max="230" step="1" placeholder="Enter voltage">
-                    <button class="styled-button" id="submit-btn-min-volt">></button>
+                    <button class="styled-button" id="submit-btn-min-volt">Submit</button>
                     <div class="error-message" id="error-message" style="display: none;">Please enter a value between
                         110
                         and 230 volts.</div>
