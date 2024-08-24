@@ -1,0 +1,21 @@
+This function, controlPumpState, is responsible for deciding whether the pump should be turned on or off based on the current mode and some conditions like voltage and timing. Here's a simplified explanation:
+
+Mutex Locking: The function first tries to safely access shared data (using xSemaphoreTake) to avoid conflicts when multiple tasks might try to access the same data at the same time. This is like making sure no one else is using the data before you start using it.
+
+Check Power-Off Mode: If the pump is set to "Power Off" mode (pump_MachineMode_POWER_OFF), it checks whether the pump is already off. If it is, it keeps the pump off, releases the lock (xSemaphoreGive), and exits. This is like making sure the pump stays off if it’s supposed to be off.
+
+Calculate Elapsed Time: It then calculates how much time has passed since the pump last changed its state (on or off). This time is measured in seconds to match the time ranges that determine how long the pump should run or rest.
+
+Check Voltage: The function checks if the current voltage is sufficient to run the pump. This is like making sure there’s enough power to turn on the pump.
+
+Mode Handling:
+
+Automatic Mode (AUTO): If the pump is in "Auto" mode (pump_MachineMode_AUTO), and the conditions (like voltage) are right, the function checks if the pump should be turned on or off based on the elapsed time:
+If the pump has been resting for the required time, it turns on.
+If the pump has been running for the required time, it turns off.
+Always On Mode (POWER_ON): If the pump is in "Always On" mode (pump_MachineMode_POWER_ON), it also checks the time and voltage to decide whether to turn the pump on or off, but it doesn’t require an external trigger like the AUTO mode does.
+Update Pump State: After determining whether the pump should be on or off, the function updates the pump’s status and calls another function (switch_pump) to physically turn the pump on or off.
+
+Release Mutex: Finally, it releases the lock to allow other tasks to access the shared data.
+
+In short, this function is like a decision-maker that constantly checks the mode, time, and power conditions to decide whether the pump should be running or not, ensuring that the pump operates according to its settings.

@@ -150,9 +150,10 @@ header.header-default {
 #pump-power-indicator {
   width: 20px;
   height: 20px;
-  border-left: 15px solid transparent;
+  background-color: #808080;
+/*   border-left: 15px solid transparent;
   border-right: 15px solid transparent;
-  border-bottom: 15px solid #33b864;
+  border-bottom: 15px solid #33b864; */
 }
 
 .lds-ellipsis {

@@ -228,31 +228,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handlePowerStatus = (buffer) => {
         const numValue = Num.decode(buffer.slice(1));
-        console.log('numValue:', numValue);
+        console.log('handlePowerStatus numValue..........................:', numValue);
         const { key, value } = numValue;
-    
+        const valueToNumber = Number(value);
+        countdown.update(valueToNumber);
         switch (key) {
             case PowerStatus.POWER_INACTIVE:
-                pumpPowerIndicator.style.color = '#808080'; // Gray
+                pumpPowerIndicator.style.backgroundColor = '#808080'; // Gray
                 runRestState.textContent = 'Inactive';
                 break;
             case PowerStatus.POWER_READY:
-                pumpPowerIndicator.style.color = '#FFD700'; // Yellow
+                pumpPowerIndicator.style.backgroundColor = '#FFD700'; // Yellow
                 runRestState.textContent = 'Ready...';
                 break;
             case PowerStatus.POWER_RUNNING:
-                pumpPowerIndicator.style.color = '#32CD32'; // Green
+                pumpPowerIndicator.style.backgroundColor = '#32CD32'; // Green
                 runRestState.textContent = 'Running...';
                 break;
             case PowerStatus.POWER_RESTING:
-                pumpPowerIndicator.style.color = '#1E90FF'; // Blue
+                pumpPowerIndicator.style.backgroundColor = '#1E90FF'; // Blue
                 runRestState.textContent = 'Resting...';
                 break;
             default:
                 console.log(`Unexpected key: ${key}`);
+                countdown.update(0);
         }
 
-        countdown.update(value);
     }
     
 

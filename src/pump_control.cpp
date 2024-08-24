@@ -9,6 +9,9 @@ TaskHandle_t runMachineTask = NULL;
 SemaphoreHandle_t controlDataMutex = NULL;
 
 bool pumpState = false;
+unsigned long lastChangeTime = 0;
+bool powerOn = false;
+
 TimerHandle_t delayTimer = NULL;
 
 // Get the current control data
@@ -121,15 +124,13 @@ void init_EEPROM_pump_controller() {
 // Control pump state based on mode and signal
 void controlPumpState(bool trigger_auto_pump) {
   if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
+    DEBUG_SERIAL_PRINTF("Pump State...............: %s\n",
+                        pumpState ? "ON" : "OFF");
     pump_ControlData &ctrl = get_current_control_data();
     unsigned long currentTime = getCurrentTimeMs();
-    static unsigned long lastChangeTime = 0;
-    static bool powerOn = false;
-
     if (ctrl.mode == pump_MachineMode_POWER_OFF) {
       if (!ctrl.is_running) {
         powerOn = false;
-        ctrl.is_running = powerOn;
         xSemaphoreGive(controlDataMutex);
         switch_pump(powerOn);
       }
@@ -138,15 +139,16 @@ void controlPumpState(bool trigger_auto_pump) {
 
     unsigned long signalTime = currentTime - lastChangeTime;
     signalTime /= 1000; // Convert milliseconds to seconds for comparison
+    static bool flag = true;
     bool isVoltageSufficient = readVoltage() > min_voltage;
 
     switch (ctrl.mode) {
     case pump_MachineMode_AUTO:
       if (trigger_auto_pump && isVoltageSufficient) {
-        if (signalTime >= ctrl.time_range.resting && !ctrl.is_running) {
+        if (signalTime <= ctrl.time_range.resting && !ctrl.is_running) {
           powerOn = true;
           lastChangeTime = currentTime;
-        } else if (signalTime >= ctrl.time_range.running && ctrl.is_running) {
+        } else if (signalTime <= ctrl.time_range.running && ctrl.is_running) {
           powerOn = false;
           lastChangeTime = currentTime;
         }
@@ -157,13 +159,29 @@ void controlPumpState(bool trigger_auto_pump) {
 
     case pump_MachineMode_POWER_ON:
       if (isVoltageSufficient) {
-        if (signalTime >= ctrl.time_range.resting && !ctrl.is_running) {
-          powerOn = true;
-          lastChangeTime = currentTime;
-        } else if (signalTime >= ctrl.time_range.running && ctrl.is_running) {
-          powerOn = false;
-          lastChangeTime = currentTime;
+        if (ctrl.is_running) {
+          // If pump is on and the running period is over, turn it off
+          DEBUG_SERIAL_PRINTF("Running Time remaining...: %ld\n",
+                              ctrl.time_range.running - signalTime);
+          if (signalTime > ctrl.time_range.running) {
+            powerOn = false;
+            lastChangeTime = currentTime;
+          }
+        } else {
+          // If pump is off and the resting period is over, turn it on
+          DEBUG_SERIAL_PRINTF("Resting Time remaining...: %ld\n",
+                              ctrl.time_range.resting - signalTime);
+          if (signalTime > ctrl.time_range.resting) {
+            powerOn = true;
+            lastChangeTime = currentTime;
+          } else if (flag) {
+            powerOn = true;
+            lastChangeTime = currentTime;
+            flag = false;
+          }
         }
+      } else {
+        powerOn = false; // If voltage is insufficient, ensure the pump is off
       }
       break;
 
@@ -172,7 +190,6 @@ void controlPumpState(bool trigger_auto_pump) {
       break;
     }
 
-    ctrl.is_running = powerOn;
     xSemaphoreGive(controlDataMutex);
     switch_pump(powerOn);
   }

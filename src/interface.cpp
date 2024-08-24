@@ -186,7 +186,7 @@ void handle_control_data_update(Num &msg, bool &dataChanged) {
     if (control_data.mode != static_cast<pump_MachineMode>(msg.value)) {
       control_data.mode = static_cast<pump_MachineMode>(msg.value);
       dataChanged = true;
-      DEBUG_SERIAL_PRINTF("Received mode: %d\n", msg.value);
+      DEBUG_SERIAL_PRINTF("Received mode: %d\n", static_cast<int>(msg.value));
     }
     break;
 
