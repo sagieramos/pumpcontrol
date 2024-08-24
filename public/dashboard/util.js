@@ -175,32 +175,20 @@ const handleTimeRangeChange = (running, resting, ws) => {
     }
 }
 
-/**
- * Convert milliseconds to a formatted string of hours and minutes (H:MM).
- * @param {number} totalMilliseconds - The total number of milliseconds to convert.
- * @returns {string} - The formatted time string in H:MM format.
- */
 
-const millisecondsToTime = (totalMilliseconds) => {
-    const totalSeconds = totalMilliseconds / 1000;
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    /* const seconds = Math.floor(totalSeconds % 60); */
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
-}
-
-const getHoursAndMinutes = (totalMilliseconds) => {
-    const totalSeconds = totalMilliseconds / 1000;
+const getHoursAndMinutes = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     return { hours, minutes };
-}
-
-const getMilliseconds = ({ hours, minutes }) => {
-    const hoursToMilliseconds = hours * 60 * 60 * 1000;
-    const minutesToMilliseconds = minutes * 60 * 1000;
-    return hoursToMilliseconds + minutesToMilliseconds;
 };
+
+
+const getSeconds = ({ hours, minutes }) => {
+    const hoursToSeconds = hours * 60 * 60;
+    const minutesToSeconds = minutes * 60;
+    return hoursToSeconds + minutesToSeconds;
+};
+
 
 /**
  * Updates the display style of a list of elements.
@@ -217,9 +205,8 @@ export {
     handleVoltageChange,
     handleModeChange,
     toggleElementVisibility,
-    millisecondsToTime,
     getHoursAndMinutes,
-    getMilliseconds,
+    getSeconds,
     getModeString,
     handleTimeRangeChange,
     updateVisibility,

@@ -3,37 +3,32 @@
 #include "sensors.h"
 #include "type_id.h"
 
-enum Timer { INACTIVE = 0, RESTING, RUNNING };
+#define PUMP_DELAY pdMS_TO_TICKS(6000)
+constexpr unsigned long MS_TO_S = 1000;
+constexpr unsigned long DELAY_S = PUMP_DELAY / MS_TO_S;
 
 Num power = Num_init_default;
-Num power_status = Num_init_default;
 
-unsigned int last_change_time = 0;
+unsigned long last_change_time = 0;
 
 // Timer callback to handle pump ON
 void power_on_cb(TimerHandle_t xTimer) {
   digitalWrite(PUMP_RELAY_PIN, HIGH);
   pumpState = true;
   DEBUG_SERIAL_PRINTLN("Pump is ON");
-  power.key = static_cast<uint32_t>(Timer::RUNNING);
+  power.key = static_cast<uint32_t>(PowerStatus::POWER_RUNNING);
 
   if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
     pump_ControlData &ctrl = get_current_control_data();
     ctrl.is_running = true;
-    power.value = ctrl.time_range.running;
+    power.value = static_cast<float>(ctrl.time_range.running);
     xSemaphoreGive(controlDataMutex);
 
-    last_change_time = getCurrentTimeMs();
+    last_change_time = getCurrentTimeMs() / MS_TO_S;
     send_num_message(power, POWER_TYPE_ID);
 
-    // Send power status
-    power_status.key = static_cast<uint32_t>(PowerStatus::POWER_ON);
-    power_status.value = 0;
-    send_num_message(power_status, POWER_STATUS_ID);
-
   } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in pumpControlCallback()");
+    DEBUG_SERIAL_PRINTLN("Failed to acquire controlDataMutex in power_on_cb()");
   }
 }
 
@@ -46,20 +41,19 @@ void power_off() {
     pump_ControlData &ctrl = get_current_control_data();
     ctrl.is_running = false;
     xSemaphoreGive(controlDataMutex);
-    unsigned int current_time = getCurrentTimeMs();
+    unsigned long current_time = getCurrentTimeMs() / MS_TO_S;
 
     if (current_time - last_change_time < ctrl.time_range.resting) {
-      power.key = static_cast<uint32_t>(Timer::INACTIVE);
-      power.value = 0;
+      power.key = static_cast<uint32_t>(PowerStatus::POWER_INACTIVE);
+      power.value = 0.0f;
     } else {
-      last_change_time = current_time;
-      power.key = static_cast<uint32_t>(Timer::RESTING);
-      power.value = ctrl.time_range.resting;
+      power.key = static_cast<uint32_t>(PowerStatus::POWER_RESTING);
+      power.value = static_cast<float>(ctrl.time_range.resting);
     }
+    last_change_time = current_time;
     send_num_message(power, POWER_TYPE_ID);
   } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in pumpControlCallback()");
+    DEBUG_SERIAL_PRINTLN("Failed to acquire controlDataMutex in power_off()");
   }
 }
 
@@ -80,14 +74,15 @@ void startPumpDelayTimer() {
     return;
   }
 
-  const unsigned int delay_s = PUMP_DELAY / 1000;
-
   DEBUG_SERIAL_PRINTLN("Pump delay timer started");
-  DEBUG_SERIAL_PRINTF("Pump will be ON in %d seconds\n", delay_s);
+  DEBUG_SERIAL_PRINTF("Pump will be ON in %d seconds\n", DELAY_S);
 
-  power_status.key = static_cast<uint32_t>(PowerStatus::POWER_READY);
-  power_status.value = delay_s;
-  send_num_message(power_status, POWER_STATUS_ID);
+  last_change_time = getCurrentTimeMs() / MS_TO_S;
+
+  power.key = static_cast<uint32_t>(PowerStatus::POWER_READY);
+  power.value = static_cast<float>(DELAY_S);
+
+  send_num_message(power, POWER_TYPE_ID);
 }
 
 // Stop and clean up the timer
@@ -104,10 +99,6 @@ void stopAndCleanupTimer() {
     delayTimer = NULL;
 
     DEBUG_SERIAL_PRINTLN("Pump delay timer stopped");
-
-    power_status.key = PowerStatus::POWER_OFF;
-    power_status.value = 0;
-    send_num_message(power_status, POWER_STATUS_ID);
   }
 }
 
@@ -146,6 +137,33 @@ void send_serialized_message(Num &value, uint8_t type_id,
 }
 
 void send_all_power_status_and_type(AsyncWebSocketClient *client) {
+
+  pump_ControlData &ctrl = get_current_control_data();
+
+  PowerStatus power_status = static_cast<PowerStatus>(power.key);
+  const unsigned long current_time = getCurrentTimeMs() / MS_TO_S;
+
+  switch (power_status) {
+  case POWER_READY: {
+    power.value = static_cast<float>(current_time - last_change_time - DELAY_S);
+    break;
+  }
+  case POWER_RUNNING: {
+    unsigned long current_run_time = current_time - last_change_time;
+    power.value =
+        static_cast<float>(ctrl.time_range.running - current_run_time);
+    break;
+  }
+  case POWER_RESTING: {
+    unsigned long current_rest_time = current_time - last_change_time;
+    power.value =
+        static_cast<float>(ctrl.time_range.resting - current_rest_time);
+    break;
+  }
+  default:
+    power.value = 0.0f;
+    break;
+  }
+
   send_serialized_message(power, POWER_TYPE_ID, client);
-  send_serialized_message(power_status, POWER_STATUS_ID, client);
 }

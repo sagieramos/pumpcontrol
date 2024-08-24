@@ -15,13 +15,15 @@ const float SCALE_FACTOR = 11.0;
 
 float min_voltage = 0.0f;
 
-void readVoltage(float &voltage) {
+float readVoltage() {
+#ifndef PRODUCTION
+  return random(209, 230);
+#endif
+
   int adcValue = analogRead(adcPin);
   float adcVoltage = adcValue * VREF / ADC_MAX;
-  voltage = adcVoltage * SCALE_FACTOR;
-#ifndef PRODUCTION
-  voltage = random(209, 213);
-#endif
+
+  return (adcVoltage * SCALE_FACTOR);
 }
 
 // Store minimum voltage to power the pump in EEPROM
@@ -62,8 +64,6 @@ void send_voltage_task(void *pvParameter) {
   msg.key = VoltageKey::VOLTAGE;
   pinMode(adcPin, INPUT);
 
-  static float reading_voltage = 0.0f;
-
   get_min_voltage(min_voltage);
 
   for (;;) {
@@ -75,9 +75,8 @@ void send_voltage_task(void *pvParameter) {
     }
 
     // Update reading_voltage before sending
-    readVoltage(reading_voltage);
 
-    msg.value = reading_voltage;
+    msg.value = readVoltage();
 
     send_num_message(msg, NUM_TYPE_ID);
 

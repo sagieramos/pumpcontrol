@@ -5,8 +5,6 @@
 #include "network.h"
 #include <transcode_pump_control.h>
 
-#define PUMP_DELAY pdMS_TO_TICKS(5000)
-
 constexpr int FLOAT_SIGNAL_PIN = 21;  // Float signal pin
 constexpr int PUMP_RELAY_PIN = 12;    // Relay pin for pump
 constexpr uint8_t MAGIC_NUMBER = 123; // Magic number for EEPROM data validity

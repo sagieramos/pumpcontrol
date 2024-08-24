@@ -40,9 +40,9 @@ void store_time_range(bool check_changed) {
   }
 
   if (time_range_changed) {
-    DEBUG_SERIAL_PRINTF("Storing Time Range - Running: %ld\tResting: %ld\n",
-                        control_data.time_range.running,
-                        control_data.time_range.resting);
+    DEBUG_SERIAL_PRINTF(
+        "Storing Time Range - Running: %ld seconds\tResting: %ld seconds\n",
+        control_data.time_range.running, control_data.time_range.resting);
 
     EEPROM.put(MAGIC_NUMBER_SIZE, control_data.time_range);
     EEPROM.commit();
@@ -55,11 +55,11 @@ void store_time_range(bool check_changed) {
   xSemaphoreGive(controlDataMutex);
 }
 
+// Validate if the time range is within acceptable limits (in seconds)
 bool is_valid_time_range(const pump_TimeRange &time_range) {
-  const long min_time = 300000;          // 5 minutes in milliseconds
-  const long max_time_running = 7200000; // 2 hours in milliseconds
-
-  const long max_time_resting = 86400000; // 24 hours in milliseconds
+  const long min_time = 300;           // 5 minutes in seconds
+  const long max_time_running = 7200;  // 2 hours in seconds
+  const long max_time_resting = 86400; // 24 hours in seconds
 
   return (time_range.running >= min_time &&
           time_range.running <= max_time_running &&
@@ -90,8 +90,9 @@ void init_EEPROM_pump_controller() {
     if (readMagicNumber == MAGIC_NUMBER) {
       EEPROM.get(MAGIC_NUMBER_SIZE, pump_time_range);
       DEBUG_SERIAL_PRINTF("Magic number found: %d\n", readMagicNumber);
-      DEBUG_SERIAL_PRINTF("Read Time Range - Running: %ld\tResting: %ld\n",
-                          pump_time_range.running, pump_time_range.resting);
+      DEBUG_SERIAL_PRINTF(
+          "Read Time Range - Running: %ld seconds\tResting: %ld seconds\n",
+          pump_time_range.running, pump_time_range.resting);
 
       // Validate and set time range
       if (is_valid_time_range(pump_time_range)) {
@@ -121,42 +122,58 @@ void init_EEPROM_pump_controller() {
 void controlPumpState(bool trigger_auto_pump) {
   if (xSemaphoreTake(controlDataMutex, portMAX_DELAY) == pdTRUE) {
     pump_ControlData &ctrl = get_current_control_data();
+    unsigned long currentTime = getCurrentTimeMs();
     static unsigned long lastChangeTime = 0;
     static bool powerOn = false;
 
+    if (ctrl.mode == pump_MachineMode_POWER_OFF) {
+      if (!ctrl.is_running) {
+        powerOn = false;
+        ctrl.is_running = powerOn;
+        xSemaphoreGive(controlDataMutex);
+        switch_pump(powerOn);
+      }
+      return;
+    }
+
+    unsigned long signalTime = currentTime - lastChangeTime;
+    signalTime /= 1000; // Convert milliseconds to seconds for comparison
+    bool isVoltageSufficient = readVoltage() > min_voltage;
+
     switch (ctrl.mode) {
-    case pump_MachineMode_AUTO: {
-      float voltageReading = 0.0f;
-      readVoltage(voltageReading);
-      if (trigger_auto_pump && voltageReading) {
-        unsigned long currentTime = getCurrentTimeMs();
-        unsigned long signalTime = currentTime - lastChangeTime;
-        if (signalTime >= ctrl.time_range.resting) {
-          lastChangeTime = currentTime;
-          powerOn = false;
-        } else if (signalTime >= ctrl.time_range.running) {
+    case pump_MachineMode_AUTO:
+      if (trigger_auto_pump && isVoltageSufficient) {
+        if (signalTime >= ctrl.time_range.resting && !ctrl.is_running) {
           powerOn = true;
+          lastChangeTime = currentTime;
+        } else if (signalTime >= ctrl.time_range.running && ctrl.is_running) {
+          powerOn = false;
+          lastChangeTime = currentTime;
         }
       } else {
         powerOn = false;
       }
       break;
-    }
 
     case pump_MachineMode_POWER_ON:
-      powerOn = true;
-      break;
-
-    case pump_MachineMode_POWER_OFF:
-      powerOn = false;
+      if (isVoltageSufficient) {
+        if (signalTime >= ctrl.time_range.resting && !ctrl.is_running) {
+          powerOn = true;
+          lastChangeTime = currentTime;
+        } else if (signalTime >= ctrl.time_range.running && ctrl.is_running) {
+          powerOn = false;
+          lastChangeTime = currentTime;
+        }
+      }
       break;
 
     default:
       DEBUG_SERIAL_PRINTLN("Invalid mode");
       break;
     }
-    xSemaphoreGive(controlDataMutex);
 
+    ctrl.is_running = powerOn;
+    xSemaphoreGive(controlDataMutex);
     switch_pump(powerOn);
   }
 }

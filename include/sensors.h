@@ -8,7 +8,7 @@
 extern TaskHandle_t sendVoltageTask;
 extern float min_voltage;
 
-void readVoltage(float &voltage);
+float readVoltage();
 bool store_min_voltage(float min_voltage);
 void send_voltage_task(void *pvParameter);
 
