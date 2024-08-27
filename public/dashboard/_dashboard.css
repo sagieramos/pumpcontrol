@@ -229,7 +229,6 @@ header.header-default {
 }
 
 .bg-config {
-  padding: 12px;
   position: absolute;
   top: 0;
   right: 0;
@@ -247,8 +246,8 @@ header.header-default {
 .bg-config-inner {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 24px;
-  max-width: 768px;
-  width: 100%;
+  max-width: var(--max-width);
+  width: 86%;
   display: flex;
   flex-direction: column;
   gap: 36px;
@@ -260,13 +259,12 @@ header.header-default {
 }
 
 .config {
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 12px;
   color: #333;
-
 }
 
 .init-hide {
@@ -466,21 +464,59 @@ select:hover::after {
 
 .tui-timepicker {
   border-radius: var(--border-radius);
-  margin-top: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 12px;
 }
 
 .set-time-range {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
-  justify-content: center;
   margin-bottom: 24px;
-}
-
-.note {
-  line-height: 1.5px;
 }
 
 #config-group {
   display: none;
+}
+
+.note-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.note-header {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.note-content {
+  font-size: 16px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.note-section {
+  margin-bottom: 15px;
+}
+
+.note-section:last-child {
+  margin-bottom: 0;
+}
+
+.note-section h4 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #444;
+  margin: 10px 0 5px;
+}
+
+.note-section p {
+  margin: 0;
+  font-size: 15px;
+  color: #666;
 }

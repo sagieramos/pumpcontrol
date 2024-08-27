@@ -29,48 +29,48 @@ const StaticFile staticFiles[] = {
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
 void setup() {
-  DEBUG_SERIAL_BEGIN(115200);
+  LOG_BEGIN(115200);
   if (!SPIFFS.begin()) {
-    DEBUG_SERIAL_PRINTLN("Failed to mount SPIFFS");
+    LOG_LN("Failed to mount SPIFFS");
     return;
   }
-  DEBUG_SERIAL_PRINTLN("SPIFFS mounted successfully");
+  LOG_LN("SPIFFS mounted successfully");
 
   int8_t count = 5;
 
-  DEBUG_SERIAL_PRINTLN("Starting in 5 seconds... ");
+  LOG_LN("Starting in 5 seconds... ");
 
   while (count >= 0) {
-    DEBUG_SERIAL_PRINT("\r");
-    DEBUG_SERIAL_PRINT(count);
-    DEBUG_SERIAL_PRINT(" ");
+    LOG_("\r");
+    LOG_(count);
+    LOG_(" ");
     delay(1000);
 
     count--;
   }
 
-  DEBUG_SERIAL_PRINTLN();
+  LOG_LN();
 
   pinMode(LED_BUILTIN, OUTPUT);
   if (xTaskCreate(send_voltage_task, "SendVoltageTask", 4096, NULL, 2,
                   &sendVoltageTask) != pdPASS) {
-    DEBUG_SERIAL_PRINTLN("Failed to create send voltage task");
+    LOG_LN("Failed to create send voltage task");
   } else {
-    DEBUG_SERIAL_PRINTLN("Send voltage task created successfully");
+    LOG_LN("Send voltage task created successfully");
   }
 
   if (xTaskCreate(runMachine, "Pump Controller", 4096, NULL, 1,
                   &runMachineTask) != pdPASS) {
-    DEBUG_SERIAL_PRINTLN("Failed to create pump controller task");
+    LOG_LN("Failed to create pump controller task");
   } else {
-    DEBUG_SERIAL_PRINTLN("Pump controller task created successfully");
+    LOG_LN("Pump controller task created successfully");
   }
 
   if (xTaskCreate(checkSignal, "Check Signal", 4096, NULL, 1,
                   &checkSignalTask) != pdPASS) {
-    DEBUG_SERIAL_PRINTLN("Failed to create check signal task");
+    LOG_LN("Failed to create check signal task");
   } else {
-    DEBUG_SERIAL_PRINTLN("Check signal task created successfully");
+    LOG_LN("Check signal task created successfully");
   }
 
   // Setup WiFi AP and DNS
@@ -88,7 +88,7 @@ void setup() {
   ws.onEvent(onWsEvent);
   server.addHandler(&ws).setFilter([](AsyncWebServerRequest *request) {
     String urlPath = request->url();
-    DEBUG_SERIAL_PRINTF("URL Path: %s\n", urlPath.c_str());
+    LOG_F("URL Path: %s\n", urlPath.c_str());
     if (strcmp(urlPath.c_str(), "/ws") == 0) {
       return authSession(authClients, request, CHECK) == ACTIVE;
     }
@@ -101,8 +101,8 @@ void setup() {
   for (int i = 0; i < numPaths; i++) {
     server.on(staticFiles[i].path, HTTP_GET,
               [file = staticFiles[i]](AsyncWebServerRequest *request) {
-                DEBUG_SERIAL_PRINTF("Serving path: %s with content type: %s\n",
-                                    file.path, file.contentType);
+                LOG_F("Serving path: %s with content type: %s\n", file.path,
+                      file.contentType);
                 serveStaticFile(request, file.path, file.contentType);
               });
   }

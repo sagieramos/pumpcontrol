@@ -29,15 +29,15 @@ float readVoltage() {
 // Store minimum voltage to power the pump in EEPROM
 bool store_min_voltage(float voltage) {
   if (voltage < 110.0f || voltage > 240.0f) {
-    DEBUG_SERIAL_PRINTF("Invalid min voltage: %f\n", voltage);
-    DEBUG_SERIAL_PRINTLN("Min voltage should be between 110 and 240");
+    LOG_F("Invalid min voltage: %f\n", voltage);
+    LOG_LN("Min voltage should be between 110 and 240");
     return false;
   }
 
   min_voltage = voltage;
-  DEBUG_SERIAL_PRINTF("Min voltage: %f\n", min_voltage);
+  LOG_F("Min voltage: %f\n", min_voltage);
   EEPROM.begin(EEPROM_SIZE_CTL);
-  EEPROM.put(MAGIC_NUMBER_SIZE + sizeof(pump_TimeRange), voltage);
+  EEPROM.put(MIN_VOLTAGE_ADDRESS, voltage);
   EEPROM.commit();
   return true;
 }
@@ -46,16 +46,16 @@ bool store_min_voltage(float voltage) {
 void get_min_voltage(float &voltage) {
   float volt = 0.0f;
   EEPROM.begin(EEPROM_SIZE_CTL);
-  EEPROM.get(MAGIC_NUMBER_SIZE + sizeof(pump_TimeRange), volt);
+  EEPROM.get(MIN_VOLTAGE_ADDRESS, volt);
   if (volt < 110.0f || volt > 250.0f || isnan(volt)) {
-    DEBUG_SERIAL_PRINTLN("Invalid min voltage");
-    DEBUG_SERIAL_PRINTLN("Setting default min voltage to 200");
+    LOG_LN("Invalid min voltage");
+    LOG_LN("Setting default min voltage to 200");
     volt = DEFAULT_MIN_VOLTAGE;
   }
 
   // generate random number between 209 and 213
   voltage = volt;
-  DEBUG_SERIAL_PRINTF("Min voltage: %f\n", voltage);
+  LOG_F("Min voltage: %f\n", voltage);
 }
 
 void send_voltage_task(void *pvParameter) {
@@ -70,7 +70,7 @@ void send_voltage_task(void *pvParameter) {
     ws.cleanupClients();
 
     if (ws.count() == 0) {
-      DEBUG_SERIAL_PRINTLN("Suspending sendVoltageTask");
+      LOG_LN("Suspending sendVoltageTask");
       vTaskSuspend(NULL);
     }
 

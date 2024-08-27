@@ -19,18 +19,18 @@ void update_and_send_power_status(uint32_t key, float value) {
   size_t buffer_size = NUM_BUFFER_SIZE;
   if (serialize_num(power, buffer, &buffer_size, POWER_TYPE_ID,
                     send_binary_data)) {
-    DEBUG_SERIAL_PRINTF("Sent Num message. key: %d, value: %f | Type ID: %d | "
-                        "Buffer size: %d\n",
-                        power.key, power.value, POWER_TYPE_ID, buffer_size);
+    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
+          "Buffer size: %d\n",
+          power.key, power.value, POWER_TYPE_ID, buffer_size);
   } else {
-    DEBUG_SERIAL_PRINTF("Failed to serialize power message\n");
+    LOG_F("Failed to serialize power message\n");
   }
 }
 
 // Timer callback to handle pump ON
 void power_on_cb(TimerHandle_t xTimer) {
   pumpState = true;
-  DEBUG_SERIAL_PRINTLN("Pump is ON");
+  LOG_LN("Pump is ON");
 
   current_pump_data.is_running = true;
   last_change_time_ms = getCurrentTimeMs();
@@ -44,7 +44,7 @@ void power_on_cb(TimerHandle_t xTimer) {
 
 void power_off() {
   pumpState = false;
-  DEBUG_SERIAL_PRINTLN("Pump is OFF");
+  LOG_LN("Pump is OFF");
 
   current_pump_data.is_running = false;
   unsigned long current_time_ms = getCurrentTimeMs();
@@ -76,17 +76,16 @@ void startPumpDelayTimer() {
     delayTimer = xTimerCreate("PumpDelayTimer", pdMS_TO_TICKS(PUMP_DELAY_MS),
                               pdFALSE, 0, power_on_cb);
     if (delayTimer == nullptr) {
-      DEBUG_SERIAL_PRINTLN("Failed to create PumpDelayTimer");
+      LOG_LN("Failed to create PumpDelayTimer");
       return;
     }
   }
 
   if (xTimerStart(delayTimer, 0) != pdPASS) {
-    DEBUG_SERIAL_PRINTLN("Failed to start PumpDelayTimer");
+    LOG_LN("Failed to start PumpDelayTimer");
   } else {
-    DEBUG_SERIAL_PRINTLN("Pump delay timer started");
-    DEBUG_SERIAL_PRINTF("Pump will be ON in %lu seconds\n",
-                        PUMP_DELAY_MS / MS_TO_S);
+    LOG_LN("Pump delay timer started");
+    LOG_F("Pump will be ON in %lu seconds\n", PUMP_DELAY_MS / MS_TO_S);
 
     last_change_time_ms = getCurrentTimeMs();
 
@@ -100,13 +99,13 @@ void startPumpDelayTimer() {
 void stopAndCleanupTimer() {
   if (delayTimer != nullptr) {
     if (xTimerStop(delayTimer, 0) != pdPASS) {
-      DEBUG_SERIAL_PRINTLN("Failed to stop PumpDelayTimer");
+      LOG_LN("Failed to stop PumpDelayTimer");
     }
     if (xTimerDelete(delayTimer, 0) != pdPASS) {
-      DEBUG_SERIAL_PRINTLN("Failed to delete PumpDelayTimer");
+      LOG_LN("Failed to delete PumpDelayTimer");
     }
     delayTimer = nullptr;
-    DEBUG_SERIAL_PRINTLN("Pump delay timer stopped");
+    LOG_LN("Pump delay timer stopped");
   }
 }
 
@@ -115,7 +114,7 @@ void switch_pump(bool state) {
   if (state == pumpState)
     return;
 
-  DEBUG_SERIAL_PRINTF("Switching pump state to %s\n", state ? "ON" : "OFF");
+  LOG_F("Switching pump state to %s\n", state ? "ON" : "OFF");
 
   pumpState = state;
 

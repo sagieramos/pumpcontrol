@@ -27,7 +27,7 @@ void store_time_range(bool check_changed) {
 
   if (check_changed) {
     pump_TimeRange stored_time_range;
-    EEPROM.get(MAGIC_NUMBER_SIZE, stored_time_range);
+    EEPROM.get(PUMP_TIME_RANGE_ADDRESS, stored_time_range);
 
     time_range_changed =
         (stored_time_range.running != current_pump_data.time_range.running) ||
@@ -35,16 +35,16 @@ void store_time_range(bool check_changed) {
   }
 
   if (time_range_changed) {
-    DEBUG_SERIAL_PRINTF("Storing Time Range - Running: %lu "
-                        "milliseconds\tResting: %lu milliseconds\n",
-                        current_pump_data.time_range.running,
-                        current_pump_data.time_range.resting);
+    LOG_F("Storing Time Range - Running: %lu "
+          "milliseconds\tResting: %lu milliseconds\n",
+          current_pump_data.time_range.running,
+          current_pump_data.time_range.resting);
 
-    EEPROM.put(MAGIC_NUMBER_SIZE, current_pump_data.time_range);
+    EEPROM.put(PUMP_TIME_RANGE_ADDRESS, current_pump_data.time_range);
     EEPROM.commit();
-    DEBUG_SERIAL_PRINTLN("Time Range updated in EEPROM");
+    LOG_LN("Time Range updated in EEPROM");
   } else {
-    DEBUG_SERIAL_PRINTLN("Time Range is unchanged, not updating EEPROM");
+    LOG_LN("Time Range is unchanged, not updating EEPROM");
   }
 
   EEPROM.end();
@@ -73,26 +73,60 @@ void init_EEPROM_pump_controller() {
   pump_TimeRange pump_time_range = pump_TimeRange_init_default;
 
   if (readMagicNumber == MAGIC_NUMBER) {
-    EEPROM.get(MAGIC_NUMBER_SIZE, pump_time_range);
-    DEBUG_SERIAL_PRINTF("Magic number found: %d\n", readMagicNumber);
-    DEBUG_SERIAL_PRINTF("Read Time Range - Running: %lu milliseconds\tResting: "
-                        "%lu milliseconds\n",
-                        pump_time_range.running, pump_time_range.resting);
+    EEPROM.get(PUMP_TIME_RANGE_ADDRESS, pump_time_range);
+    LOG_F("Magic number found: %d\n", readMagicNumber);
+    LOG_F("Read Time Range - Running: %lu milliseconds\tResting: "
+          "%lu milliseconds\n",
+          pump_time_range.running, pump_time_range.resting);
 
     // Validate and set time range
     if (is_valid_time_range(pump_time_range)) {
       current_pump_data.time_range = pump_time_range;
     } else {
-      DEBUG_SERIAL_PRINTLN("Invalid time range, using default values");
+      LOG_LN("Invalid time range, using default values");
       current_pump_data.time_range = pump_TimeRange_init_default;
     }
+
+    // Read pump mode from eeprom
+    uint8_t pump_mode = 0;
+    EEPROM.get(PUMP_MODE_ADDRESS, pump_mode);
+    // pump mode can only be AUTO or POWER_OFF
+    if (pump_mode == pump_MachineMode_AUTO ||
+        pump_mode == pump_MachineMode_POWER_OFF) {
+      current_pump_data.mode = static_cast<pump_MachineMode>(pump_mode);
+    } else {
+      LOG_LN("Invalid pump mode, using default value");
+      current_pump_data.mode = pump_MachineMode_AUTO;
+    }
+
   } else {
-    DEBUG_SERIAL_PRINTF("Magic number not found: %d\n", readMagicNumber);
+    LOG_F("Magic number not found: %d\n", readMagicNumber);
 
     // Store default values and magic number
     EEPROM.put(0, MAGIC_NUMBER);
-    EEPROM.put(MAGIC_NUMBER_SIZE, pump_time_range);
+    EEPROM.put(PUMP_TIME_RANGE_ADDRESS, pump_time_range);
     EEPROM.commit();
+  }
+
+  EEPROM.end();
+}
+
+// check and store pump mode in EEPROM
+void store_pump_mode(bool check_changed) {
+  EEPROM.begin(EEPROM_SIZE_CTL);
+
+  if (check_changed) {
+    uint8_t stored_pump_mode;
+    EEPROM.get(PUMP_MODE_ADDRESS, stored_pump_mode);
+    if (stored_pump_mode != current_pump_data.mode) {
+      EEPROM.put(PUMP_MODE_ADDRESS, current_pump_data.mode);
+      EEPROM.commit();
+      LOG_F("Stored pump mode: %d\n", current_pump_data.mode);
+    }
+  } else {
+    EEPROM.put(PUMP_MODE_ADDRESS, current_pump_data.mode);
+    EEPROM.commit();
+    LOG_F("Stored pump mode: %d\n", current_pump_data.mode);
   }
 
   EEPROM.end();
@@ -101,15 +135,15 @@ void init_EEPROM_pump_controller() {
 void updatePumpState(unsigned long signalTimeMs, unsigned long currentTimeMs) {
   readingVolt = readVoltage();
   if (readingVolt < min_voltage) {
-    DEBUG_SERIAL_PRINTF("Supply voltage(%fV) is below required voltage(%fV)\n",
-                        readingVolt, min_voltage);
+    LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n", readingVolt,
+          min_voltage);
     powerOn = false;
     flagP = true;
     return;
   }
 
   if (flagP) {
-    DEBUG_SERIAL_PRINTF("Manually power ON");
+    LOG_F("Manually power ON");
     powerOn = true;
     flagP = false;
     if (!current_pump_data.is_running) {
@@ -117,16 +151,16 @@ void updatePumpState(unsigned long signalTimeMs, unsigned long currentTimeMs) {
     }
   } else if (current_pump_data.is_running) {
     // Check if running time has elapsed
-    DEBUG_SERIAL_PRINTF("Running Time remaining...: %lu milliseconds\n",
-                        current_pump_data.time_range.running - signalTimeMs);
+    LOG_F("Running Time remaining...: %lu milliseconds\n",
+          current_pump_data.time_range.running - signalTimeMs);
     if (signalTimeMs > current_pump_data.time_range.running) {
       powerOn = false;
       lastChangeTimeMs = currentTimeMs;
     }
   } else {
     // Check if resting time has elapsed
-    DEBUG_SERIAL_PRINTF("Resting Time remaining...: %lu milliseconds\n",
-                        current_pump_data.time_range.resting - signalTimeMs);
+    LOG_F("Resting Time remaining...: %lu milliseconds\n",
+          current_pump_data.time_range.resting - signalTimeMs);
     if (signalTimeMs > current_pump_data.time_range.resting) {
       powerOn = true;
       lastChangeTimeMs = currentTimeMs;
@@ -169,7 +203,7 @@ void controlPumpState() {
     updatePumpState(signalTimeMs, currentTimeMs);
     anotherFlag = true;
   } else {
-    DEBUG_SERIAL_PRINTLN("Invalid mode");
+    LOG_LN("Invalid mode");
   }
 
   switch_pump(powerOn);
@@ -199,9 +233,9 @@ void checkSignal(void *parameter) {
       signal += digitalRead(FLOAT_SIGNAL_PIN) == HIGH ? 1 : 0;
       vTaskDelay(500 / portTICK_PERIOD_MS);
     }
-    DEBUG_SERIAL_PRINTF("Signal: %d\n", signal);
+    LOG_F("Signal: %d\n", signal);
     automate_mode_signal = signal >= 3;
-    DEBUG_SERIAL_PRINTF("Current Mode: %d\n", current_pump_data.mode);
+    LOG_F("Current Mode: %d\n", current_pump_data.mode);
     vTaskDelay(500 / portTICK_PERIOD_MS);
   }
 }

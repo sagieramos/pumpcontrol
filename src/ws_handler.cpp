@@ -20,20 +20,18 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
   if (type == WS_EVT_CONNECT) {
     ws.cleanupClients();
-    DEBUG_SERIAL_PRINTF("Websocket client connection received: %u\n",
-                        client_id);
+    LOG_F("Websocket client connection received: %u\n", client_id);
 
     uint8_t buff[56];
     size_t buff_size = sizeof(buff);
 
     if (serialize_control_data(current_pump_data, buff, &buff_size,
                                CONTROL_DATA_TYPE_ID)) {
-      DEBUG_SERIAL_PRINTF(
-          "Sent control data. Mode: %lu ms, Running: %lu ms, Resting: %d\n",
-          current_pump_data.mode, current_pump_data.time_range.running,
-          current_pump_data.time_range.resting);
+      LOG_F("Sent control data. Mode: %lu ms, Running: %lu ms, Resting: %d\n",
+            current_pump_data.mode, current_pump_data.time_range.running,
+            current_pump_data.time_range.resting);
     } else {
-      DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
+      LOG_LN("Failed to serialize control data");
     }
     client->binary(buff, buff_size);
 
@@ -47,17 +45,17 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
     check_and_resume_task(sendVoltageTask, ws.count() > 0);
 
-    DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
+    LOG_F("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_DISCONNECT) {
     check_and_resume_task(sendVoltageTask, ws.count() > 0);
-    DEBUG_SERIAL_PRINTF("Clients online: %d\n", ws.count());
+    LOG_F("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_ERROR) {
-    DEBUG_SERIAL_PRINTLN("Websocket error");
+    LOG_LN("Websocket error");
   } else if (type == WS_EVT_PONG) {
   } else if (WS_EVT_DATA) {
-    DEBUG_SERIAL_PRINTF("Websocket data received: %u\n", client_id);
+    LOG_F("Websocket data received: %u\n", client_id);
     receive_msg_and_perform_action(data, len, data[0]);
   } else {
-    DEBUG_SERIAL_PRINTLN("Websocket event not handled");
+    LOG_LN("Websocket event not handled");
   }
 }

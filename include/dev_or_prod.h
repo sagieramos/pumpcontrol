@@ -5,21 +5,21 @@
 #include <Arduino.h>
 
 #ifndef PRODUCTION
-#define DEBUG_SERIAL_ENABLED
+#define LOG_ENABLED
 #endif
 
 #endif // TESTING
 
-#ifdef DEBUG_SERIAL_ENABLED
-#define DEBUG_SERIAL_BEGIN(baud) Serial.begin(baud)
-#define DEBUG_SERIAL_PRINT(...) Serial.print(__VA_ARGS__)
-#define DEBUG_SERIAL_PRINTLN(...) Serial.println(__VA_ARGS__)
-#define DEBUG_SERIAL_PRINTF(...) Serial.printf(__VA_ARGS__)
+#ifdef LOG_ENABLED
+#define LOG_BEGIN(baud) Serial.begin(baud)
+#define LOG_(...) Serial.print(__VA_ARGS__)
+#define LOG_LN(...) Serial.println(__VA_ARGS__)
+#define LOG_F(...) Serial.printf(__VA_ARGS__)
 #else
-#define DEBUG_SERIAL_BEGIN(baud) ((void)0)
-#define DEBUG_SERIAL_PRINT(...) ((void)0)
-#define DEBUG_SERIAL_PRINTLN(...) ((void)0)
-#define DEBUG_SERIAL_PRINTF(...) ((void)0)
+#define LOG_BEGIN(baud) ((void)0)
+#define LOG_(...) ((void)0)
+#define LOG_LN(...) ((void)0)
+#define LOG_F(...) ((void)0)
 #endif
 
 unsigned long getCurrentTimeMs();

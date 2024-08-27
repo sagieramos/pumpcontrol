@@ -8,8 +8,8 @@ ClientSession authClients[MAX_CLIENTS];
 void serveStaticFile(AsyncWebServerRequest *request, const char *path,
                      const char *contentType) {
   String userAgent = request->header("User-Agent");
-  DEBUG_SERIAL_PRINTF("User-Agent: %s\n", userAgent.c_str());
-  DEBUG_SERIAL_PRINTLN("..........................................");
+  LOG_F("User-Agent: %s\n", userAgent.c_str());
+  LOG_LN("..........................................");
   bool isMobile = userAgent.indexOf("Android") != -1 ||
                   userAgent.indexOf("iPhone") != -1 ||
                   userAgent.indexOf("iPad") != -1;
@@ -17,17 +17,17 @@ void serveStaticFile(AsyncWebServerRequest *request, const char *path,
   String gzPath = String(path) + ".gz";
 
   if (!isMobile && SPIFFS.exists(gzPath)) {
-    DEBUG_SERIAL_PRINTF("Serving gzipped file: %s\n", gzPath.c_str());
+    LOG_F("Serving gzipped file: %s\n", gzPath.c_str());
     AsyncWebServerResponse *response =
         request->beginResponse(SPIFFS, gzPath, contentType);
     response->addHeader("Content-Encoding", "gzip");
     request->send(response);
   } else if (SPIFFS.exists(path)) {
-    DEBUG_SERIAL_PRINTF("Serving file: %s\n", path);
+    LOG_F("Serving file: %s\n", path);
     request->send(SPIFFS, path, contentType);
   } else {
     request->send(404, "text/plain", "File Not Found");
-    DEBUG_SERIAL_PRINTF("File not found: %s\n", path);
+    LOG_F("File not found: %s\n", path);
   }
 }
 
@@ -35,10 +35,10 @@ void handleDashboard(AsyncWebServerRequest *request) {
   int auth = authSession(authClients, request, CHECK);
   if (auth == ACTIVE) {
     request->send(SPIFFS, "/_dashboard.html", "text/html");
-    DEBUG_SERIAL_PRINTLN("Dashboard");
+    LOG_LN("Dashboard");
   } else {
     request->redirect("/");
-    DEBUG_SERIAL_PRINTLN("Unauthorized");
+    LOG_LN("Unauthorized");
   }
 }
 
@@ -46,10 +46,10 @@ void handleLogout(AsyncWebServerRequest *request) {
   int auth = authSession(authClients, request, LOGOUT);
   if (auth == DEAUTHENTICATED) {
     request->redirect("/");
-    DEBUG_SERIAL_PRINTLN("Logged out");
+    LOG_LN("Logged out");
   } else {
     request->redirect("/");
-    DEBUG_SERIAL_PRINTLN("Unauthorized");
+    LOG_LN("Unauthorized");
   }
 }
 
@@ -58,7 +58,7 @@ void handleLogin(AsyncWebServerRequest *request) {
     ClientSession session;
     AuthStatus auth = authSession(authClients, request, session, LOGIN);
 
-    DEBUG_SERIAL_PRINTF("auth value: %d\n", auth);
+    LOG_F("auth value: %d\n", auth);
 
     switch (auth) {
     case AUTHENTICATED: {
@@ -76,22 +76,22 @@ void handleLogin(AsyncWebServerRequest *request) {
       response->addHeader("Set-Cookie", cookie2);
       request->send(response);
 
-      DEBUG_SERIAL_PRINTLN("Login successful");
+      LOG_LN("Login successful");
       break;
     }
     case SESSION_IS_FULL:
       request->send(500, "text/plain", "Session is full");
-      DEBUG_SERIAL_PRINTLN("Session is full");
+      LOG_LN("Session is full");
       break;
     case UNAUTHORIZED:
     default:
       request->send(401, "text/plain", "PIN is incorrect or unauthorized");
-      DEBUG_SERIAL_PRINTLN("PIN is incorrect or unauthorized");
+      LOG_LN("PIN is incorrect or unauthorized");
       break;
     }
   } else {
     request->send(400, "text/html", "No PIN provided");
-    DEBUG_SERIAL_PRINTLN("No PIN provided");
+    LOG_LN("No PIN provided");
   }
 }
 
@@ -103,20 +103,20 @@ void handleRequest(AsyncWebServerRequest *request) {
   strcpy(urlPath, request->url().c_str());
 
   // Debug printouts for request details
-  DEBUG_SERIAL_PRINTF("Request from: %s:%d\n",
-                      request->client()->remoteIP().toString().c_str(),
-                      request->client()->remotePort());
-  DEBUG_SERIAL_PRINTF("http://%s => Method: %d\n", urlPath, method);
+  LOG_F("Request from: %s:%d\n",
+        request->client()->remoteIP().toString().c_str(),
+        request->client()->remotePort());
+  LOG_F("http://%s => Method: %d\n", urlPath, method);
 
   if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
     // Handle root route (example)
     int auth = authSession(authClients, request, CHECK);
     if (auth == ACTIVE) {
       request->redirect("/dashboard");
-      DEBUG_SERIAL_PRINTLN("Already logged in");
+      LOG_LN("Already logged in");
     } else {
       request->send(SPIFFS, "/_login.html", "text/html");
-      DEBUG_SERIAL_PRINTLN("Serving _login.html");
+      LOG_LN("Serving _login.html");
     }
   } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
     // Handle login route
@@ -129,13 +129,13 @@ void handleRequest(AsyncWebServerRequest *request) {
     int auth = authSession(authClients, request, CHECK);
     if (auth == ACTIVE) {
       request->send(SPIFFS, "/_dashboard.html", "text/html");
-      DEBUG_SERIAL_PRINTLN("Dashboard");
+      LOG_LN("Dashboard");
     } else {
       request->redirect("/");
     }
   } else {
     // Handle other routes (404 Not Found)
     request->send(404, "text/plain", "Not found");
-    DEBUG_SERIAL_PRINTLN("Not found");
+    LOG_LN("Not found");
   }
 }

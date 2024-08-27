@@ -10,11 +10,11 @@ void send_num_message(Num &value, uint8_t type_id) {
   uint8_t buffer[NUM_BUFFER_SIZE];
   size_t buffer_size = NUM_BUFFER_SIZE;
   if (serialize_num(value, buffer, &buffer_size, type_id, send_binary_data)) {
-    DEBUG_SERIAL_PRINTF("Sent Num message. key: %d, value: %f | Type ID: %d | "
-                        "Buffer size: %d\n",
-                        value.key, value.value, type_id, buffer_size);
+    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
+          "Buffer size: %d\n",
+          value.key, value.value, type_id, buffer_size);
   } else {
-    DEBUG_SERIAL_PRINTF("Failed to serialize power message\n");
+    LOG_F("Failed to serialize power message\n");
   }
 }
 
@@ -23,19 +23,19 @@ void send_num_message_to_a_client(Num value, uint8_t type_id,
   uint8_t buffer[NUM_BUFFER_SIZE];
   size_t buffer_size = NUM_BUFFER_SIZE;
   if (serialize_num(value, buffer, &buffer_size, type_id)) {
-    DEBUG_SERIAL_PRINTF("Sent Num message. key: %d, value: %f | Type ID: %d | "
-                        "Buffer size: %d\n",
-                        value.key, value.value, type_id, buffer_size);
+    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
+          "Buffer size: %d\n",
+          value.key, value.value, type_id, buffer_size);
     client->binary(buffer, buffer_size);
   } else {
-    DEBUG_SERIAL_PRINTF("Failed to serialize power message\n");
+    LOG_F("Failed to serialize power message\n");
   }
 }
 
 void receive_control_data(uint8_t *data, size_t len) {
-  DEBUG_SERIAL_PRINTF("Received `control_data` message of length %u\n", len);
+  LOG_F("Received `control_data` message of length %u\n", len);
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
 
@@ -55,21 +55,20 @@ void receive_control_data(uint8_t *data, size_t len) {
         ws.binaryAll(data, len);
       }
 
-      DEBUG_SERIAL_PRINTF(
-          "Received Control Data - Mode: %d\tRunning: %lu\tResting: %lu\n",
-          current_pump_data.mode, current_pump_data.time_range.running,
-          current_pump_data.time_range.resting);
+      LOG_F("Received Control Data - Mode: %d\tRunning: %lu\tResting: %lu\n",
+            current_pump_data.mode, current_pump_data.time_range.running,
+            current_pump_data.time_range.resting);
 
       store_time_range(false);
 
       return;
     } else {
-      DEBUG_SERIAL_PRINTLN(
+      LOG_LN(
           "Received data is the same as the current data; no update needed.");
     }
 
   } else {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize control data");
+    LOG_LN("Failed to deserialize control data");
   }
 }
 
@@ -79,66 +78,66 @@ void void_action(uint8_t *data, size_t len) {
 }
 
 void receive_strnum(uint8_t *data, size_t len) {
-  DEBUG_SERIAL_PRINTF("Received `strnum` message of length %u\n", len);
+  LOG_F("Received `strnum` message of length %u\n", len);
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
   Strnum msg = Strnum_init_zero;
   if (deserialize_strnum(msg, data, len)) {
-    DEBUG_SERIAL_PRINTF("Received string: %s\n", (const char *)msg.str.arg);
-    DEBUG_SERIAL_PRINTF("Received number: %f\n", msg.num);
-    DEBUG_SERIAL_PRINTF("Received key: %u\n", msg.key);
+    LOG_F("Received string: %s\n", (const char *)msg.str.arg);
+    LOG_F("Received number: %f\n", msg.num);
+    LOG_F("Received key: %u\n", msg.key);
 
     free_strnum(msg);
   } else {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize string and number message");
+    LOG_LN("Failed to deserialize string and number message");
   }
 }
 
 void receive_str(uint8_t *data, size_t len) {
-  DEBUG_SERIAL_PRINTF("Received `str` message of length %u\n", len);
+  LOG_F("Received `str` message of length %u\n", len);
   Str msg = Str_init_zero;
   if (deserialize_str(msg, data, len)) {
-    DEBUG_SERIAL_PRINTF("Received string: %s\n", (const char *)msg.value.arg);
-    DEBUG_SERIAL_PRINTF("Received key: %u\n", msg.key);
+    LOG_F("Received string: %s\n", (const char *)msg.value.arg);
+    LOG_F("Received key: %u\n", msg.key);
 
     free_str(msg);
   } else {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize string message");
+    LOG_LN("Failed to deserialize string message");
   }
 }
 
 void receive_min_voltage(uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
   Num msg = Num_init_zero;
   if (deserialize_num(msg, data, len)) {
-    DEBUG_SERIAL_PRINTF("Received min voltage: %f\n", msg.value);
+    LOG_F("Received min voltage: %f\n", msg.value);
     if (store_min_voltage(msg.value)) {
       if (ws.count() > 0) {
         ws.binaryAll(data, len);
       }
     }
   } else {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize min voltage message");
+    LOG_LN("Failed to deserialize min voltage message");
   }
 }
 bool deserialize_and_validate(Num &msg, uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return false;
   }
 
   if (!deserialize_num(msg, data, len)) {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize number message");
+    LOG_LN("Failed to deserialize number message");
     return false;
   }
 
   if (msg.key == 0 || msg.key >= ConfigKey::CONFIG_KEY_MAX) {
-    DEBUG_SERIAL_PRINTF("Invalid key: %d\n", msg.key);
+    LOG_F("Invalid key: %d\n", msg.key);
     return false;
   }
 
@@ -147,11 +146,11 @@ bool deserialize_and_validate(Num &msg, uint8_t *data, size_t len) {
 
 void handle_min_voltage(Num &msg, uint8_t *data, size_t len,
                         bool &dataChanged) {
-  DEBUG_SERIAL_PRINTF("Current min voltage: %f\n", min_voltage);
+  LOG_F("Current min voltage: %f\n", min_voltage);
   if (min_voltage != msg.value) {
     store_min_voltage(msg.value);
     dataChanged = true;
-    DEBUG_SERIAL_PRINTF("Received min voltage: %f\n", msg.value);
+    LOG_F("Received min voltage: %f\n", msg.value);
 
     if (ws.count() > 0) {
       ws.binaryAll(data, len);
@@ -162,40 +161,39 @@ void handle_min_voltage(Num &msg, uint8_t *data, size_t len,
 void handle_control_data_update(Num &msg, bool &dataChanged) {
   switch (static_cast<ConfigKey>(msg.key)) {
   case CONFIG_MODE:
-    DEBUG_SERIAL_PRINTF("Current mode: %d\n", current_pump_data.mode);
+    LOG_F("Current mode: %d\n", current_pump_data.mode);
     if (current_pump_data.mode != static_cast<pump_MachineMode>(msg.value)) {
       current_pump_data.mode = static_cast<pump_MachineMode>(msg.value);
       dataChanged = true;
-      DEBUG_SERIAL_PRINTF("Received mode: %d\n", static_cast<int>(msg.value));
+      store_pump_mode(false);
+      LOG_F("Received mode: %d\n", static_cast<int>(msg.value));
     }
     break;
 
   case CONFIG_RUNNING_TIME:
-    DEBUG_SERIAL_PRINTF("Current running time: %d\n",
-                        current_pump_data.time_range.running);
+    LOG_F("Current running time: %d\n", current_pump_data.time_range.running);
     if (current_pump_data.time_range.running !=
         static_cast<uint32_t>(msg.value)) {
       current_pump_data.time_range.running = static_cast<uint32_t>(msg.value);
       dataChanged = true;
-      store_time_range();
-      DEBUG_SERIAL_PRINTF("Received running time: %d\n", msg.value);
+      store_time_range(false);
+      LOG_F("Received running time: %d\n", msg.value);
     }
     break;
 
   case CONFIG_RESTING_TIME:
-    DEBUG_SERIAL_PRINTF("Current resting time: %d\n",
-                        current_pump_data.time_range.resting);
+    LOG_F("Current resting time: %d\n", current_pump_data.time_range.resting);
     if (current_pump_data.time_range.resting !=
         static_cast<uint32_t>(msg.value)) {
       current_pump_data.time_range.resting = static_cast<uint32_t>(msg.value);
       dataChanged = true;
       store_time_range();
-      DEBUG_SERIAL_PRINTF("Received resting time: %d\n", msg.value);
+      LOG_F("Received resting time: %d\n", msg.value);
     }
     break;
 
   default:
-    DEBUG_SERIAL_PRINTF("Received unknown key: %d\n", msg.key);
+    LOG_F("Received unknown key: %d\n", msg.key);
     break;
   }
 }
@@ -210,7 +208,7 @@ void send_data_if_changed(bool dataChanged, Num &msg, uint8_t *data,
 }
 
 void receive_single_config(uint8_t *data, size_t len) {
-  DEBUG_SERIAL_PRINTF("Received config message of length %u\n", len);
+  LOG_F("Received config message of length %u\n", len);
 
   Num msg = Num_init_zero;
   if (!deserialize_and_validate(msg, data, len)) {
@@ -234,37 +232,37 @@ void receive_single_config(uint8_t *data, size_t len) {
 
 void receive_pump_time_range(uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
 
   pump_TimeRange time_range = pump_TimeRange_init_zero;
   if (!deserialize_time_range(time_range, data, len)) {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize time range message");
+    LOG_LN("Failed to deserialize time range message");
     return;
   }
 
   if (!is_valid_time_range(time_range)) {
-    DEBUG_SERIAL_PRINTLN("Invalid time range received");
+    LOG_LN("Invalid time range received");
     return;
   }
 
   // Check if the new time_range is the same as the current one
   if (current_pump_data.time_range.running == time_range.running &&
       current_pump_data.time_range.resting == time_range.resting) {
-    DEBUG_SERIAL_PRINTLN("Received Time Range is the same as the current "
-                         "range. No update required.");
+    LOG_LN("Received Time Range is the same as the current "
+           "range. No update required.");
     return;
   }
 
   // Update control data with the new time range
   current_pump_data.time_range = time_range;
 
-  DEBUG_SERIAL_PRINTF("Received Time Range - Running: %ld\tResting: %ld\n",
-                      time_range.running, time_range.resting);
-  DEBUG_SERIAL_PRINTF("Current Time Range - Running: %ld\tResting: %ld\n",
-                      current_pump_data.time_range.running,
-                      current_pump_data.time_range.resting);
+  LOG_F("Received Time Range - Running: %ld\tResting: %ld\n",
+        time_range.running, time_range.resting);
+  LOG_F("Current Time Range - Running: %ld\tResting: %ld\n",
+        current_pump_data.time_range.running,
+        current_pump_data.time_range.resting);
 
   if (ws.count() > 0) {
     ws.binaryAll(data, len);
@@ -276,25 +274,24 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
 
 void receive_auth(uint8_t *data, size_t len) {
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
   Auth msg = Auth_init_zero;
   if (deserialize_auth(msg, data, len, NULL)) {
-    DEBUG_SERIAL_PRINTF("Received ID: %s\n", (const char *)msg.id.arg);
-    DEBUG_SERIAL_PRINTF("Received Password: %s\n", (const char *)msg.pass.arg);
+    LOG_F("Received ID: %s\n", (const char *)msg.id.arg);
+    LOG_F("Received Password: %s\n", (const char *)msg.pass.arg);
   } else {
-    DEBUG_SERIAL_PRINTLN("Failed to deserialize Auth message");
+    LOG_LN("Failed to deserialize Auth message");
   }
 }
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len,
                                     uint8_t msg_type) {
-  DEBUG_SERIAL_PRINTF("Received `msg` of length %u and type: %d\n", len,
-                      msg_type);
+  LOG_F("Received `msg` of length %u and type: %d\n", len, msg_type);
 
   if (data == NULL || len == 0) {
-    DEBUG_SERIAL_PRINTLN("Invalid data received: NULL pointer or zero length");
+    LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
 
@@ -312,7 +309,7 @@ void receive_msg_and_perform_action(uint8_t *data, size_t len,
   const uint8_t len_msg_types = sizeof(receive_ptr) / sizeof(receive_ptr[0]);
 
   if (msg_type >= len_msg_types) {
-    DEBUG_SERIAL_PRINTF("Unhandled message type: %d\n", msg_type);
+    LOG_F("Unhandled message type: %d\n", msg_type);
     return;
   }
 

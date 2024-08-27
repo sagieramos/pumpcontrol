@@ -46,27 +46,27 @@ bool extractCookieAttribute(const char *cookie, const char *attribute,
 
   const char *attribute_start = strstr(cookie, attribute_with_equal);
   if (!attribute_start) {
-    DEBUG_SERIAL_PRINTF("Attribute not found\n");
+    LOG_F("Attribute not found\n");
     return false;
   }
 
   attribute_start += strlen(attribute_with_equal);
   const char *attribute_end = strchr(attribute_start, ';');
   if (!attribute_end) {
-    DEBUG_SERIAL_PRINTF("Attribute end not found\n");
+    LOG_F("Attribute end not found\n");
     attribute_end = cookie + strlen(cookie);
   }
 
   size_t attribute_length = attribute_end - attribute_start;
   if (attribute_length >= value_size) {
-    DEBUG_SERIAL_PRINTF("Attribute length is too long: %d\n", attribute_length);
+    LOG_F("Attribute length is too long: %d\n", attribute_length);
     return false;
   }
 
   strncpy(value, attribute_start, attribute_length);
   value[attribute_length] = '\0';
 
-  DEBUG_SERIAL_PRINTF("Attribute name: %s, value: %s\n", attribute, value);
+  LOG_F("Attribute name: %s, value: %s\n", attribute, value);
   return true;
 }
 
@@ -77,7 +77,7 @@ ClientSession *getSessionFromRequest(const String &cookieHeader,
   }
   const char *cookie = cookieHeader.c_str();
 
-  DEBUG_SERIAL_PRINTF("Cookies: %s\n", cookie);
+  LOG_F("Cookies: %s\n", cookie);
 
   char token[TOKEN_LENGTH];
   char index_str[11]; // 11 characters to fit any integer, including null

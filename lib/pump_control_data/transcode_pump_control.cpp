@@ -86,7 +86,7 @@ bool deserialize_time_range(pump_TimeRange &time_range, const uint8_t *buffer,
   }
 
   if (!status) {
-    DEBUG_SERIAL_PRINTF("Decoding failed: %s\n", PB_GET_ERROR(&istream));
+    LOG_F("Decoding failed: %s\n", PB_GET_ERROR(&istream));
   }
 
   return status;

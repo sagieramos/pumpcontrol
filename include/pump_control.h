@@ -5,12 +5,25 @@
 #include "network.h"
 #include <transcode_pump_control.h>
 
-constexpr int FLOAT_SIGNAL_PIN = 21;  // Float signal pin
-constexpr int PUMP_RELAY_PIN = 12;    // Relay pin for pump
+constexpr int FLOAT_SIGNAL_PIN = 21; // Float signal pin
+constexpr int PUMP_RELAY_PIN = 12;   // Relay pin for pump
+
 constexpr uint8_t MAGIC_NUMBER = 123; // Magic number for EEPROM data validity
+
+// Sizes of individual data types
 constexpr size_t MAGIC_NUMBER_SIZE = sizeof(MAGIC_NUMBER);
-constexpr size_t EEPROM_SIZE_CTL =
-    sizeof(pump_TimeRange) + MAGIC_NUMBER_SIZE + sizeof(float);
+constexpr size_t PUMP_MODE_SIZE = sizeof(uint8_t);
+constexpr size_t PUMP_TIME_RANGE_SIZE = sizeof(pump_TimeRange);
+constexpr size_t MIN_VOLT_SIZE = sizeof(float);
+
+// Calculate EEPROM offsets based on data sizes
+constexpr int PUMP_MODE_ADDRESS = MAGIC_NUMBER_SIZE;
+constexpr int PUMP_TIME_RANGE_ADDRESS = PUMP_MODE_ADDRESS + PUMP_MODE_SIZE;
+constexpr int MIN_VOLTAGE_ADDRESS =
+    PUMP_TIME_RANGE_ADDRESS + PUMP_TIME_RANGE_SIZE;
+
+// Total EEPROM size required
+constexpr size_t EEPROM_SIZE_CTL = MIN_VOLTAGE_ADDRESS + MIN_VOLT_SIZE;
 
 extern TaskHandle_t runMachineTask;
 extern TaskHandle_t checkSignalTask;
@@ -20,6 +33,7 @@ extern unsigned long lastChangeTime;
 extern float readingVolt;
 
 void store_time_range(bool check_changed = true);
+void store_pump_mode(bool check_changed = true);
 bool is_valid_time_range(const pump_TimeRange &time_range);
 void update_and_send_power_status(uint32_t key, float value);
 void switch_pump(bool state);
