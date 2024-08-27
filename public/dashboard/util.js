@@ -176,18 +176,27 @@ const handleTimeRangeChange = (running, resting, ws) => {
 }
 
 
-const getHoursAndMinutes = (totalSeconds) => {
+const getHoursAndMinutes = (totalMilliseconds) => {
+    const totalSeconds = Math.floor(totalMilliseconds / 1000);
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     return { hours, minutes };
 };
 
 
-const getSeconds = ({ hours, minutes }) => {
+/* const getSeconds = ({ hours, minutes }) => {
     const hoursToSeconds = hours * 60 * 60;
     const minutesToSeconds = minutes * 60;
     return hoursToSeconds + minutesToSeconds;
+}; */
+
+const getMilliseconds = ({ hours, minutes }) => {
+    const hoursToSeconds = hours * 60 * 60;
+    const minutesToSeconds = minutes * 60;
+    const totalSeconds = hoursToSeconds + minutesToSeconds;
+    return totalSeconds * 1000;
 };
+
 
 
 /**
@@ -206,7 +215,7 @@ export {
     handleModeChange,
     toggleElementVisibility,
     getHoursAndMinutes,
-    getSeconds,
+    getMilliseconds,
     getModeString,
     handleTimeRangeChange,
     updateVisibility,

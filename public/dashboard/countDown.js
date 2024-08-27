@@ -9,13 +9,22 @@ export class Countdown {
         this.totalSeconds = totalSeconds;
         this.startTime = Math.floor(Date.now() / 1000); // Initialize start time
 
+        // Ensure canvas elements are available
         let $ = el => document.querySelector(el);
-        this.dateSelectors = {
-            timer: $(itemSelector + ' .timer').getContext('2d'), // Single canvas for time and meter
-            meter: $(itemSelector + ' .meter').getContext('2d') // Separate canvas for the meter
-        };
+        let timerCanvas = $(itemSelector + ' .timer');
+        let meterCanvas = $(itemSelector + ' .meter');
 
-        requestAnimationFrame(() => this.set());
+        if (timerCanvas && meterCanvas) {
+            this.dateSelectors = {
+                timer: timerCanvas.getContext('2d'),
+                meter: meterCanvas.getContext('2d')
+            };
+
+            // Start the countdown
+            this.start();
+        } else {
+            console.error('Canvas elements not found');
+        }
     }
 
     /**
@@ -53,7 +62,7 @@ export class Countdown {
      * @returns {String}
      */
     formatNumber(num) {
-        return num < 10 ? '0' + num : num;
+        return num < 10 ? '0' + num : num.toString();
     }
 
     /**
@@ -79,20 +88,21 @@ export class Countdown {
         const progressWidth = width * (1 - (remainingSeconds / this.totalSeconds)); // Fill from left to right
 
         // Set styles for the meter
-        this.dateSelectors.meter.lineWidth = height; 
-        this.dateSelectors.meter.fillStyle = '#ecf0f1'; 
+        let ctx = this.dateSelectors.meter;
+        ctx.lineWidth = height;
+        ctx.fillStyle = '#ecf0f1';
 
         // Draw background rectangle
-        this.dateSelectors.meter.beginPath();
-        this.dateSelectors.meter.rect(0, 0, width, height);
-        this.dateSelectors.meter.fillStyle = '#F28C28';  // Background color
-        this.dateSelectors.meter.fill();
+        ctx.beginPath();
+        ctx.rect(0, 0, width, height);
+        ctx.fillStyle = '#F28C28';  // Background color
+        ctx.fill();
 
         // Draw progress rectangle (loading bar)
-        this.dateSelectors.meter.beginPath();
-        this.dateSelectors.meter.rect(0, 0, progressWidth, height);
-        this.dateSelectors.meter.fillStyle = '#D3D3D3'; // Progress color
-        this.dateSelectors.meter.fill();
+        ctx.beginPath();
+        ctx.rect(0, 0, progressWidth, height);
+        ctx.fillStyle = '#D3D3D3'; // Progress color
+        ctx.fill();
     }
 
     /**
@@ -114,10 +124,7 @@ export class Countdown {
      */
     update(totalSeconds) {
         this.totalSeconds = totalSeconds;
+        this.startTime = Math.floor(Date.now() / 1000); // Reset start time for new duration
         this.start(); // Restart the countdown with new time
     }
 }
-
-// Set countdown to 3600 seconds (1 hour)
-// Ensure the HTML includes a canvas element for both the timer and the meter
-/* new Countdown('.item-time', 3600).start(); */

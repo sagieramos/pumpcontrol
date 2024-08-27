@@ -26,12 +26,12 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     uint8_t buff[56];
     size_t buff_size = sizeof(buff);
 
-    pump_ControlData ctr = get_current_control_data();
-
-    if (serialize_control_data(ctr, buff, &buff_size, CONTROL_DATA_TYPE_ID)) {
+    if (serialize_control_data(current_pump_data, buff, &buff_size,
+                               CONTROL_DATA_TYPE_ID)) {
       DEBUG_SERIAL_PRINTF(
           "Sent control data. Mode: %lu ms, Running: %lu ms, Resting: %d\n",
-          ctr.mode, ctr.time_range.running, ctr.time_range.resting);
+          current_pump_data.mode, current_pump_data.time_range.running,
+          current_pump_data.time_range.resting);
     } else {
       DEBUG_SERIAL_PRINTLN("Failed to serialize control data");
     }

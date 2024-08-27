@@ -6,7 +6,7 @@
 
 #define SEMAPHORE_TIMEOUT_MS 1000
 
-void send_num_message(Num value, uint8_t type_id) {
+void send_num_message(Num &value, uint8_t type_id) {
   uint8_t buffer[NUM_BUFFER_SIZE];
   size_t buffer_size = NUM_BUFFER_SIZE;
   if (serialize_num(value, buffer, &buffer_size, type_id, send_binary_data)) {
@@ -39,48 +39,37 @@ void receive_control_data(uint8_t *data, size_t len) {
     return;
   }
 
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) ==
-      pdTRUE) {
-    pump_ControlData &control_data = get_current_control_data();
-    pump_ControlData new_control_data = control_data;
+  pump_ControlData new_control_data = pump_ControlData_init_zero;
 
-    if (deserialize_control_data(new_control_data, data, len)) {
-      bool data_changed = (control_data.mode != new_control_data.mode) ||
-                          (control_data.time_range.running !=
-                           new_control_data.time_range.running) ||
-                          (control_data.time_range.resting !=
-                           new_control_data.time_range.resting);
+  if (deserialize_control_data(new_control_data, data, len)) {
+    bool data_changed = (current_pump_data.mode != new_control_data.mode) ||
+                        (current_pump_data.time_range.running !=
+                         new_control_data.time_range.running) ||
+                        (current_pump_data.time_range.resting !=
+                         new_control_data.time_range.resting);
 
-      if (data_changed) {
-        control_data = new_control_data;
+    if (data_changed) {
+      current_pump_data = new_control_data;
 
-        if (ws.count() > 0) {
-          ws.binaryAll(data, len);
-        }
-
-        DEBUG_SERIAL_PRINTF(
-            "Received Control Data - Mode: %d\tRunning: %lu\tResting: %lu\n",
-            control_data.mode, control_data.time_range.running,
-            control_data.time_range.resting);
-
-        xSemaphoreGive(controlDataMutex);
-
-        store_time_range(false);
-
-        return;
-      } else {
-        DEBUG_SERIAL_PRINTLN(
-            "Received data is the same as the current data; no update needed.");
+      if (ws.count() > 0) {
+        ws.binaryAll(data, len);
       }
 
-      xSemaphoreGive(controlDataMutex);
+      DEBUG_SERIAL_PRINTF(
+          "Received Control Data - Mode: %d\tRunning: %lu\tResting: %lu\n",
+          current_pump_data.mode, current_pump_data.time_range.running,
+          current_pump_data.time_range.resting);
+
+      store_time_range(false);
+
+      return;
     } else {
-      DEBUG_SERIAL_PRINTLN("Failed to deserialize control data");
-      xSemaphoreGive(controlDataMutex);
+      DEBUG_SERIAL_PRINTLN(
+          "Received data is the same as the current data; no update needed.");
     }
+
   } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in receive_control_data()");
+    DEBUG_SERIAL_PRINTLN("Failed to deserialize control data");
   }
 }
 
@@ -171,20 +160,11 @@ void handle_min_voltage(Num &msg, uint8_t *data, size_t len,
 }
 
 void handle_control_data_update(Num &msg, bool &dataChanged) {
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) !=
-      pdTRUE) {
-    DEBUG_SERIAL_PRINTF(
-        "Failed to acquire controlDataMutex in receive_single_config()");
-    return;
-  }
-
-  pump_ControlData &control_data = get_current_control_data();
-
   switch (static_cast<ConfigKey>(msg.key)) {
   case CONFIG_MODE:
-    DEBUG_SERIAL_PRINTF("Current mode: %d\n", control_data.mode);
-    if (control_data.mode != static_cast<pump_MachineMode>(msg.value)) {
-      control_data.mode = static_cast<pump_MachineMode>(msg.value);
+    DEBUG_SERIAL_PRINTF("Current mode: %d\n", current_pump_data.mode);
+    if (current_pump_data.mode != static_cast<pump_MachineMode>(msg.value)) {
+      current_pump_data.mode = static_cast<pump_MachineMode>(msg.value);
       dataChanged = true;
       DEBUG_SERIAL_PRINTF("Received mode: %d\n", static_cast<int>(msg.value));
     }
@@ -192,9 +172,10 @@ void handle_control_data_update(Num &msg, bool &dataChanged) {
 
   case CONFIG_RUNNING_TIME:
     DEBUG_SERIAL_PRINTF("Current running time: %d\n",
-                        control_data.time_range.running);
-    if (control_data.time_range.running != static_cast<uint32_t>(msg.value)) {
-      control_data.time_range.running = static_cast<uint32_t>(msg.value);
+                        current_pump_data.time_range.running);
+    if (current_pump_data.time_range.running !=
+        static_cast<uint32_t>(msg.value)) {
+      current_pump_data.time_range.running = static_cast<uint32_t>(msg.value);
       dataChanged = true;
       store_time_range();
       DEBUG_SERIAL_PRINTF("Received running time: %d\n", msg.value);
@@ -203,9 +184,10 @@ void handle_control_data_update(Num &msg, bool &dataChanged) {
 
   case CONFIG_RESTING_TIME:
     DEBUG_SERIAL_PRINTF("Current resting time: %d\n",
-                        control_data.time_range.resting);
-    if (control_data.time_range.resting != static_cast<uint32_t>(msg.value)) {
-      control_data.time_range.resting = static_cast<uint32_t>(msg.value);
+                        current_pump_data.time_range.resting);
+    if (current_pump_data.time_range.resting !=
+        static_cast<uint32_t>(msg.value)) {
+      current_pump_data.time_range.resting = static_cast<uint32_t>(msg.value);
       dataChanged = true;
       store_time_range();
       DEBUG_SERIAL_PRINTF("Received resting time: %d\n", msg.value);
@@ -216,8 +198,6 @@ void handle_control_data_update(Num &msg, bool &dataChanged) {
     DEBUG_SERIAL_PRINTF("Received unknown key: %d\n", msg.key);
     break;
   }
-
-  xSemaphoreGive(controlDataMutex);
 }
 
 void send_data_if_changed(bool dataChanged, Num &msg, uint8_t *data,
@@ -269,40 +249,29 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
     return;
   }
 
-  // Attempt to take the semaphore
-  if (xSemaphoreTake(controlDataMutex, pdMS_TO_TICKS(SEMAPHORE_TIMEOUT_MS)) ==
-      pdTRUE) {
-    pump_ControlData &control_data = get_current_control_data();
-
-    // Check if the new time_range is the same as the current one
-    if (control_data.time_range.running == time_range.running &&
-        control_data.time_range.resting == time_range.resting) {
-      DEBUG_SERIAL_PRINTLN("Received Time Range is the same as the current "
-                           "range. No update required.");
-      xSemaphoreGive(controlDataMutex);
-      return;
-    }
-
-    // Update control data with the new time range
-    control_data.time_range = time_range;
-
-    DEBUG_SERIAL_PRINTF("Received Time Range - Running: %ld\tResting: %ld\n",
-                        time_range.running, time_range.resting);
-    DEBUG_SERIAL_PRINTF("Current Time Range - Running: %ld\tResting: %ld\n",
-                        control_data.time_range.running,
-                        control_data.time_range.resting);
-
-    if (ws.count() > 0) {
-      ws.binaryAll(data, len);
-    }
-
-    // Release the semaphore after the work is done
-    xSemaphoreGive(controlDataMutex);
-    store_time_range(false);
-  } else {
-    DEBUG_SERIAL_PRINTLN(
-        "Failed to acquire controlDataMutex in receive_pump_time_range()");
+  // Check if the new time_range is the same as the current one
+  if (current_pump_data.time_range.running == time_range.running &&
+      current_pump_data.time_range.resting == time_range.resting) {
+    DEBUG_SERIAL_PRINTLN("Received Time Range is the same as the current "
+                         "range. No update required.");
+    return;
   }
+
+  // Update control data with the new time range
+  current_pump_data.time_range = time_range;
+
+  DEBUG_SERIAL_PRINTF("Received Time Range - Running: %ld\tResting: %ld\n",
+                      time_range.running, time_range.resting);
+  DEBUG_SERIAL_PRINTF("Current Time Range - Running: %ld\tResting: %ld\n",
+                      current_pump_data.time_range.running,
+                      current_pump_data.time_range.resting);
+
+  if (ws.count() > 0) {
+    ws.binaryAll(data, len);
+  }
+
+  // Release the semaphore after the work is done
+  store_time_range(false);
 }
 
 void receive_auth(uint8_t *data, size_t len) {

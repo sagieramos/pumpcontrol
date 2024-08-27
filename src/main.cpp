@@ -12,6 +12,7 @@ struct StaticFile {
 #define APP_JS "application/javascript"
 #define TEXT_CSS "text/css"
 #define IMAGE_SVG "image/svg+xml"
+#define AUDIO_MP3 "audio/mpeg"
 
 // Array of StaticFile structures
 const StaticFile staticFiles[] = {
@@ -22,6 +23,7 @@ const StaticFile staticFiles[] = {
     {"/_dashboard.css", TEXT_CSS}, {"/217._dbundle.js", APP_JS},
     {"/828._dbundle.js", APP_JS},  {"/939._dbundle.js", APP_JS},
     {"/680._dbundle.js", APP_JS},  {"/27._dbundle.js", APP_JS},
+    {"/notify.mp3", AUDIO_MP3},
 };
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
@@ -62,6 +64,13 @@ void setup() {
     DEBUG_SERIAL_PRINTLN("Failed to create pump controller task");
   } else {
     DEBUG_SERIAL_PRINTLN("Pump controller task created successfully");
+  }
+
+  if (xTaskCreate(checkSignal, "Check Signal", 4096, NULL, 1,
+                  &checkSignalTask) != pdPASS) {
+    DEBUG_SERIAL_PRINTLN("Failed to create check signal task");
+  } else {
+    DEBUG_SERIAL_PRINTLN("Check signal task created successfully");
   }
 
   // Setup WiFi AP and DNS

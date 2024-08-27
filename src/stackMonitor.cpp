@@ -4,7 +4,7 @@
 
 void stackMonitor(void *pvParameter) {
   TaskHandle_t taskHandles[] = {dnsTaskHandle, blinkTaskHandle, runMachineTask,
-                                sendVoltageTask};
+                                checkSignalTask, sendVoltageTask};
   const int numTasks = sizeof(taskHandles) / sizeof(TaskHandle_t);
 
   for (;;) {

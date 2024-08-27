@@ -106,6 +106,7 @@ header.header-default {
 
 #container {
   color: #243b55;
+  padding-bottom: 24px;
 }
 
 #status {

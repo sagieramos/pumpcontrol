@@ -16,7 +16,7 @@ export default {
   output: {
     filename: `_${subDir.charAt(0)}bundle.js`,
     path: path.resolve(__dirname, 'data'),
-    assetModuleFilename: '[name][ext]'
+    assetModuleFilename: '[name][ext]' // Ensure the asset module filename is correctly set
   },
   module: {
     rules: [
@@ -40,7 +40,7 @@ export default {
         use: ['html-loader']
       },
       {
-        test: /\.(png|jpe?g|gif|svg)$/i,
+        test: /\.(png|jpe?g|gif|svg|mp3)$/i, 
         type: 'asset/resource',
         generator: {
           filename: '[name][ext]'
@@ -59,7 +59,7 @@ export default {
     new CompressionPlugin({
       filename: '[path][base].gz',
       algorithm: 'gzip',
-      test: /\.(js|css|html|svg|png|jpe?g|gif)$/,
+      test: /\.(js|css|html|svg|png|jpe?g|gif|mp3)$/,
       threshold: 5120,
       minRatio: 0.8
     }),

@@ -11,8 +11,8 @@ extern AsyncWebSocket ws;
 extern DNSServer dnsServer;
 
 void send_binary_data(void *data, size_t len);
-void send_num_message(Num value, uint8_t type_id);
 void send_num_message_to_a_client(Num value, uint8_t type_id,
                                   AsyncWebSocketClient *client);
+void send_num_message(Num &value, uint8_t type_id);
 
 #endif // NETWORK_H

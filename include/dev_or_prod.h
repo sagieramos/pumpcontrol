@@ -22,7 +22,7 @@
 #define DEBUG_SERIAL_PRINTF(...) ((void)0)
 #endif
 
-unsigned int getCurrentTimeMs();
+unsigned long getCurrentTimeMs();
 void check_and_resume_task(TaskHandle_t task, bool resumeTask);
 
 #endif // DEV_OR_PROD_H

@@ -1,7 +1,7 @@
 import './_dashboard.css';
 import './reset.css';
 import {
-    toggleElementVisibility, getHoursAndMinutes, getSeconds,
+    toggleElementVisibility, getHoursAndMinutes, getMilliseconds,
     handleVoltageChange, handleTimeRangeChange,
     handleModeChange,
     getModeString,
@@ -14,15 +14,17 @@ import { ControlData, TimeRange } from '../protoc/js/pump_control_data.js';
 import { Num } from '../protoc/js/str_num_msg.js';
 import TimePicker from 'tui-time-picker';
 import 'tui-time-picker/dist/tui-time-picker.css';
+import notificationSound from './notify.mp3'
 
 let updateChartFunction;
 let updateMinVoltCutOffFunction;
 
-const PowerStatus  = {
+const PowerStatus = {
     POWER_INACTIVE: 0,
     POWER_READY: 1,
     POWER_RUNNING: 2,
     POWER_RESTING: 3,
+    POWER_VOLTAGE_LOW: 4,
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const minVoltInput = document.getElementById('min-voltage');
     const modeConfig = document.getElementById('mode');
     const runRestState = document.getElementById('run-rest-state');
+    const timerMeter = document.querySelectorAll('.timer-meter');
 
     let ws;
     let heartbeat;
@@ -56,6 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
         inputType: 'spinbox',
         showMeridiem: false,
     };
+
+    countdown.update(0);
 
     const timeRangeBegin = { hour: 0, minute: 5 };
     const timeRangeEnd = { hour: 23, minute: 59 };
@@ -204,26 +209,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const controlData = ControlData.decode(buffer.slice(1));
             console.log('controlData:', controlData);
 
-            // Destructure the controlData object
-            const { mode, is_running, time_range } = controlData;
-            const { running, resting } = time_range;
+            insertTimeRange(controlData.time_range);
 
-            insertTimeRange(time_range);
-
-            // Update the countdown and indicator based on running state
-            if (is_running) {
-                countdown.update(running / 1000);
-                pumpPowerIndicator.style.color = 'green';
-            } else {
-                countdown.update(resting / 1000);
-                pumpPowerIndicator.style.color = 'gray';
-            }
-
-            modeElement.textContent = getModeString(mode);
-            modeConfig.value = mode;
+            modeElement.textContent = getModeString(controlData.mode);
+            modeConfig.value = controlData.mode;
         } catch (error) {
             console.error('Failed to deserialize ControlData:', error);
         }
+    };
+
+    const audio = new Audio(notificationSound);
+
+    audio.addEventListener('canplaythrough', () => {
+        console.log('Audio is ready to play');
+    }, { once: true });
+    
+    audio.addEventListener('error', (e) => {
+        console.error('Audio playback error:', e);
+    });
+
+    const triggerVibration = () => {
+        if ("vibrate" in navigator) {
+            navigator.vibrate([200, 100, 200]);
+        } else {
+            console.log("Vibration API is not supported.");
+        }
+    };
+    
+    const notifyUser = () => {
+        audio.play().catch(error => console.error('Audio play error:', error));
+        triggerVibration();
     };
 
     const handlePowerStatus = (buffer) => {
@@ -231,163 +246,176 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('handlePowerStatus numValue..........................:', numValue);
         const { key, value } = numValue;
         const valueToNumber = Number(value);
+
         countdown.update(valueToNumber);
         switch (key) {
             case PowerStatus.POWER_INACTIVE:
                 pumpPowerIndicator.style.backgroundColor = '#808080'; // Gray
                 runRestState.textContent = 'Inactive';
+                updateVisibility(timerMeter, 'none');
                 break;
             case PowerStatus.POWER_READY:
                 pumpPowerIndicator.style.backgroundColor = '#FFD700'; // Yellow
                 runRestState.textContent = 'Ready...';
+                updateVisibility(timerMeter, 'block');
                 break;
             case PowerStatus.POWER_RUNNING:
                 pumpPowerIndicator.style.backgroundColor = '#32CD32'; // Green
                 runRestState.textContent = 'Running...';
+                updateVisibility(timerMeter, 'block');
                 break;
             case PowerStatus.POWER_RESTING:
                 pumpPowerIndicator.style.backgroundColor = '#1E90FF'; // Blue
                 runRestState.textContent = 'Resting...';
+                updateVisibility(timerMeter, 'block');
+                break;
+            case PowerStatus.POWER_VOLTAGE_LOW:
+                pumpPowerIndicator.style.backgroundColor = '#FF0000'; // Red
+                runRestState.textContent = 'Voltage Low';
+                updateVisibility(timerMeter, 'none');
                 break;
             default:
                 console.log(`Unexpected key: ${key}`);
                 countdown.update(0);
+                updateVisibility(timerMeter, 'none');
+                runRestState.textContent = '...';
         }
 
+        notifyUser();
     }
-    
 
-        const handlers = [
-            voidHandler,    // Index 0
-            handleSingleConfig,    // Index 1
-            voidHandler,    // Index 2
-            voidHandler,    // Index 3
-            handleControlData,  // Index 4
-            handleTimeRange,    // Index 5
-            voidHandler,    // Index 6
-            voidHandler,   // Index 7
-            handlePowerStatus,  // Index 8
-        ];
 
-        /**
-         * Deserializes data from the given buffer and updates UI elements.
-         * @param {Uint8Array} bufferData - The data buffer to deserialize.
-         */
-        const deserializeData = async (bufferData) => {
-            const typeIdentifier = bufferData[0];
-            console.log('Type identifier from deserialize:', typeIdentifier);
+    const handlers = [
+        voidHandler,    // Index 0
+        handleSingleConfig,    // Index 1
+        voidHandler,    // Index 2
+        voidHandler,    // Index 3
+        handleControlData,  // Index 4
+        handleTimeRange,    // Index 5
+        voidHandler,    // Index 6
+        voidHandler,   // Index 7
+        handlePowerStatus,  // Index 8
+    ];
 
-            await loadModules();
+    /**
+     * Deserializes data from the given buffer and updates UI elements.
+     * @param {Uint8Array} bufferData - The data buffer to deserialize.
+     */
+    const deserializeData = async (bufferData) => {
+        const typeIdentifier = bufferData[0];
+        console.log('Type identifier from deserialize:', typeIdentifier);
 
-            if (handlers[typeIdentifier]) {
-                handlers[typeIdentifier](bufferData);
-            } else {
-                console.log(`No handler for type identifier: ${typeIdentifier}`);
+        await loadModules();
+
+        if (handlers[typeIdentifier]) {
+            handlers[typeIdentifier](bufferData);
+        } else {
+            console.log(`No handler for type identifier: ${typeIdentifier}`);
+        }
+    };
+
+    /**
+     * Connects to the WebSocket server and sets up event handlers.
+     */
+    const connectWebSocket = () => {
+        ws = new WebSocket('ws://akowe.org/ws');
+
+        ws.onopen = () => {
+            console.log('Connected to WebSocket server');
+            hideLoadingIndicators();
+            resetHeartbeat();
+        };
+
+        ws.onmessage = async (event) => {
+            resetHeartbeat();
+            try {
+                // Convert Blob to ArrayBuffer
+                const arrayBuffer = await event.data.arrayBuffer();
+                // Convert ArrayBuffer to Uint8Array
+                const buffer = new Uint8Array(arrayBuffer);
+                deserializeData(buffer);
+            } catch (error) {
+                console.error('Error handling WebSocket message:', error);
             }
         };
 
-        /**
-         * Connects to the WebSocket server and sets up event handlers.
-         */
-        const connectWebSocket = () => {
-            ws = new WebSocket('ws://akowe.org/ws');
+        ws.onclose = () => {
+            voltageElement.textContent = '00.0';
+            console.log('Disconnected from WebSocket server');
+            showLoadingIndicators();
+            reconnectWebSocket();
 
-            ws.onopen = () => {
-                console.log('Connected to WebSocket server');
-                hideLoadingIndicators();
-                resetHeartbeat();
-            };
-
-            ws.onmessage = async (event) => {
-                resetHeartbeat();
-                try {
-                    // Convert Blob to ArrayBuffer
-                    const arrayBuffer = await event.data.arrayBuffer();
-                    // Convert ArrayBuffer to Uint8Array
-                    const buffer = new Uint8Array(arrayBuffer);
-                    deserializeData(buffer);
-                } catch (error) {
-                    console.error('Error handling WebSocket message:', error);
-                }
-            };
-
-            ws.onclose = () => {
-                voltageElement.textContent = '00.0';
-                console.log('Disconnected from WebSocket server');
-                showLoadingIndicators();
-                reconnectWebSocket();
-
-            };
-
-            ws.onerror = error => {
-                voltageElement.textContent = '00.0';
-                console.error('WebSocket error:', error);
-                showLoadingIndicators();
-                wsError = true;
-            };
         };
 
-        const minVoltageInput = document.getElementById('min-voltage');
-        const errorMessage = document.getElementById('error-message');
-        const configGroup = document.getElementById('config-group');
-        const config = configGroup.querySelectorAll('.config');
-        const openConfigButtons = Array.from(document.querySelectorAll('.open-config'));
+        ws.onerror = error => {
+            voltageElement.textContent = '00.0';
+            console.error('WebSocket error:', error);
+            showLoadingIndicators();
+            wsError = true;
+        };
+    };
 
-        document.addEventListener('click', (event) => {
-            const { target } = event;
+    const minVoltageInput = document.getElementById('min-voltage');
+    const errorMessage = document.getElementById('error-message');
+    const configGroup = document.getElementById('config-group');
+    const config = configGroup.querySelectorAll('.config');
+    const openConfigButtons = Array.from(document.querySelectorAll('.open-config'));
 
-            if (target.matches('#submit-btn-min-volt')) {
-                const voltage = parseInt(minVoltageInput.value, 10);
+    document.addEventListener('click', (event) => {
+        const { target } = event;
 
-                if (isNaN(voltage) || voltage < 110 || voltage > 230) {
-                    errorMessage.style.display = 'block';
-                } else {
-                    console.log('Minimum operating voltage set to:', voltage);
-                    handleVoltageChange(voltage, ws);
-                    errorMessage.style.display = 'none';
-                }
+        if (target.matches('#submit-btn-min-volt')) {
+            const voltage = parseInt(minVoltageInput.value, 10);
 
-                configGroup.style.display = 'none';
-            } else if (target.matches('#submit-time-range-btn')) {
-                const runningSecs = getSeconds({
-                    hours: timePickerRunning.getHour(),
-                    minutes: timePickerRunning.getMinute()
-                });
-                const restingSecs = getSeconds({
-                    hours: timePickerResting.getHour(),
-                    minutes: timePickerResting.getMinute()
-                });
-
-                handleTimeRangeChange(runningSecs, restingSecs, ws);
-                configGroup.style.display = 'none';
-            }
-            else if (target.matches('.open-config')) {
-                const index = openConfigButtons.indexOf(target);
-                console.log('Index...................:', index);
-                if (index === -1) return;
-                configGroup.style.display = 'flex';
-                updateVisibility(config, 'none');
-                config[index].style.display = 'flex';
-            }
-            else if (target.matches('#cancel-config-ui')) {
-                configGroup.style.display = 'none';
-            }
-        });
-
-        modeConfig.addEventListener('change', (event) => {
-            if (ws.readyState === WebSocket.OPEN) {
-                handleModeChange(event.target.value, ws);
+            if (isNaN(voltage) || voltage < 110 || voltage > 230) {
+                errorMessage.style.display = 'block';
             } else {
-                console.error('WebSocket is not open');
+                console.log('Minimum operating voltage set to:', voltage);
+                handleVoltageChange(voltage, ws);
+                errorMessage.style.display = 'none';
             }
 
             configGroup.style.display = 'none';
-        });
+        } else if (target.matches('#submit-time-range-btn')) {
+            const runningSecs = getMilliseconds({
+                hours: timePickerRunning.getHour(),
+                minutes: timePickerRunning.getMinute()
+            });
+            const restingSecs = getMilliseconds({
+                hours: timePickerResting.getHour(),
+                minutes: timePickerResting.getMinute()
+            });
 
-        // Initial setup
-        setTimeout(() => {
-            connectWebSocket();
-        }, 1000);
-
+            handleTimeRangeChange(runningSecs, restingSecs, ws);
+            configGroup.style.display = 'none';
+        }
+        else if (target.matches('.open-config')) {
+            const index = openConfigButtons.indexOf(target);
+            console.log('Index...................:', index);
+            if (index === -1) return;
+            configGroup.style.display = 'flex';
+            updateVisibility(config, 'none');
+            config[index].style.display = 'flex';
+        }
+        else if (target.matches('#cancel-config-ui')) {
+            configGroup.style.display = 'none';
+        }
     });
+
+    modeConfig.addEventListener('change', (event) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            handleModeChange(event.target.value, ws);
+        } else {
+            console.error('WebSocket is not open');
+        }
+
+        configGroup.style.display = 'none';
+    });
+
+    // Initial setup
+    setTimeout(() => {
+        connectWebSocket();
+    }, 1000);
+
+});
 

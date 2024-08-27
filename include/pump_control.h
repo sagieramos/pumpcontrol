@@ -13,19 +13,22 @@ constexpr size_t EEPROM_SIZE_CTL =
     sizeof(pump_TimeRange) + MAGIC_NUMBER_SIZE + sizeof(float);
 
 extern TaskHandle_t runMachineTask;
+extern TaskHandle_t checkSignalTask;
 extern float min_voltage;
+extern pump_ControlData current_pump_data;
+extern unsigned long lastChangeTime;
+extern float readingVolt;
 
 void store_time_range(bool check_changed = true);
 bool is_valid_time_range(const pump_TimeRange &time_range);
+void update_and_send_power_status(uint32_t key, float value);
 void switch_pump(bool state);
 
 void runMachine(void *parameter);
+void checkSignal(void *parameter);
 
 void send_all_power_status_and_type(AsyncWebSocketClient *client);
 
-pump_ControlData &get_current_control_data();
-
-extern SemaphoreHandle_t controlDataMutex;
 extern TimerHandle_t delayTimer;
 extern bool pumpState;
 
@@ -49,5 +52,4 @@ extern bool pumpState;
  */
 void receive_msg_and_perform_action(uint8_t *data, size_t len,
                                     uint8_t msg_type);
-
 #endif // PUMP_CONTROL_H

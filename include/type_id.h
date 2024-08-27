@@ -202,6 +202,7 @@ enum PowerStatus {
   POWER_READY,
   POWER_RUNNING,
   POWER_RESTING,
+  POWER_VOLTAGE_LOW
 };
 
 enum ConfigKey {
