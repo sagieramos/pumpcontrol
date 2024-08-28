@@ -4,6 +4,17 @@
 #include "sensors.h"
 /* #include "esp_task_wdt.h" */
 
+#define SLEEP_WAKE_PIN GPIO_NUM_15
+
+void IRAM_ATTR handleSleepInterrupt() {
+  LOG_LN("Pin went Low, preparing to enter sleep");
+
+  esp_sleep_enable_ext0_wakeup(SLEEP_WAKE_PIN, HIGH);
+  delay(100);
+
+  esp_light_sleep_start();
+};
+
 struct StaticFile {
   const char *path;
   const char *contentType;
@@ -30,6 +41,9 @@ const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
 void setup() {
   LOG_BEGIN(115200);
+  pinMode(SLEEP_WAKE_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(SLEEP_WAKE_PIN), handleSleepInterrupt,
+                  FALLING);
   if (!SPIFFS.begin()) {
     LOG_LN("Failed to mount SPIFFS");
     return;

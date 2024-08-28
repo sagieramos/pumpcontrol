@@ -39,10 +39,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const restTimeElement = document.getElementById('rest-time');
     const modeElement = document.getElementById('machine-mode');
     const styledButton = document.querySelectorAll('.styled-button')
-    const minVoltInput = document.getElementById('min-voltage');
+    const minVoltInput = document.getElementById('min-voltage-input');
     const modeConfig = document.getElementById('mode');
     const runRestState = document.getElementById('run-rest-state');
     const timerMeter = document.querySelectorAll('.timer-meter');
+    const slider = document.getElementById('min-voltage-slider');
 
     let ws;
     let heartbeat;
@@ -56,13 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const timePickerObj = {
         initialHour: 0,
         initialMinute: 0,
-        inputType: 'spinbox',
+        inputType: 'selectbox',
         showMeridiem: false,
     };
 
     countdown.update(0);
 
-    const timeRangeBegin = { hour: 0, minute: 5 };
+    const timeRangeBegin = { hour: 0, minute: 4 };
     const timeRangeEnd = { hour: 23, minute: 59 };
     const timeRangeEndRunning = { hour: 2, minute: 0 };
 
@@ -71,6 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const timePickerResting = new TimePicker('#resting-time', timePickerObj);
     timePickerResting.setRange(timeRangeBegin, timeRangeEnd);
+/* 
+    document.querySelectorAll('.tui-timepicker').forEach(element => {
+        element.style.padding = '8px';
+        element.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+        element.style.border = 'none';
+    }); */
 
     const loadModules = async () => {
         if (!updateChartFunction || !updateMinVoltCutOffFunction) {
@@ -103,14 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 modeConfig.value = value;
                 break;
             default:
-                console.log(`Unexpected key: ${key}`);
+                //console.log(`Unexpected key: ${key}`);
         }
     }
 
     const handleSingleConfig = (buffer) => {
         try {
             const numValue = Num.decode(buffer.slice(1));
-            console.log('numValue:', numValue);
+            //console.log('numValue:', numValue);
             const { key, value } = numValue;
             handleKeyAction(key, value);
         } catch (error) {
@@ -132,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleTimeRange = (buffer) => {
         try {
             const timeRange = TimeRange.decode(buffer.slice(1));
-            console.log('timeRange:', timeRange);
+            //console.log('timeRange:', timeRange);
             insertTimeRange(timeRange);
         } catch (error) {
             console.error('Failed to deserialize TimeRange:', error);
@@ -171,10 +178,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         reconnecting = setInterval(() => {
             if (ws.readyState === WebSocket.CLOSED) {
-                console.log('Attempting to reconnect WebSocket...');
+                //console.log('Attempting to reconnect WebSocket...');
                 connectWebSocket();
             } else {
-                console.log('WebSocket is not closed. Clearing reconnection interval.');
+                //console.log('WebSocket is not closed. Clearing reconnection interval.');
                 clearInterval(reconnecting);
             }
         }, 3000);
@@ -189,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         heartbeat = setTimeout(() => {
-            console.log('Heartbeat timeout. Reconnecting WebSocket...');
+            //console.log('Heartbeat timeout. Reconnecting WebSocket...');
             if (ws) {
                 showLoadingIndicators();
                 ws.close();
@@ -200,14 +207,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const voidHandler = (buffer) => {
         const typeIdentifier = buffer[0];
-        console.log(`No handler for type identifier: ${typeIdentifier}`);
+        //console.log(`No handler for type identifier: ${typeIdentifier}`);
     };
 
     const handleControlData = (buffer) => {
         try {
             // Decode the buffer
             const controlData = ControlData.decode(buffer.slice(1));
-            console.log('controlData:', controlData);
+            //console.log('controlData:', controlData);
 
             insertTimeRange(controlData.time_range);
 
@@ -221,9 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const audio = new Audio(notificationSound);
 
     audio.addEventListener('canplaythrough', () => {
-        console.log('Audio is ready to play');
+        //console.log('Audio is ready to play');
     }, { once: true });
-    
+
     audio.addEventListener('error', (e) => {
         console.error('Audio playback error:', e);
     });
@@ -232,10 +239,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if ("vibrate" in navigator) {
             navigator.vibrate([200, 100, 200]);
         } else {
-            console.log("Vibration API is not supported.");
+            //console.log("Vibration API is not supported.");
         }
     };
-    
+
     const notifyUser = () => {
         audio.play().catch(error => console.error('Audio play error:', error));
         triggerVibration();
@@ -243,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handlePowerStatus = (buffer) => {
         const numValue = Num.decode(buffer.slice(1));
-        console.log('handlePowerStatus numValue..........................:', numValue);
+        //console.log('handlePowerStatus numValue..........................:', numValue);
         const { key, value } = numValue;
         const valueToNumber = Number(value);
 
@@ -275,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateVisibility(timerMeter, 'none');
                 break;
             default:
-                console.log(`Unexpected key: ${key}`);
+                //console.log(`Unexpected key: ${key}`);
                 countdown.update(0);
                 updateVisibility(timerMeter, 'none');
                 runRestState.textContent = '...';
@@ -303,14 +310,14 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const deserializeData = async (bufferData) => {
         const typeIdentifier = bufferData[0];
-        console.log('Type identifier from deserialize:', typeIdentifier);
+        //console.log('Type identifier from deserialize:', typeIdentifier);
 
         await loadModules();
 
         if (handlers[typeIdentifier]) {
             handlers[typeIdentifier](bufferData);
         } else {
-            console.log(`No handler for type identifier: ${typeIdentifier}`);
+            //console.log(`No handler for type identifier: ${typeIdentifier}`);
         }
     };
 
@@ -321,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ws = new WebSocket('ws://akowe.org/ws');
 
         ws.onopen = () => {
-            console.log('Connected to WebSocket server');
+            //console.log('Connected to WebSocket server');
             hideLoadingIndicators();
             resetHeartbeat();
         };
@@ -341,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ws.onclose = () => {
             voltageElement.textContent = '00.0';
-            console.log('Disconnected from WebSocket server');
+            //console.log('Disconnected from WebSocket server');
             showLoadingIndicators();
             reconnectWebSocket();
 
@@ -355,8 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
-    const minVoltageInput = document.getElementById('min-voltage');
-    const errorMessage = document.getElementById('error-message');
     const configGroup = document.getElementById('config-group');
     const config = configGroup.querySelectorAll('.config');
     const openConfigButtons = Array.from(document.querySelectorAll('.open-config'));
@@ -365,14 +370,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const { target } = event;
 
         if (target.matches('#submit-btn-min-volt')) {
-            const voltage = parseInt(minVoltageInput.value, 10);
+            const voltage = parseInt(minVoltInput.value, 10);
 
             if (isNaN(voltage) || voltage < 110 || voltage > 230) {
-                errorMessage.style.display = 'block';
+                return;
             } else {
-                console.log('Minimum operating voltage set to:', voltage);
+                //console.log('Minimum operating voltage set to:', voltage);
                 handleVoltageChange(voltage, ws);
-                errorMessage.style.display = 'none';
             }
 
             configGroup.style.display = 'none';
@@ -391,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else if (target.matches('.open-config')) {
             const index = openConfigButtons.indexOf(target);
-            console.log('Index...................:', index);
             if (index === -1) return;
             configGroup.style.display = 'flex';
             updateVisibility(config, 'none');
@@ -399,9 +402,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else if (target.matches('#cancel-config-ui')) {
             configGroup.style.display = 'none';
+        } else if(target.matches('#config-group')) {
+            target.style.display = 'none';
         }
     });
 
+    document.getElementById('voltage-setting').addEventListener('input', (event) => {
+        const { value, id } = event.target;
+        const sliderValue = parseInt(value, 10);
+        const voltageLabel = document.getElementById('voltage-label');
+    
+        // Validate the value range
+        if (sliderValue < 110 || sliderValue > 230) {
+            voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V) <span id="error">- Please enter a valid value!</span>';
+        } else {
+            voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V)';
+            // Synchronize the values between the input field and the slider
+            if (id === 'min-voltage-input') {
+                document.getElementById('min-voltage-slider').value = sliderValue;
+            } else if (id === 'min-voltage-slider') {
+                document.getElementById('min-voltage-input').value = sliderValue;
+            }
+        }
+    });
     modeConfig.addEventListener('change', (event) => {
         if (ws.readyState === WebSocket.OPEN) {
             handleModeChange(event.target.value, ws);

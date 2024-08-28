@@ -33,12 +33,6 @@ void send_num_message_to_a_client(Num value, uint8_t type_id,
 }
 
 void receive_control_data(uint8_t *data, size_t len) {
-  LOG_F("Received `control_data` message of length %u\n", len);
-  if (data == NULL || len == 0) {
-    LOG_LN("Invalid data received: NULL pointer or zero length");
-    return;
-  }
-
   pump_ControlData new_control_data = pump_ControlData_init_zero;
 
   if (deserialize_control_data(new_control_data, data, len)) {
@@ -78,11 +72,6 @@ void void_action(uint8_t *data, size_t len) {
 }
 
 void receive_strnum(uint8_t *data, size_t len) {
-  LOG_F("Received `strnum` message of length %u\n", len);
-  if (data == NULL || len == 0) {
-    LOG_LN("Invalid data received: NULL pointer or zero length");
-    return;
-  }
   Strnum msg = Strnum_init_zero;
   if (deserialize_strnum(msg, data, len)) {
     LOG_F("Received string: %s\n", (const char *)msg.str.arg);
@@ -109,10 +98,6 @@ void receive_str(uint8_t *data, size_t len) {
 }
 
 void receive_min_voltage(uint8_t *data, size_t len) {
-  if (data == NULL || len == 0) {
-    LOG_LN("Invalid data received: NULL pointer or zero length");
-    return;
-  }
   Num msg = Num_init_zero;
   if (deserialize_num(msg, data, len)) {
     LOG_F("Received min voltage: %f\n", msg.value);
@@ -126,11 +111,6 @@ void receive_min_voltage(uint8_t *data, size_t len) {
   }
 }
 bool deserialize_and_validate(Num &msg, uint8_t *data, size_t len) {
-  if (data == NULL || len == 0) {
-    LOG_LN("Invalid data received: NULL pointer or zero length");
-    return false;
-  }
-
   if (!deserialize_num(msg, data, len)) {
     LOG_LN("Failed to deserialize number message");
     return false;
@@ -231,11 +211,6 @@ void receive_single_config(uint8_t *data, size_t len) {
 }
 
 void receive_pump_time_range(uint8_t *data, size_t len) {
-  if (data == NULL || len == 0) {
-    LOG_LN("Invalid data received: NULL pointer or zero length");
-    return;
-  }
-
   pump_TimeRange time_range = pump_TimeRange_init_zero;
   if (!deserialize_time_range(time_range, data, len)) {
     LOG_LN("Failed to deserialize time range message");
@@ -273,10 +248,6 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
 }
 
 void receive_auth(uint8_t *data, size_t len) {
-  if (data == NULL || len == 0) {
-    LOG_LN("Invalid data received: NULL pointer or zero length");
-    return;
-  }
   Auth msg = Auth_init_zero;
   if (deserialize_auth(msg, data, len, NULL)) {
     LOG_F("Received ID: %s\n", (const char *)msg.id.arg);
@@ -288,25 +259,26 @@ void receive_auth(uint8_t *data, size_t len) {
 
 void receive_msg_and_perform_action(uint8_t *data, size_t len,
                                     uint8_t msg_type) {
-  LOG_F("Received `msg` of length %u and type: %d\n", len, msg_type);
-
   if (data == NULL || len == 0) {
     LOG_LN("Invalid data received: NULL pointer or zero length");
     return;
   }
 
-  void (*receive_ptr[])(uint8_t *, size_t) = {
-      void_action,             // 0
-      receive_single_config,   // 1
-      receive_str,             // 2
-      receive_strnum,          // 3
-      receive_control_data,    // 4
-      receive_pump_time_range, // 5
-      receive_auth,            // 6
-      receive_min_voltage,     // 7
+  LOG_F("Received `msg` of length %u and type: %d\n", len, msg_type);
+
+  constexpr void (*receive_ptr[])(uint8_t *, size_t) = {
+      void_action,             // 0: For No-operation actions
+      receive_single_config,   // 1: For Receiving single configuration updates
+      receive_str,             // 2: For Receiving string messages
+      receive_strnum,          // 3: For Receiving string and number messages
+      receive_control_data,    // 4: For Setting control data
+      receive_pump_time_range, // 5: For Setting pump time range
+      receive_auth,            // 6: For Authentication
+      receive_min_voltage,     // 7: For Setting min voltage
   };
 
-  const uint8_t len_msg_types = sizeof(receive_ptr) / sizeof(receive_ptr[0]);
+  constexpr uint8_t len_msg_types =
+      sizeof(receive_ptr) / sizeof(receive_ptr[0]);
 
   if (msg_type >= len_msg_types) {
     LOG_F("Unhandled message type: %d\n", msg_type);

@@ -114,55 +114,61 @@
 
             <!--  -->
         </div>
+    </div>
+    <div id="config-group" class="bg-config">
+        <div class="bg-config-inner">
+            <button class="st-btn" id="cancel-config-ui">X</button>
+            <div class="config">
+                <label for="mode">Set Machine Mode</label>
+                <select id="mode">
+                    <option value="0">POWER OFF</option>
+                    <option value="1">POWER ON</option>
+                    <option value="2">AUTOMATE</option>
+                </select>
+            </div>
+            <div class="config">
+                <div id="voltage-setting">
+                    <label for="min-voltage-input" id="voltage-label">Set Minimum Operating Voltage (110-230
+                        V)</label>
+                    <input type="number" id="min-voltage-input" min="110" max="230" step="1">
+                    <input type="range" id="min-voltage-slider" min="110" max="230" step="1">
+                </div>
+                <button class="styled-button" id="submit-btn-min-volt">OK</button>
+            </div>
 
-        <div id="config-group" class="bg-config">
-            <div class="bg-config-inner">
-                <button class="styled-button" id="cancel-config-ui">X</button>
-                <div class="config">
-                    <label for="mode">Set Machine Mode</label>
-                    <select id="mode">
-                        <option value="0">POWER OFF</option>
-                        <option value="1">POWER ON</option>
-                        <option value="2">AUTOMATE</option>
-                    </select>
-                </div>
-                <div class="config">
-                    <label for="min-voltage">Set Minimum Operating Voltage (110-230 V):</label>
-                    <input type="number" id="min-voltage" min="110" max="230" step="1" placeholder="Enter voltage">
-                    <button class="styled-button" id="submit-btn-min-volt">OK</button>
-                    <div class="error-message" id="error-message" style="display: none;">Please enter a value between
-                        110
-                        and 230 volts.</div>
-                </div>
-                <div class="config">
-                    <div class="note-container">
-                        <div class="note-content">
-                            <div class="note-section">
-                                <h4>Run Duration</h4>
-                                <p>The period during which the machine is actively operating. This is the time when the pump is running and performing its duty.</p>
-                            </div>
-                            <div class="note-section">
-                                <h4>Rest Duration</h4>
-                                <p>The cooldown period after the machine finishes its run cycle. During this time, the machine remains idle to prevent overheating and to prepare for the next run cycle.</p>
-                            </div>
+            <div class="config">
+                <div class="note-container">
+                    <div class="note-content">
+                        <div class="note-section">
+                            <h4>Run Duration</h4>
+                            <p>The period during which the machine is actively operating. This is the time when the
+                                pump is running and performing its duty.</p>
+                        </div>
+                        <div class="note-section">
+                            <h4>Rest Duration</h4>
+                            <p>The cooldown period after the machine finishes its run cycle. During this time, the
+                                machine remains idle to prevent overheating and to prepare for the next run cycle.
+                            </p>
                         </div>
                     </div>
-                    <div class="set-time-range">
-                        <div>
-                            <p>Set Run Duration</p>
-                            <div id="running-time"></div>
-                        </div>
-
-                        <div>
-                            <p>Set Rest Duration</p>
-                            <div id="resting-time"></div>
-                        </div>
-                    </div>
-                    <button class="styled-button" id="submit-time-range-btn">OK</button>
                 </div>
+                <table class="set-time-range">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <p>Set Run Duration</p>
+                                <div id="running-time"></div>
+                            </td>
+                            <td>
+                                <p>Set Rest Duration</p>
+                                <div id="resting-time"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="styled-button" id="submit-time-range-btn">OK</button>
             </div>
         </div>
-    </div>
     </div>
     <footer>
         <div class="footer-content">

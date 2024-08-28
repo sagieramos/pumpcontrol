@@ -30,6 +30,7 @@
 
 html {
   height: 100%;
+  background: linear-gradient(#141e30, #243b55);
 }
 
 .hero {
@@ -38,7 +39,6 @@ html {
 }
 
 body {
-  background: linear-gradient(#141e30, #243b55);
   font-size: 16px;
   margin: 0;
   padding: 0;
@@ -152,7 +152,7 @@ header.header-default {
   width: 20px;
   height: 20px;
   background-color: #808080;
-/*   border-left: 15px solid transparent;
+  /*   border-left: 15px solid transparent;
   border-right: 15px solid transparent;
   border-bottom: 15px solid #33b864; */
 }
@@ -239,23 +239,24 @@ header.header-default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5); 
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.5s ease, opacity 0.5s ease;
 }
 
 .bg-config-inner {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 24px;
+  padding: 12px;
   max-width: var(--max-width);
-  width: 86%;
+  width: 88%;
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 12px;
   align-items: center;
   justify-content: center;
   opacity: 1;
   transform: scale(1);
   transition: opacity 0.5s ease, transform 0.5s ease;
+  border-radius: 8px;
 }
 
 .config {
@@ -376,16 +377,15 @@ header.header-default {
   color: #333;
 }
 
-.styled-button {
+.styled-button,
+.st-btn {
   background-color: transparent;
   color: #6c757d;
-/*   border: 1px solid #6c757d;
+  /*   border: 1px solid #6c757d;
   border-radius: 4px; */
   padding: 0;
   border: none;
   background: none;
-  
-  /* padding: 6px 12px; */
 
   font-size: 1rem;
   cursor: pointer;
@@ -393,24 +393,6 @@ header.header-default {
   align-self: flex-end;
 }
 
-/* .styled-button:hover {
-  color: #ffffff;
-  border-color: #5a6268;
-  background-color: #5a6268;
-  transform: scale(1.05);
-}
-
-.styled-button:active {
-  color: #ffffff;
-  border-color: #343a40;
-  background-color: #343a40;
-  transform: scale(0.98);
-}
-
-.styled-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px #6c757d80;
-} */
 
 .l-white,
 .r-white {
@@ -418,25 +400,27 @@ header.header-default {
 }
 
 select {
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  -ms-appearance:none;
-  appearance:none;
-  outline:0;
-  box-shadow:none;
-  border:0!important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  outline: 0;
+  box-shadow: none;
+  border: 0 !important;
   background: #5c6664;
   background-image: none;
   flex: 1;
   padding: 0 .5em;
-  color:#333;
-  cursor:pointer;
+  color: #333;
+  cursor: pointer;
   font-size: 1em;
   font-family: 'Open Sans', sans-serif;
 }
+
 select::-ms-expand {
   display: none;
 }
+
 select {
   position: relative;
   display: flex;
@@ -447,6 +431,7 @@ select {
   overflow: hidden;
   border-radius: .25em;
 }
+
 select::after {
   content: '\25BC';
   position: absolute;
@@ -454,28 +439,22 @@ select::after {
   right: 0;
   padding: 0 1em;
   background: #2b2e2e;
-  cursor:pointer;
-  pointer-events:none;
-  transition:.25s all ease;
+  cursor: pointer;
+  pointer-events: none;
+  transition: .25s all ease;
 }
+
 select:hover::after {
   color: #F28C28;
 }
 
-.tui-timepicker {
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-top: 12px;
-}
-
-.set-time-range {
+/* .set-time-range {
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   margin-bottom: 24px;
 }
-
+ */
 #config-group {
   display: none;
 }
@@ -485,6 +464,12 @@ select:hover::after {
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
+}
+
+.tui-timepicker {
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 12px;
 }
 
 .note-header {
@@ -519,4 +504,34 @@ select:hover::after {
   margin: 0;
   font-size: 15px;
   color: #666;
+}
+
+.voltage-setting {
+  margin-bottom: 15px;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin: 5px 0;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 10px 0;
+}
+
+input[type="number"] {
+  width: 80px;
+  height: 35px;
+  margin-top: 10px;
+  border: 1px solid #aaa;
+  text-align: center;
+  line-height: 35px;
+  border: var(--border-radius);
+}
+
+tr {
+  display: flex;
+  gap: 10px;
 }
