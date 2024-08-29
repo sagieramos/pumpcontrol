@@ -5,15 +5,16 @@
 #include <EEPROM.h>
 #include <str_num_msg_transcode.h>
 
+const int SIGNAL_READ_COUNT = 5;
+const int SIGNAL_READ_DELAY_MS = 500;
+
 TaskHandle_t runMachineTask = NULL;
 TaskHandle_t checkSignalTask = NULL;
 
-bool pumpState = false;
 unsigned long lastChangeTimeMs = 0;
 float readingVolt = 0.0f;
 bool powerOn = false;
 bool automate_mode_signal = false;
-bool flagP = false;
 
 pump_ControlData current_pump_data = pump_ControlData_init_default;
 
@@ -23,7 +24,7 @@ TimerHandle_t delayTimer = NULL;
 void store_time_range(bool check_changed) {
   EEPROM.begin(EEPROM_SIZE_CTL);
 
-  bool time_range_changed = true; // Assume change by default
+  bool time_range_changed = true;
 
   if (check_changed) {
     pump_TimeRange stored_time_range;
@@ -133,77 +134,54 @@ void store_pump_mode(bool check_changed) {
 }
 
 void updatePumpState(unsigned long signalTimeMs, unsigned long currentTimeMs) {
+  bool timeElapsed = false;
+  if (current_pump_data.is_running) {
+    timeElapsed = signalTimeMs > current_pump_data.time_range.running;
+  } else {
+    timeElapsed = signalTimeMs > current_pump_data.time_range.resting;
+  }
+
+  if (timeElapsed) {
+    powerOn = !current_pump_data.is_running;
+    lastChangeTimeMs = currentTimeMs;
+  }
+}
+
+void controlPumpState() {
   readingVolt = readVoltage();
   if (readingVolt < min_voltage) {
     LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n", readingVolt,
           min_voltage);
-    powerOn = false;
-    flagP = true;
+    switch_pump(false);
     return;
   }
 
-  if (flagP) {
-    LOG_F("Manually power ON");
-    powerOn = true;
-    flagP = false;
-    if (!current_pump_data.is_running) {
-      lastChangeTimeMs = currentTimeMs;
+  unsigned long currentTimeMs = getCurrentTimeMs();
+  unsigned long signalTimeMs = currentTimeMs - lastChangeTimeMs;
+
+  switch (current_pump_data.mode) {
+  case pump_MachineMode_POWER_OFF:
+    powerOn = false;
+    break;
+  case pump_MachineMode_AUTO:
+    if (automate_mode_signal) {
+      updatePumpState(signalTimeMs, currentTimeMs);
+    } else if (power.key != POWER_INACTIVE) {
+      update_and_send_power_status(POWER_INACTIVE, 0.0f);
     }
-  } else if (current_pump_data.is_running) {
-    // Check if running time has elapsed
-    LOG_F("Running Time remaining...: %lu milliseconds\n",
-          current_pump_data.time_range.running - signalTimeMs);
-    if (signalTimeMs > current_pump_data.time_range.running) {
-      powerOn = false;
-      lastChangeTimeMs = currentTimeMs;
-    }
-  } else {
-    // Check if resting time has elapsed
-    LOG_F("Resting Time remaining...: %lu milliseconds\n",
-          current_pump_data.time_range.resting - signalTimeMs);
-    if (signalTimeMs > current_pump_data.time_range.resting) {
+    break;
+  case pump_MachineMode_POWER_ON:
+    if (power.key == POWER_RESTING || power.key == POWER_RUNNING) {
+      updatePumpState(signalTimeMs, currentTimeMs);
+    } else {
       powerOn = true;
       lastChangeTimeMs = currentTimeMs;
     }
-  }
-}
+    break;
 
-bool anotherFlag = false;
-
-// Control pump state based on mode and signal
-void controlPumpState() {
-  unsigned long currentTimeMs = getCurrentTimeMs();
-
-  // Handle POWER_OFF mode
-  if (current_pump_data.mode == pump_MachineMode_POWER_OFF) {
-    powerOn = false;
-    flagP = true;
-    anotherFlag = true;
-    switch_pump(powerOn);
-    return;
-  }
-
-  // Compute time since the last state change
-  unsigned long signalTimeMs = currentTimeMs - lastChangeTimeMs;
-
-  // Handle AUTO and POWER_ON modes
-  if (current_pump_data.mode == pump_MachineMode_AUTO) {
-    if (automate_mode_signal) {
-      updatePumpState(signalTimeMs, currentTimeMs);
-
-    } else if (anotherFlag) {
-      update_and_send_power_status(
-          static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
-      anotherFlag = false;
-    } else {
-      powerOn = false;
-      flagP = true;
-    }
-  } else if (current_pump_data.mode == pump_MachineMode_POWER_ON) {
-    updatePumpState(signalTimeMs, currentTimeMs);
-    anotherFlag = true;
-  } else {
+  default:
     LOG_LN("Invalid mode");
+    break;
   }
 
   switch_pump(powerOn);
@@ -229,13 +207,13 @@ void checkSignal(void *parameter) {
   (void)parameter;
   for (;;) {
     int signal = 0;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < SIGNAL_READ_COUNT; i++) {
       signal += digitalRead(FLOAT_SIGNAL_PIN) == HIGH ? 1 : 0;
-      vTaskDelay(500 / portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
     }
     LOG_F("Signal: %d\n", signal);
     automate_mode_signal = signal >= 3;
     LOG_F("Current Mode: %d\n", current_pump_data.mode);
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
   }
 }

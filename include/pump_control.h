@@ -31,6 +31,7 @@ extern float min_voltage;
 extern pump_ControlData current_pump_data;
 extern unsigned long lastChangeTime;
 extern float readingVolt;
+extern Num power;
 
 void store_time_range(bool check_changed = true);
 void store_pump_mode(bool check_changed = true);
@@ -41,10 +42,9 @@ void switch_pump(bool state);
 void runMachine(void *parameter);
 void checkSignal(void *parameter);
 
-void send_all_power_status_and_type(AsyncWebSocketClient *client);
+void send_all_power_status_and_type(AsyncWebSocketClient *client = nullptr);
 
 extern TimerHandle_t delayTimer;
-extern bool pumpState;
 
 /**
  * @brief Processes a message and performs an action based on the first byte of

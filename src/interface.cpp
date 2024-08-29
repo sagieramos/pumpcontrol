@@ -243,7 +243,8 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
     ws.binaryAll(data, len);
   }
 
-  // Release the semaphore after the work is done
+  send_all_power_status_and_type();
+
   store_time_range(false);
 }
 

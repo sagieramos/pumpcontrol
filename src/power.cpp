@@ -4,7 +4,7 @@
 #include "type_id.h"
 
 constexpr unsigned long MS_TO_S = 1000;
-constexpr unsigned long PUMP_DELAY_MS = 6000;
+constexpr unsigned long PUMP_DELAY_MS = 10000;
 
 Num power = Num_init_default;
 
@@ -12,6 +12,9 @@ unsigned long last_change_time_ms = 0;
 
 // Helper function to update and send power status
 void update_and_send_power_status(uint32_t key, float value) {
+  if (power.key == key && power.value == value) {
+    return;
+  }
   power.key = key;
   power.value = value;
 
@@ -29,7 +32,6 @@ void update_and_send_power_status(uint32_t key, float value) {
 
 // Timer callback to handle pump ON
 void power_on_cb(TimerHandle_t xTimer) {
-  pumpState = true;
   LOG_LN("Pump is ON");
 
   current_pump_data.is_running = true;
@@ -43,7 +45,6 @@ void power_on_cb(TimerHandle_t xTimer) {
 }
 
 void power_off() {
-  pumpState = false;
   LOG_LN("Pump is OFF");
 
   current_pump_data.is_running = false;
@@ -111,6 +112,8 @@ void stopAndCleanupTimer() {
 
 // Switch pump state with proper handling
 void switch_pump(bool state) {
+  static bool pumpState = false;
+
   if (state == pumpState)
     return;
 
@@ -163,5 +166,9 @@ void send_all_power_status_and_type(AsyncWebSocketClient *client) {
   }
 
   power.value = adjusted_time;
-  send_num_message_to_a_client(power, POWER_TYPE_ID, client);
+  if (client == nullptr) {
+    send_num_message(power, POWER_TYPE_ID);
+  } else {
+    send_num_message_to_a_client(power, POWER_TYPE_ID, client);
+  }
 }
