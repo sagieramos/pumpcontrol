@@ -32,6 +32,8 @@ extern pump_ControlData current_pump_data;
 extern unsigned long lastChangeTime;
 extern float readingVolt;
 extern Num power;
+extern bool pumpState;
+extern bool automate_mode_signal;
 
 void store_time_range(bool check_changed = true);
 void store_pump_mode(bool check_changed = true);

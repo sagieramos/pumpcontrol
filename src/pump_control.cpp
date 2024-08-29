@@ -167,7 +167,8 @@ void controlPumpState() {
     if (automate_mode_signal) {
       updatePumpState(signalTimeMs, currentTimeMs);
     } else if (power.key != POWER_INACTIVE) {
-      update_and_send_power_status(POWER_INACTIVE, 0.0f);
+      pumpState = true;
+      powerOn = !pumpState;
     }
     break;
   case pump_MachineMode_POWER_ON:

@@ -7,6 +7,7 @@ constexpr unsigned long MS_TO_S = 1000;
 constexpr unsigned long PUMP_DELAY_MS = 10000;
 
 Num power = Num_init_default;
+bool pumpState = false;
 
 unsigned long last_change_time_ms = 0;
 
@@ -18,16 +19,7 @@ void update_and_send_power_status(uint32_t key, float value) {
   power.key = key;
   power.value = value;
 
-  uint8_t buffer[NUM_BUFFER_SIZE];
-  size_t buffer_size = NUM_BUFFER_SIZE;
-  if (serialize_num(power, buffer, &buffer_size, POWER_TYPE_ID,
-                    send_binary_data)) {
-    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
-          "Buffer size: %d\n",
-          power.key, power.value, POWER_TYPE_ID, buffer_size);
-  } else {
-    LOG_F("Failed to serialize power message\n");
-  }
+  send_num_message(power, POWER_TYPE_ID);
 }
 
 // Timer callback to handle pump ON
@@ -62,7 +54,8 @@ void power_off() {
     update_and_send_power_status(
         static_cast<uint32_t>(PowerStatus::POWER_RESTING),
         static_cast<float>(current_pump_data.time_range.resting / MS_TO_S));
-  } else {
+  } else if (current_pump_data.mode == pump_MachineMode_AUTO &&
+             !automate_mode_signal) {
     update_and_send_power_status(
         static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
   }
@@ -112,8 +105,6 @@ void stopAndCleanupTimer() {
 
 // Switch pump state with proper handling
 void switch_pump(bool state) {
-  static bool pumpState = false;
-
   if (state == pumpState)
     return;
 

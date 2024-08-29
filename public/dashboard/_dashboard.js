@@ -39,10 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const restTimeElement = document.getElementById('rest-time');
     const modeElement = document.getElementById('machine-mode');
     const styledButton = document.querySelectorAll('.styled-button')
-    const minVoltInput = document.getElementById('min-voltage-input');
     const modeConfig = document.getElementById('mode');
     const runRestState = document.getElementById('run-rest-state');
-    const timerMeter = document.querySelectorAll('.timer-meter');
+    const timer = document.getElementById('timer');
+    const minVoltInput = document.getElementById('min-voltage-input');
     const slider = document.getElementById('min-voltage-slider');
 
     let ws;
@@ -252,41 +252,44 @@ document.addEventListener('DOMContentLoaded', () => {
         const numValue = Num.decode(buffer.slice(1));
         //console.log('handlePowerStatus numValue..........................:', numValue);
         const { key, value } = numValue;
-        const valueToNumber = Number(value);
+        let valueToNumber = Number(value);
 
-        countdown.update(valueToNumber);
+        let visibility = 'block';
+
         switch (key) {
             case PowerStatus.POWER_INACTIVE:
                 pumpPowerIndicator.style.backgroundColor = '#808080'; // Gray
                 runRestState.textContent = 'Inactive';
-                updateVisibility(timerMeter, 'none');
+                visibility = 'none';
+                valueToNumber = 1;
                 break;
             case PowerStatus.POWER_READY:
                 pumpPowerIndicator.style.backgroundColor = '#FFD700'; // Yellow
                 runRestState.textContent = 'Ready...';
-                updateVisibility(timerMeter, 'block');
                 break;
             case PowerStatus.POWER_RUNNING:
                 pumpPowerIndicator.style.backgroundColor = '#32CD32'; // Green
                 runRestState.textContent = 'Running...';
-                updateVisibility(timerMeter, 'block');
                 break;
             case PowerStatus.POWER_RESTING:
                 pumpPowerIndicator.style.backgroundColor = '#1E90FF'; // Blue
                 runRestState.textContent = 'Resting...';
-                updateVisibility(timerMeter, 'block');
                 break;
             case PowerStatus.POWER_VOLTAGE_LOW:
                 pumpPowerIndicator.style.backgroundColor = '#FF0000'; // Red
                 runRestState.textContent = 'Voltage Low';
-                updateVisibility(timerMeter, 'none');
+                visibility = 'none';
+                valueToNumber = 1;
                 break;
             default:
                 //console.log(`Unexpected key: ${key}`);
-                countdown.update(0);
-                updateVisibility(timerMeter, 'none');
+                valueToNumber = 1;
+                visibility = 'none';
                 runRestState.textContent = '...';
         }
+
+        timer.style.display = visibility;
+        countdown.update(valueToNumber);
 
         notifyUser();
     }
@@ -404,6 +407,8 @@ document.addEventListener('DOMContentLoaded', () => {
             configGroup.style.display = 'none';
         } else if(target.matches('#config-group')) {
             target.style.display = 'none';
+        } else if (target.matches('#logout')) {
+            window.location.href = '/logout';
         }
     });
 
@@ -419,9 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
             voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V)';
             // Synchronize the values between the input field and the slider
             if (id === 'min-voltage-input') {
-                document.getElementById('min-voltage-slider').value = sliderValue;
+                slider.value = sliderValue;
             } else if (id === 'min-voltage-slider') {
-                document.getElementById('min-voltage-input').value = sliderValue;
+                minVoltInput.value = sliderValue;
             }
         }
     });

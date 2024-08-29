@@ -27,15 +27,16 @@ struct StaticFile {
 
 // Array of StaticFile structures
 const StaticFile staticFiles[] = {
-    {"/_lbundle.js", APP_JS},      {"/_login.js", APP_JS},
-    {"/_login.css", TEXT_CSS},     {"/favicon.ico", "image/x-icon"},
-    {"/logo.svg", IMAGE_SVG},      {"/warning.svg", IMAGE_SVG},
-    {"/_dbundle.js", APP_JS},      {"/_dashboard.js", APP_JS},
-    {"/_dashboard.css", TEXT_CSS}, {"/217._dbundle.js", APP_JS},
-    {"/828._dbundle.js", APP_JS},  {"/939._dbundle.js", APP_JS},
-    {"/680._dbundle.js", APP_JS},  {"/27._dbundle.js", APP_JS},
-    {"/notify.mp3", AUDIO_MP3},
-};
+    {"/_lbundle.js", APP_JS},       {"/_login.js", APP_JS},
+    {"/_login.css", TEXT_CSS},      {"/favicon.ico", "image/x-icon"},
+    {"/logo.svg", IMAGE_SVG},       {"/warning.svg", IMAGE_SVG},
+    {"/_dbundle.js", APP_JS},       {"/_dashboard.js", APP_JS},
+    {"/_dashboard.css", TEXT_CSS},  {"/reset.css", TEXT_CSS},
+    {"/217._dbundle.js", APP_JS},   {"/logout.svg", IMAGE_SVG},
+    {"/828._dbundle.js", APP_JS},   {"/939._dbundle.js", APP_JS},
+    {"/680._dbundle.js", APP_JS},   {"/27._dbundle.js", APP_JS},
+    {"/notify.mp3", AUDIO_MP3},     {"/next-gray.svg", IMAGE_SVG},
+    {"/next-white.svg", IMAGE_SVG}, {"/cancel.svg", IMAGE_SVG}};
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 

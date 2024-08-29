@@ -34,6 +34,8 @@
                 <img src="../logo.svg" alt="logo">
                 <span id="logo-text">Akowe</span>
             </div>
+
+            <button id="logout"></button>
         </nav>
     </header>
     <div class="hero">
@@ -62,16 +64,14 @@
             <div id="run-rest-ing">
                 <div class="run-rest">
                     <h3 id="run-rest-state">Inactive</h3>
-                    <canvas class="timer timer-meter" width="55" height="12"></canvas>
+                    <canvas id="timer" class="timer" width="55" height="12"></canvas>
                 </div>
 
-                <canvas class="meter timer-meter" width="100" height="3"></canvas>
+                <canvas class="meter" width="100" height="3"></canvas>
             </div>
         </div>
 
         <div>
-            <!-- comeback -->
-
             <div class="pump-power-indicator-1">
 
                 <div class="indicator">
@@ -80,7 +80,7 @@
                     </div>
                     <div class="label-btm">
                         <h2 class="l-white">Machine Mode</h2>
-                        <button class="styled-button open-config">></button>
+                        <button class="styled-button open-config open-config-1 ok-btn"></button>
                     </div>
                 </div>
 
@@ -94,7 +94,7 @@
                     </div>
                     <div class="label-btm">
                         <h2>Voltage Range</h2>
-                        <button class="styled-button open-config">></button>
+                        <button class="styled-button open-config ok-btn"></button>
                     </div>
 
                 </div>
@@ -107,17 +107,16 @@
                     </div>
                     <div class="label-btm">
                         <h2>Running & Resting Time (mm:hh)</h2>
-                        <button class="styled-button open-config">></button>
+                        <button class="styled-button open-config ok-btn"></button>
                     </div>
                 </div>
             </div>
 
-            <!--  -->
         </div>
     </div>
     <div id="config-group" class="bg-config">
         <div class="bg-config-inner">
-            <button class="st-btn" id="cancel-config-ui">X</button>
+            <button class="ok-btn st-btn" id="cancel-config-ui"></button>
             <div class="config">
                 <label for="mode">Set Machine Mode</label>
                 <select id="mode">
@@ -133,7 +132,7 @@
                     <input type="number" id="min-voltage-input" min="110" max="230" step="1">
                     <input type="range" id="min-voltage-slider" min="110" max="230" step="1">
                 </div>
-                <button class="styled-button" id="submit-btn-min-volt">OK</button>
+                <button class="styled-button ok-btn" id="submit-btn-min-volt"></button>
             </div>
 
             <div class="config">
@@ -166,7 +165,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <button class="styled-button" id="submit-time-range-btn">OK</button>
+                <button class="styled-button ok-btn" id="submit-time-range-btn"></button>
             </div>
         </div>
     </div>
