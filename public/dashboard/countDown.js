@@ -95,13 +95,13 @@ export class Countdown {
         // Draw background rectangle
         ctx.beginPath();
         ctx.rect(0, 0, width, height);
-        ctx.fillStyle = '#F28C28';  // Background color
+        ctx.fillStyle = '#36a2eb';  // Background color
         ctx.fill();
 
         // Draw progress rectangle (loading bar)
         ctx.beginPath();
         ctx.rect(0, 0, progressWidth, height);
-        ctx.fillStyle = '#D3D3D3'; // Progress color
+        ctx.fillStyle = '#c3cfe2'; // Progress color
         ctx.fill();
     }
 

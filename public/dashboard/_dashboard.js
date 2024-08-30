@@ -4,7 +4,7 @@ import {
     toggleElementVisibility, getHoursAndMinutes, getMilliseconds,
     handleVoltageChange, handleTimeRangeChange,
     handleModeChange,
-    getModeString,
+    getModeString, setColorFromMode,
     updateVisibility,
     KEY_CONFIG,
     VOLT_RECEIVE_FROM_SERVER
@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timer = document.getElementById('timer');
     const minVoltInput = document.getElementById('min-voltage-input');
     const slider = document.getElementById('min-voltage-slider');
+    const modeBg = document.getElementById('mode-bg');
 
     let ws;
     let heartbeat;
@@ -72,13 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const timePickerResting = new TimePicker('#resting-time', timePickerObj);
     timePickerResting.setRange(timeRangeBegin, timeRangeEnd);
-/* 
-    document.querySelectorAll('.tui-timepicker').forEach(element => {
-        element.style.padding = '8px';
-        element.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-        element.style.border = 'none';
-    }); */
-
     const loadModules = async () => {
         if (!updateChartFunction || !updateMinVoltCutOffFunction) {
             const [{ updateChart, updateMinVoltCutOff }] = await Promise.all([
@@ -93,24 +87,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    const valueHeading = document.getElementById('value-heading');
+    let flagP = true;
+    let minValueStorage = 0;
+
     const handleKeyAction = (key, value) => {
         switch (key) {
             case VOLT_RECEIVE_FROM_SERVER.VOLTAGE:
                 voltageElement.textContent = value;
                 updateChartFunction(value);
+                const f = value < minValueStorage
+                if (flagP !== f) {
+                    valueHeading.style.color = f ? '#ff6384' : '#36a2eb';
+                    flagP = f;
+                }
                 break;
             case VOLT_RECEIVE_FROM_SERVER.MIN_VOLTAGE:
             case KEY_CONFIG.MIN_VOLT:
                 updateMinVoltCutOffFunction(value, true);
                 minVoltElement.textContent = value;
                 minVoltInput.value = value;
+                minValueStorage = value;
                 break;
             case KEY_CONFIG.CONFIG_MODE:
                 modeElement.textContent = getModeString(value);
+                setColorFromMode(value, modeBg);
                 modeConfig.value = value;
                 break;
             default:
-                //console.log(`Unexpected key: ${key}`);
+            //console.log(`Unexpected key: ${key}`);
         }
     }
 
@@ -219,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
             insertTimeRange(controlData.time_range);
 
             modeElement.textContent = getModeString(controlData.mode);
+            setColorFromMode(controlData.mode, modeBg);
             modeConfig.value = controlData.mode;
         } catch (error) {
             console.error('Failed to deserialize ControlData:', error);
@@ -405,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else if (target.matches('#cancel-config-ui')) {
             configGroup.style.display = 'none';
-        } else if(target.matches('#config-group')) {
+        } else if (target.matches('#config-group')) {
             target.style.display = 'none';
         } else if (target.matches('#logout')) {
             window.location.href = '/logout';
@@ -416,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { value, id } = event.target;
         const sliderValue = parseInt(value, 10);
         const voltageLabel = document.getElementById('voltage-label');
-    
+
         // Validate the value range
         if (sliderValue < 110 || sliderValue > 230) {
             voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V) <span id="error">- Please enter a valid value!</span>';

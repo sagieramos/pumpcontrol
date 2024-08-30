@@ -127,6 +127,45 @@ const getModeString = (intValue) => {
     return modeMapping[intValue] || "Unknown mode";
 };
 
+const setColorFromMode = (mode, parentElement) => {
+    let gradient;
+
+    switch (mode) {
+        case POWER_OFF:
+            gradient = 'linear-gradient(135deg, #808080, #606060)';  // Gray gradient
+            break;
+        case POWER_ON:
+            gradient = 'linear-gradient(135deg, #32CD32, #228B22)';  // Green gradient
+            break;
+        case AUTO:
+            gradient = 'linear-gradient(135deg, #FFA500, #FF8C00)';  // Orange gradient
+            break;
+        default:
+            gradient = 'linear-gradient(135deg, black, gray)';
+            break;
+    }
+
+    // Apply the gradient with a transition to the parent element
+    if (parentElement) {
+        parentElement.style.transition = 'background 0.5s ease, color 0.5s ease';
+        parentElement.style.backgroundImage = gradient;
+        parentElement.style.color = mode === AUTO ? '#00274D' : '#FFFFFF';  
+
+        setTimeout(() => {
+            parentElement.style.transition = 'background 2s ease';
+            parentElement.style.backgroundImage = `linear-gradient(135deg, ${gradient.split(', ')[1]}, ${gradient.split(', ')[0]})`;
+            setTimeout(() => {
+                parentElement.style.backgroundImage = gradient; // Revert to original gradient
+            }, 2000);
+        }, 500); 
+    }
+
+    return gradient;
+};
+
+
+
+
 /**
  * Handles the change in machine mode and sends the corresponding data.
  * @param {string} newMode - The new machine mode to set.
@@ -134,14 +173,11 @@ const getModeString = (intValue) => {
 const handleModeChange = (newMode, ws) => {
     const modeValue = parseInt(newMode, 10);
 
-    console.log('Mode value:', modeValue);
     if (modeValue < 0 || modeValue > 2) {
         console.error('Invalid mode:', newMode);
         return;
     }
     const num = { key: KEY_CONFIG.CONFIG_MODE, value: modeValue };
-
-    console.log('Sending mode data:', num);
 
     try {
         const buffer = serializeAndSendData(num, TYPE_IDS.NUM_TYPE_ID, Num);
@@ -217,6 +253,7 @@ export {
     getHoursAndMinutes,
     getMilliseconds,
     getModeString,
+    setColorFromMode,
     handleTimeRangeChange,
     updateVisibility,
     KEY_CONFIG,

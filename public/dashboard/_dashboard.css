@@ -8,6 +8,7 @@
 *::after,
 *::before {
   box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
 }
 
 html {
@@ -241,7 +242,6 @@ header.header-default {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  color: #333;
 }
 
 .init-hide {
@@ -249,7 +249,6 @@ header.header-default {
 }
 
 .label-btm {
-  color: #333;
   font-size: 0.9rem;
   display: flex;
   justify-content: space-between;
@@ -295,6 +294,7 @@ header.header-default {
 
 .value-heading {
   font-size: 1.2rem;
+  color: #ff6384;
 }
 
 .value-heading .volt-unit {
@@ -303,7 +303,6 @@ header.header-default {
 }
 
 .volt-unit {
-  font-style: italic;
   font-size: 0.8rem;
 }
 
@@ -334,23 +333,30 @@ header.header-default {
   flex: 1 1 100%;
   background-color: #c3cfe2;
   border-radius: 0 0 var(--border-radius) var(--border-radius);
+  color: #666;
 }
 
 .indicator:nth-child(2) {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   border-radius: 0 var(--border-radius) 0 0;
+  color: #666;
 }
 
 .indicator:nth-child(1) {
-  background-color: #F28C28;
-
+  background: linear-gradient(135deg, #808080, #606060);
   border-radius: var(--border-radius) 0 0 0;
+  color: var(--white);
 }
 
-
 .res-server {
+  display: flex;
+  align-items: center;
   margin-bottom: 4px;
-  color: #333;
+  
+}
+
+.res-server svg {
+  margin-right: 8px;
 }
 
 .styled-button,
@@ -391,8 +397,8 @@ header.header-default {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center left;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 nav {
@@ -400,12 +406,6 @@ nav {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-}
-
-
-.l-white,
-.r-white {
-  color: var(--white);
 }
 
 select {
@@ -482,7 +482,6 @@ select:hover::after {
 }
 
 .note-content {
-  font-size: 16px;
   color: #555;
   line-height: 1.5;
 }
@@ -496,7 +495,7 @@ select:hover::after {
 }
 
 .note-section h4 {
-  font-size: 18px;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #444;
   margin: 10px 0 5px;
@@ -504,8 +503,16 @@ select:hover::after {
 
 .note-section p {
   margin: 0;
-  font-size: 15px;
+  font-size: 0.9rem;
   color: #666;
+}
+
+.l-gray {
+  color: #666;
+}
+
+.h-gray {
+  color: #444;
 }
 
 .voltage-setting {
