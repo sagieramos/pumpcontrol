@@ -4,7 +4,7 @@
 #include "sensors.h"
 /* #include "esp_task_wdt.h" */
 
-#define SLEEP_WAKE_PIN GPIO_NUM_15
+/* #define SLEEP_WAKE_PIN GPIO_NUM_15
 
 void IRAM_ATTR handleSleepInterrupt() {
   LOG_LN("Pin went Low, preparing to enter sleep");
@@ -14,7 +14,7 @@ void IRAM_ATTR handleSleepInterrupt() {
 
   esp_light_sleep_start();
 };
-
+ */
 struct StaticFile {
   const char *path;
   const char *contentType;
@@ -42,9 +42,9 @@ const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
 void setup() {
   LOG_BEGIN(115200);
-  pinMode(SLEEP_WAKE_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(SLEEP_WAKE_PIN), handleSleepInterrupt,
-                  FALLING);
+  /*   pinMode(SLEEP_WAKE_PIN, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(SLEEP_WAKE_PIN), handleSleepInterrupt,
+                    FALLING); */
   if (!SPIFFS.begin()) {
     LOG_LN("Failed to mount SPIFFS");
     return;
@@ -67,22 +67,22 @@ void setup() {
   LOG_LN();
 
   pinMode(LED_BUILTIN, OUTPUT);
-  if (xTaskCreate(send_voltage_task, "SendVoltageTask", 4096, NULL, 2,
-                  &sendVoltageTask) != pdPASS) {
+  if (xTaskCreatePinnedToCore(send_voltage_task, "SendVoltageTask", 4096, NULL,
+                              2, &sendVoltageTask, 1) != pdPASS) {
     LOG_LN("Failed to create send voltage task");
   } else {
     LOG_LN("Send voltage task created successfully");
   }
 
-  if (xTaskCreate(runMachine, "Pump Controller", 4096, NULL, 1,
-                  &runMachineTask) != pdPASS) {
+  if (xTaskCreatePinnedToCore(runMachine, "Pump Controller", 4096, NULL, 1,
+                              &runMachineTask, 1) != pdPASS) {
     LOG_LN("Failed to create pump controller task");
   } else {
     LOG_LN("Pump controller task created successfully");
   }
 
-  if (xTaskCreate(checkSignal, "Check Signal", 4096, NULL, 1,
-                  &checkSignalTask) != pdPASS) {
+  if (xTaskCreatePinnedToCore(checkSignal, "Check Signal", 4096, NULL, 1,
+                              &checkSignalTask, 1) != pdPASS) {
     LOG_LN("Failed to create check signal task");
   } else {
     LOG_LN("Check signal task created successfully");
@@ -91,8 +91,12 @@ void setup() {
   // Setup WiFi AP and DNS
   setupWifiAP();
 
-  // xTaskCreate(stackMonitor, "Stack monitor", 2560, NULL, 4, NULL);
-
+  if (xTaskCreatePinnedToCore(stackMonitor, "Stack monitor", 2560, NULL, 4,
+                              NULL, 1) != pdPASS) {
+    LOG_LN("Failed to create Stack Monitor task");
+  } else {
+    LOG_LN("Stack Monitor task created successfully");
+  }
   IPAddress apIP = WiFi.softAPIP();
   dnsServer.start(DNS_PORT, "akowe.org", apIP);
   dnsServer.start(DNS_PORT, "www.akowe.org", apIP);
