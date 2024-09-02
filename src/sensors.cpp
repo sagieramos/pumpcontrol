@@ -16,8 +16,8 @@ const float SCALE_FACTOR = 11.0;
 float min_voltage = 0.0f;
 
 float readVoltage() {
-#ifndef PRODUCTION
-  return random(209, 230);
+#ifdef FAKE_VOLTAGE_READING
+  return random(209, 215);
 #endif
 
   int adcValue = analogRead(adcPin);

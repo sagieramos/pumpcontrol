@@ -1,6 +1,10 @@
 #include "main.h"
 #include "network.h"
 
+#ifdef FAKE_VOLTAGE_READING
+bool test_auto_mode = false;
+#endif
+
 AsyncWebServer server(80);
 
 ClientSession authClients[MAX_CLIENTS];
@@ -133,7 +137,16 @@ void handleRequest(AsyncWebServerRequest *request) {
     } else {
       request->redirect("/");
     }
-  } else {
+  }
+#ifdef FAKE_VOLTAGE_READING
+  else if (strcmp(urlPath, "/readtest") == 0 && method == HTTP_GET) {
+    // Handle test route
+    test_auto_mode = !test_auto_mode;
+    request->send(200, "text/plain", test_auto_mode ? "true" : "false");
+    LOG_F("Test auto mode: %s\n", test_auto_mode ? "true" : "false");
+  }
+#endif
+  else {
     // Handle other routes (404 Not Found)
     request->send(404, "text/plain", "Not found");
     LOG_LN("Not found");

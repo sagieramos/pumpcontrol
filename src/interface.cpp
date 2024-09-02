@@ -27,6 +27,7 @@ void send_num_message_to_a_client(Num value, uint8_t type_id,
           "Buffer size: %d\n",
           value.key, value.value, type_id, buffer_size);
     client->binary(buffer, buffer_size);
+
   } else {
     LOG_F("Failed to serialize power message\n");
   }
@@ -99,17 +100,24 @@ void receive_str(uint8_t *data, size_t len) {
 
 void receive_min_voltage(uint8_t *data, size_t len) {
   Num msg = Num_init_zero;
-  if (deserialize_num(msg, data, len)) {
-    LOG_F("Received min voltage: %f\n", msg.value);
-    if (store_min_voltage(msg.value)) {
-      if (ws.count() > 0) {
-        ws.binaryAll(data, len);
-      }
-    }
-  } else {
+
+  if (!deserialize_num(msg, data, len)) {
     LOG_LN("Failed to deserialize min voltage message");
+    return;
+  }
+
+  LOG_F("Received min voltage: %f\n", msg.value);
+
+  if (!store_min_voltage(msg.value)) {
+    LOG_LN("Voltage not store in Flash Memory");
+    return;
+  }
+
+  if (ws.count() > 0) {
+    ws.binaryAll(data, len);
   }
 }
+
 bool deserialize_and_validate(Num &msg, uint8_t *data, size_t len) {
   if (!deserialize_num(msg, data, len)) {
     LOG_LN("Failed to deserialize number message");
@@ -140,41 +148,49 @@ void handle_min_voltage(Num &msg, uint8_t *data, size_t len,
 
 void handle_control_data_update(Num &msg, bool &dataChanged) {
   switch (static_cast<ConfigKey>(msg.key)) {
-  case CONFIG_MODE:
-    LOG_F("Current mode: %d\n", current_pump_data.mode);
-    if (current_pump_data.mode != static_cast<pump_MachineMode>(msg.value)) {
-      current_pump_data.mode = static_cast<pump_MachineMode>(msg.value);
+  case CONFIG_MODE: {
+    pump_MachineMode mode = current_pump_data.mode;
+    pump_MachineMode new_mode = static_cast<pump_MachineMode>(msg.value);
+
+    LOG_F("Current mode: %d\n", mode);
+
+    bool f = new_mode >= 0 && new_mode <= 2;
+    if (mode != new_mode && f) {
+      current_pump_data.mode = new_mode;
       dataChanged = true;
       store_pump_mode(false);
-      LOG_F("Received mode: %d\n", static_cast<int>(msg.value));
+      LOG_F("Received mode: %d\n", new_mode);
+    } else {
+      LOG_F("Received mode already selected or not valid: %d\n", new_mode);
     }
     break;
-
-  case CONFIG_RUNNING_TIME:
+  }
+  case CONFIG_RUNNING_TIME: {
     LOG_F("Current running time: %d\n", current_pump_data.time_range.running);
-    if (current_pump_data.time_range.running !=
-        static_cast<uint32_t>(msg.value)) {
-      current_pump_data.time_range.running = static_cast<uint32_t>(msg.value);
+    uint32_t new_running_time = static_cast<uint32_t>(msg.value);
+    if (current_pump_data.time_range.running != new_running_time) {
+      current_pump_data.time_range.running = new_running_time;
       dataChanged = true;
       store_time_range(false);
       LOG_F("Received running time: %d\n", msg.value);
     }
     break;
-
-  case CONFIG_RESTING_TIME:
+  }
+  case CONFIG_RESTING_TIME: {
     LOG_F("Current resting time: %d\n", current_pump_data.time_range.resting);
-    if (current_pump_data.time_range.resting !=
-        static_cast<uint32_t>(msg.value)) {
-      current_pump_data.time_range.resting = static_cast<uint32_t>(msg.value);
+    uint32_t new_resting_time = static_cast<uint32_t>(msg.value);
+    if (current_pump_data.time_range.resting != new_resting_time) {
+      current_pump_data.time_range.resting = new_resting_time;
       dataChanged = true;
-      store_time_range();
+      store_time_range(false);
       LOG_F("Received resting time: %d\n", msg.value);
     }
     break;
-
-  default:
+  }
+  default: {
     LOG_F("Received unknown key: %d\n", msg.key);
     break;
+  }
   }
 }
 

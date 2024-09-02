@@ -147,12 +147,77 @@ void updatePumpState(unsigned long signalTimeMs, unsigned long currentTimeMs) {
   }
 }
 
+inline void running_or_resting_and_update(unsigned long signalTimeMs,
+                                          unsigned long currentTimeMs) {
+  if (power.key == PowerStatus::POWER_RESTING ||
+      power.key == PowerStatus::POWER_RUNNING) {
+    updatePumpState(signalTimeMs, currentTimeMs);
+  } else {
+    powerOn = true;
+    lastChangeTimeMs = currentTimeMs;
+  }
+}
+
+#ifndef PRODUCTION
+void logPumpRunningState() {
+  static bool previousRunningState = current_pump_data.is_running;
+
+  if (previousRunningState != current_pump_data.is_running) {
+    LOG_F("Power is__________________________________ %s\n",
+          current_pump_data.is_running ? "ON" : "OFF");
+    previousRunningState = current_pump_data.is_running;
+  }
+}
+
+void logPumpMode() {
+  static pump_MachineMode previousMode = current_pump_data.mode;
+
+  if (previousMode != current_pump_data.mode) {
+    LOG_F("Current Mode: %d\n", current_pump_data.mode);
+    previousMode = current_pump_data.mode;
+  }
+}
+
+void logAutoSignal() {
+  static bool previous = automate_mode_signal;
+
+  if (automate_mode_signal != previous) {
+    LOG_F("Automate sensor is %s\n", automate_mode_signal ? "HIGH" : "LOW");
+    previous = automate_mode_signal;
+  }
+}
+#endif
+
 void controlPumpState() {
   readingVolt = readVoltage();
+
+  static bool log_voltage_low = true;
+
   if (readingVolt < min_voltage) {
-    LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n", readingVolt,
-          min_voltage);
     switch_pump(false);
+    static pump_MachineMode previousMode = current_pump_data.mode;
+    static bool previous_automate_auto_signal = automate_mode_signal;
+
+    if (log_voltage_low || previousMode != current_pump_data.mode ||
+        previous_automate_auto_signal != automate_mode_signal) {
+      LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n", readingVolt,
+            min_voltage);
+
+      if (current_pump_data.mode == pump_MachineMode_POWER_OFF ||
+          (current_pump_data.mode == pump_MachineMode_AUTO &&
+           !automate_mode_signal)) {
+        update_and_send_power_status(
+            static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
+      } else if (current_pump_data.mode != pump_MachineMode_POWER_OFF) {
+        update_and_send_power_status(
+            static_cast<uint32_t>(PowerStatus::POWER_VOLTAGE_LOW), 0.0f);
+      }
+
+      previous_automate_auto_signal = automate_mode_signal;
+      previousMode = current_pump_data.mode;
+      log_voltage_low = !log_voltage_low;
+    }
+
     return;
   }
 
@@ -161,23 +226,23 @@ void controlPumpState() {
 
   switch (current_pump_data.mode) {
   case pump_MachineMode_POWER_OFF:
-    powerOn = false;
+    if (power.key == PowerStatus::POWER_RESTING &&
+        signalTimeMs > current_pump_data.time_range.resting) {
+      pumpState = true;
+      powerOn = !pumpState;
+    } else
+      powerOn = false;
     break;
   case pump_MachineMode_AUTO:
     if (automate_mode_signal) {
-      updatePumpState(signalTimeMs, currentTimeMs);
-    } else if (power.key != POWER_INACTIVE) {
+      running_or_resting_and_update(signalTimeMs, currentTimeMs);
+    } else if (power.key != PowerStatus::POWER_INACTIVE) {
       pumpState = true;
       powerOn = !pumpState;
     }
     break;
   case pump_MachineMode_POWER_ON:
-    if (power.key == POWER_RESTING || power.key == POWER_RUNNING) {
-      updatePumpState(signalTimeMs, currentTimeMs);
-    } else {
-      powerOn = true;
-      lastChangeTimeMs = currentTimeMs;
-    }
+    running_or_resting_and_update(signalTimeMs, currentTimeMs);
     break;
 
   default:
@@ -185,7 +250,14 @@ void controlPumpState() {
     break;
   }
 
+  if (!log_voltage_low) {
+    log_voltage_low = !log_voltage_low;
+  }
+
   switch_pump(powerOn);
+#ifndef PRODUCTION
+  logPumpRunningState();
+#endif
 }
 
 // Task to run the machine
@@ -212,9 +284,18 @@ void checkSignal(void *parameter) {
       signal += digitalRead(FLOAT_SIGNAL_PIN) == HIGH ? 1 : 0;
       vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
     }
-    LOG_F("Signal: %d\n", signal);
+
+#ifdef FAKE_VOLTAGE_READING
+    automate_mode_signal = test_auto_mode;
+#else
     automate_mode_signal = signal >= 3;
-    LOG_F("Current Mode: %d\n", current_pump_data.mode);
+#endif
+
+#ifndef PRODUCTION
+    logPumpMode();
+    logAutoSignal();
+#endif
+
     vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
   }
 }

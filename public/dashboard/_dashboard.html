@@ -76,8 +76,10 @@
 
                 <div id="mode-bg" class="indicator">
                     <div class="res-server">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-                            <path d="M480-480q-17 0-28.5-11.5T440-520v-320q0-17 11.5-28.5T480-880q17 0 28.5 11.5T520-840v320q0 17-11.5 28.5T480-480Zm0 360q-75 0-140.5-28.5t-114-77q-48.5-48.5-77-114T120-480q0-61 20-118.5T198-704q11-14 28-13.5t30 13.5q11 11 10 27t-11 30q-27 36-41 79t-14 88q0 117 81.5 198.5T480-200q117 0 198.5-81.5T760-480q0-46-13.5-89.5T704-649q-10-13-11-28.5t10-26.5q12-12 29-12.5t28 12.5q39 48 59.5 105T840-480q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-120Z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"
+                            fill="currentColor">
+                            <path
+                                d="M480-480q-17 0-28.5-11.5T440-520v-320q0-17 11.5-28.5T480-880q17 0 28.5 11.5T520-840v320q0 17-11.5 28.5T480-480Zm0 360q-75 0-140.5-28.5t-114-77q-48.5-48.5-77-114T120-480q0-61 20-118.5T198-704q11-14 28-13.5t30 13.5q11 11 10 27t-11 30q-27 36-41 79t-14 88q0 117 81.5 198.5T480-200q117 0 198.5-81.5T760-480q0-46-13.5-89.5T704-649q-10-13-11-28.5t10-26.5q12-12 29-12.5t28 12.5q39 48 59.5 105T840-480q0 75-28.5 140.5t-77 114q-48.5 48.5-114 77T480-120Z" />
                         </svg>
                         <h3 id="machine-mode"></h3>
                     </div>
@@ -103,8 +105,10 @@
 
                 <div class="indicator">
                     <div class="res-server">
-                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor">
-                            <path d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z"/>
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px"
+                            fill="currentColor">
+                            <path
+                                d="m612-292 56-56-148-148v-184h-80v216l172 172ZM480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-400Zm0 320q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Z" />
                         </svg>
                         <h3 class="h-gray">
                             <span id="run-time">0:00</span>
@@ -125,6 +129,24 @@
         <div class="bg-config-inner">
             <button class="ok-btn st-btn" id="cancel-config-ui"></button>
             <div class="config">
+                <div class="note-container">
+                    <div class="note-content">
+                        <div class="note-section">
+                            <h4>POWER OFF</h4>
+                            <p>Shuts down the machine, stopping all operations.</p>
+                        </div>
+                        <div class="note-section">
+                            <h4>POWER ON</h4>
+                            <p>Operates the machine based on the configured running and resting times, cycling between
+                                active and rest periods.</p>
+                        </div>
+                        <div class="note-section">
+                            <h4>AUTOMATE</h4>
+                            <p>Controls the machine to pump only when the water level is low, while still adhering to
+                                the configured running and resting times for efficient operation.</p>
+                        </div>
+                    </div>
+                </div>
                 <label for="mode">Set Machine Mode</label>
                 <select id="mode">
                     <option value="0">POWER OFF</option>
@@ -133,10 +155,22 @@
                 </select>
             </div>
             <div class="config">
+                <div class="note-container">
+                    <div class="note-content">
+                        <div class="note-section">
+                            <p>Adjust the minimum voltage at which the machine should operate. This setting allows you
+                                to specify a voltage between 110V and 230V to ensure the machine functions optimally
+                                within your power supply range.</p>
+                        </div>
+                    </div>
+                </div>
                 <div id="voltage-setting">
                     <label for="min-voltage-input" id="voltage-label">Set Minimum Operating Voltage (110-230
                         V)</label>
-                    <input type="number" id="min-voltage-input" min="110" max="230" step="1">
+                    <div>
+                        <input type="number" id="min-voltage-input" min="110" max="230" step="1">
+                        <span class="">Volt</span>
+                    </div>
                     <input type="range" id="min-voltage-slider" min="110" max="230" step="1">
                 </div>
                 <button class="styled-button ok-btn" id="submit-btn-min-volt"></button>

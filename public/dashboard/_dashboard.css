@@ -130,6 +130,7 @@ header.header-default {
 #pump-power-indicator {
   width: 20px;
   height: 20px;
+  border-radius: var(--border-radius);
   background-color: #808080;
 }
 
@@ -519,6 +520,7 @@ select:hover::after {
   margin-bottom: 15px;
 }
 
+
 label {
   font-weight: bold;
   display: block;
@@ -538,9 +540,31 @@ input[type="number"] {
   text-align: center;
   line-height: 35px;
   border: var(--border-radius);
+  font-size: 1.1rem;
+  padding: 10px;
+}
+
+#error {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 5px;
 }
 
 tr {
   display: flex;
   gap: 10px;
+}
+
+#min-voltage-input {
+  border-radius: var(--border-radius);
+}
+
+@keyframes blink {
+  0% { background-color: #FFD700; } 
+  50% { background-color: #FFA500; }
+  100% { background-color: #FFD700; }
+}
+
+.blinking {
+  animation: blink 1.5s infinite;
 }

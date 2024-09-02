@@ -7,6 +7,7 @@ constexpr unsigned long MS_TO_S = 1000;
 constexpr unsigned long PUMP_DELAY_MS = 10000;
 
 Num power = Num_init_default;
+
 bool pumpState = false;
 
 unsigned long last_change_time_ms = 0;
@@ -30,8 +31,7 @@ void power_on_cb(TimerHandle_t xTimer) {
   last_change_time_ms = getCurrentTimeMs();
   update_and_send_power_status(
       static_cast<uint32_t>(PowerStatus::POWER_RUNNING),
-      static_cast<float>(
-          (current_pump_data.time_range.running - PUMP_DELAY_MS) / MS_TO_S));
+      static_cast<float>(current_pump_data.time_range.running / MS_TO_S));
 
   digitalWrite(PUMP_RELAY_PIN, HIGH);
 }
@@ -47,9 +47,6 @@ void power_off() {
   if (current_pump_data.mode == pump_MachineMode_POWER_OFF) {
     update_and_send_power_status(
         static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
-  } else if (readingVolt < min_voltage) {
-    update_and_send_power_status(
-        static_cast<uint32_t>(PowerStatus::POWER_VOLTAGE_LOW), 0.0f);
   } else if (run_rest_time >= current_pump_data.time_range.running) {
     update_and_send_power_status(
         static_cast<uint32_t>(PowerStatus::POWER_RESTING),
@@ -134,10 +131,10 @@ void send_all_power_status_and_type(AsyncWebSocketClient *client) {
     break;
 
   case POWER_RUNNING:
-    adjusted_time = static_cast<float>(
-        (current_pump_data.time_range.running -
-         (current_time_ms - last_change_time_ms) - PUMP_DELAY_MS) /
-        MS_TO_S);
+    adjusted_time =
+        static_cast<float>((current_pump_data.time_range.running -
+                            (current_time_ms - last_change_time_ms)) /
+                           MS_TO_S);
     break;
 
   case POWER_RESTING:

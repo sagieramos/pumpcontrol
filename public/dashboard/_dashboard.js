@@ -107,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateMinVoltCutOffFunction(value, true);
                 minVoltElement.textContent = value;
                 minVoltInput.value = value;
+                slider.value = value;
                 minValueStorage = value;
                 break;
             case KEY_CONFIG.CONFIG_MODE:
@@ -256,39 +257,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handlePowerStatus = (buffer) => {
         const numValue = Num.decode(buffer.slice(1));
-        //console.log('handlePowerStatus numValue..........................:', numValue);
         const { key, value } = numValue;
         let valueToNumber = Number(value);
 
         let visibility = 'block';
 
+        // Remove blinking class initially
+        pumpPowerIndicator.classList.remove('blinking');
+
         switch (key) {
             case PowerStatus.POWER_INACTIVE:
-                pumpPowerIndicator.style.backgroundColor = '#808080'; // Gray
+                pumpPowerIndicator.style.backgroundColor = '#808080';
                 runRestState.textContent = 'Inactive';
                 visibility = 'none';
                 valueToNumber = 1;
                 break;
             case PowerStatus.POWER_READY:
-                pumpPowerIndicator.style.backgroundColor = '#FFD700'; // Yellow
+                pumpPowerIndicator.classList.add('blinking'); // Add blinking class for POWER_READY
                 runRestState.textContent = 'Ready...';
                 break;
             case PowerStatus.POWER_RUNNING:
-                pumpPowerIndicator.style.backgroundColor = '#32CD32'; // Green
+                pumpPowerIndicator.style.backgroundColor = '#32CD32'; 
                 runRestState.textContent = 'Running...';
                 break;
             case PowerStatus.POWER_RESTING:
-                pumpPowerIndicator.style.backgroundColor = '#1E90FF'; // Blue
+                pumpPowerIndicator.style.backgroundColor = '#1E90FF';
                 runRestState.textContent = 'Resting...';
                 break;
             case PowerStatus.POWER_VOLTAGE_LOW:
-                pumpPowerIndicator.style.backgroundColor = '#FF0000'; // Red
+                pumpPowerIndicator.style.backgroundColor = '#FF0000'; 
                 runRestState.textContent = 'Voltage Low';
                 visibility = 'none';
                 valueToNumber = 1;
                 break;
             default:
-                //console.log(`Unexpected key: ${key}`);
                 valueToNumber = 1;
                 visibility = 'none';
                 runRestState.textContent = '...';
@@ -425,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Validate the value range
         if (sliderValue < 110 || sliderValue > 230) {
-            voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V) <span id="error">- Please enter a valid value!</span>';
+            voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V) <br> <span id="error">— Please enter a valid value!</span>';
         } else {
             voltageLabel.innerHTML = 'Set Minimum Operating Voltage (110-230 V)';
             // Synchronize the values between the input field and the slider

@@ -10,6 +10,10 @@ extern AsyncWebServer server;
 extern AsyncWebSocket ws;
 extern DNSServer dnsServer;
 
+#ifdef FAKE_VOLTAGE_READING
+extern bool test_auto_mode;
+#endif
+
 void send_binary_data(void *data, size_t len);
 void send_num_message_to_a_client(Num value, uint8_t type_id,
                                   AsyncWebSocketClient *client);
