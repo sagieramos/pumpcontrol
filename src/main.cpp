@@ -43,8 +43,8 @@ const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 void setup() {
   LOG_BEGIN(115200);
   pinMode(SLEEP_WAKE_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(SLEEP_WAKE_PIN), handleSleepInterrupt,
-                  FALLING);
+/*   attachInterrupt(digitalPinToInterrupt(SLEEP_WAKE_PIN), handleSleepInterrupt,
+                  FALLING); */
   if (!SPIFFS.begin()) {
     LOG_LN("Failed to mount SPIFFS");
     return;
