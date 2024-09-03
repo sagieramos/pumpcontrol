@@ -91,12 +91,13 @@ void setup() {
   // Setup WiFi AP and DNS
   setupWifiAP();
 
-  if (xTaskCreatePinnedToCore(stackMonitor, "Stack monitor", 2560, NULL, 4,
-                              NULL, 1) != pdPASS) {
-    LOG_LN("Failed to create Stack Monitor task");
-  } else {
-    LOG_LN("Stack Monitor task created successfully");
-  }
+  /*  if (xTaskCreatePinnedToCore(stackMonitor, "Stack monitor", 2560, NULL, 4,
+                               NULL, 1) != pdPASS) {
+     LOG_LN("Failed to create Stack Monitor task");
+   } else {
+     LOG_LN("Stack Monitor task created successfully");
+   } */
+
   IPAddress apIP = WiFi.softAPIP();
   dnsServer.start(DNS_PORT, "akowe.org", apIP);
   dnsServer.start(DNS_PORT, "www.akowe.org", apIP);
