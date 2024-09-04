@@ -29,7 +29,6 @@ extern TaskHandle_t runMachineTask;
 extern TaskHandle_t checkSignalTask;
 extern float min_voltage;
 extern pump_ControlData current_pump_data;
-extern unsigned long lastChangeTime;
 extern float readingVolt;
 extern Num power;
 extern bool pumpState;

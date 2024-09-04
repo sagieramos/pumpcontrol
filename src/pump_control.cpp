@@ -15,6 +15,7 @@ unsigned long lastChangeTimeMs = 0;
 float readingVolt = 0.0f;
 bool powerOn = false;
 bool automate_mode_signal = false;
+uint32_t previous_power_status = 0;
 
 pump_ControlData current_pump_data = pump_ControlData_init_default;
 
@@ -147,14 +148,25 @@ void updatePumpState(unsigned long signalTimeMs, unsigned long currentTimeMs) {
   }
 }
 
-inline void running_or_resting_and_update(unsigned long signalTimeMs,
-                                          unsigned long currentTimeMs) {
-  if (power.key == PowerStatus::POWER_RESTING ||
-      power.key == PowerStatus::POWER_RUNNING) {
+void running_or_resting_and_update(unsigned long signalTimeMs,
+                                   unsigned long currentTimeMs) {
+  switch (power.key) {
+  case PowerStatus::POWER_VOLTAGE_LOW:
+    power.key = previous_power_status;
+    if (power.key == PowerStatus::POWER_RESTING)
+      send_all_power_status_and_type();
     updatePumpState(signalTimeMs, currentTimeMs);
-  } else {
+    break;
+
+  case PowerStatus::POWER_RESTING:
+  case PowerStatus::POWER_RUNNING:
+    updatePumpState(signalTimeMs, currentTimeMs);
+    break;
+
+  default:
     powerOn = true;
     lastChangeTimeMs = currentTimeMs;
+    break;
   }
 }
 
@@ -202,6 +214,10 @@ void controlPumpState() {
         previous_automate_auto_signal != automate_mode_signal) {
       LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n", readingVolt,
             min_voltage);
+
+      if (log_voltage_low) {
+        previous_power_status = power.key;
+      }
 
       if (current_pump_data.mode == pump_MachineMode_POWER_OFF ||
           (current_pump_data.mode == pump_MachineMode_AUTO &&

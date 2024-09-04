@@ -1,8 +1,14 @@
 #include "main.h"
 #include "network.h"
 
+const char *domainName = "akowe.org";
+
 #ifdef FAKE_VOLTAGE_READING
 bool test_auto_mode = false;
+#endif
+
+#ifndef PRODUCTION
+const char *http_methods[] = {"", "GET", "POST"};
 #endif
 
 AsyncWebServer server(80);
@@ -66,9 +72,20 @@ void handleLogin(AsyncWebServerRequest *request) {
 
     switch (auth) {
     case AUTHENTICATED: {
-      // Generate cookies and send response
-      const String cookieOptions =
-          "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict; Domain=akowe.org";
+      // Common cookie options
+      const String commonCookieOptions =
+          "; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict";
+
+      String host = request->host();
+      LOG_F("Host name.....%s\n", host.c_str());
+      String cookieOptions;
+
+      if (host.indexOf('.') != -1) {
+        cookieOptions = commonCookieOptions + "; Domain=" + host;
+      } else {
+        cookieOptions = commonCookieOptions;
+      }
+
       String cookie1 =
           String(TOKEN_ATTR) + "=" + String(session.token) + cookieOptions;
       String cookie2 =
@@ -76,13 +93,16 @@ void handleLogin(AsyncWebServerRequest *request) {
 
       AsyncWebServerResponse *response =
           request->beginResponse(SPIFFS, "/_dashboard.html", "text/html");
+
       response->addHeader("Set-Cookie", cookie1);
       response->addHeader("Set-Cookie", cookie2);
+
       request->send(response);
 
       LOG_LN("Login successful");
       break;
     }
+
     case SESSION_IS_FULL:
       request->send(500, "text/plain", "Session is full");
       LOG_LN("Session is full");
@@ -100,8 +120,32 @@ void handleLogin(AsyncWebServerRequest *request) {
 }
 
 void handleRequest(AsyncWebServerRequest *request) {
+  uint8_t allowedMethods =
+      WebRequestMethod::HTTP_GET | WebRequestMethod::HTTP_POST;
+  uint8_t method = request->method();
+
+  if (!(method & allowedMethods)) {
+    request->send(405);
+    LOG_LN("Method Not Allowed. Only GET and POST");
+    return;
+  }
+
+  const char *host = request->host().c_str();
+  const char *localIPCStr = local_IP.toString().c_str();
+
+  if (strcmp(host, domainName) != 0 && strcmp(host, localIPCStr) != 0) {
+    static const char *jsContentPrefix =
+        "<script>window.location.href = 'http://";
+    static const char *jsContentSuffix = "';</script>";
+
+    char jsContent[128];
+    snprintf(jsContent, sizeof(jsContent), "%s%s%s", jsContentPrefix,
+             domainName, jsContentSuffix);
+    request->send(200, "text/html", jsContent);
+    return;
+  }
+
   char urlPath[100];
-  int method = request->method();
 
   // Get the URL path
   strcpy(urlPath, request->url().c_str());
@@ -110,7 +154,8 @@ void handleRequest(AsyncWebServerRequest *request) {
   LOG_F("Request from: %s:%d\n",
         request->client()->remoteIP().toString().c_str(),
         request->client()->remotePort());
-  LOG_F("http://%s => Method: %d\n", urlPath, method);
+  LOG_F("%s\thttp://%s%s\n", http_methods[method], request->host().c_str(),
+        urlPath);
 
   if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
     // Handle root route (example)
@@ -120,7 +165,6 @@ void handleRequest(AsyncWebServerRequest *request) {
       LOG_LN("Already logged in");
     } else {
       request->send(SPIFFS, "/_login.html", "text/html");
-      LOG_LN("Serving _login.html");
     }
   } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
     // Handle login route

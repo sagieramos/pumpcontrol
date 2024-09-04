@@ -9,7 +9,6 @@
 
 extern AsyncWebServer server;
 
-#define PIN "1234"
 #define LED_PIN 2
 
 #define MAX_BUFFER_SIZE 1024
