@@ -336,7 +336,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * Connects to the WebSocket server and sets up event handlers.
      */
     const connectWebSocket = () => {
-        ws = new WebSocket('ws://akowe.org/ws');
+        const wsScheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsAddr = `${wsScheme}//${window.location.host}/ws`;
+
+        // console.log(`Websocket Address: ${wsAddr}`);
+        ws = new WebSocket(wsAddr);
 
         ws.onopen = () => {
             //console.log('Connected to WebSocket server');

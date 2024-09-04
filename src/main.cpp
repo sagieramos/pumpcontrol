@@ -15,6 +15,7 @@ void IRAM_ATTR handleSleepInterrupt() {
   esp_light_sleep_start();
 };
  */
+
 struct StaticFile {
   const char *path;
   const char *contentType;
@@ -98,18 +99,17 @@ void setup() {
      LOG_LN("Stack Monitor task created successfully");
    } */
 
-  IPAddress apIP = WiFi.softAPIP();
-  dnsServer.start(DNS_PORT, "akowe.org", apIP);
-  dnsServer.start(DNS_PORT, "www.akowe.org", apIP);
+  /*   IPAddress apIP = WiFi.softAPIP(); */
+  LOG_F("Access Point IP Address: %s\n", local_IP.toString().c_str());
+
+  dnsServer.start(DNS_PORT, "*", local_IP);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.setTTL(604800);
 
   // Handle WebSocket events
   ws.onEvent(onWsEvent);
   server.addHandler(&ws).setFilter([](AsyncWebServerRequest *request) {
-    String urlPath = request->url();
-    LOG_F("URL Path: %s\n", urlPath.c_str());
-    if (strcmp(urlPath.c_str(), "/ws") == 0) {
+    if (strcmp(request->url().c_str(), "/ws") == 0) {
       return authSession(authClients, request, CHECK) == ACTIVE;
     }
 

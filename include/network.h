@@ -9,6 +9,8 @@
 extern AsyncWebServer server;
 extern AsyncWebSocket ws;
 extern DNSServer dnsServer;
+extern IPAddress local_IP;
+/* extern const char* domainName; */
 
 #ifdef FAKE_VOLTAGE_READING
 extern bool test_auto_mode;

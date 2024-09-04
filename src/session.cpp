@@ -1,5 +1,7 @@
 #include "main.h"
 
+constexpr const char *PIN = "1234";
+
 const char CHARSET[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -164,12 +166,9 @@ AuthStatus authSession(ClientSession *authClients,
     if (!request->hasParam("pin", true)) {
       return UNAUTHORIZED;
     }
-    String pin = request->getParam("pin", true)->value();
-    if (pin != PIN) {
-      return UNAUTHORIZED;
-    } else {
-      return createSession(authClients, session);
-    }
+    return strcmp(request->getParam("pin", true)->value().c_str(), PIN) == 0
+               ? createSession(authClients, session)
+               : UNAUTHORIZED;
   } else if (action == LOGOUT) {
     return removeSession(authClients, session);
   } else if (action == CHECK) {

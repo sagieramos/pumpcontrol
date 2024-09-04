@@ -5,9 +5,9 @@
 #include <WiFi.h>
 
 // Define the custom IP configuration
-IPAddress local_IP(192, 168, 10, 1); // Desired IP address
+IPAddress local_IP(192, 168, 10, 100); // Desired IP address
 IPAddress gateway(192, 168, 10,
-                  1); // Gateway, typically the same as local_IP for AP mode
+                  100); // Gateway, typically the same as local_IP for AP mode
 IPAddress subnet(255, 255, 255, 0); // Subnet mask
 
 void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
