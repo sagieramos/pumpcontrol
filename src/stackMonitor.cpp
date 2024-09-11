@@ -3,8 +3,9 @@
 #include "sensors.h"
 
 void stackMonitor(void *pvParameter) {
-  TaskHandle_t taskHandles[] = {dnsTaskHandle, blinkTaskHandle, runMachineTask,
-                                checkSignalTask, sendVoltageTask};
+  TaskHandle_t taskHandles[] = {dnsTaskHandle,   blinkTaskHandle,
+                                runMachineTask,  checkSignalTask,
+                                sendVoltageTask, powerControlTask};
   const int numTasks = sizeof(taskHandles) / sizeof(TaskHandle_t);
 
   for (;;) {

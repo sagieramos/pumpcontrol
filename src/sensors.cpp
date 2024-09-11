@@ -5,25 +5,20 @@
 #include "type_id.h"
 #include <EEPROM.h>
 #include <str_num_msg_transcode.h>
+#include <PZEM004Tv30.h>
 
 TaskHandle_t sendVoltageTask = NULL;
 
-const uint8_t adcPin = 34;
-const float VREF = 3.3;
-const int ADC_MAX = 4095;
-const float SCALE_FACTOR = 11.0;
+PZEM004Tv30 pzem(Serial2, 16, 17);
 
 float min_voltage = 0.0f;
 
 float readVoltage() {
 #ifdef FAKE_VOLTAGE_READING
   return random(209, 215);
-#endif
-
-  int adcValue = analogRead(adcPin);
-  float adcVoltage = adcValue * VREF / ADC_MAX;
-
-  return (adcVoltage * SCALE_FACTOR);
+#endif  
+ float voltage = pzem.voltage();
+  return (isnan(voltage) ? 0.0f : voltage);
 }
 
 // Store minimum voltage to power the pump in EEPROM
@@ -62,7 +57,6 @@ void send_voltage_task(void *pvParameter) {
   (void)pvParameter;
   Num msg = Num_init_zero;
   msg.key = VoltageKey::VOLTAGE;
-  pinMode(adcPin, INPUT);
 
   get_min_voltage(min_voltage);
 
@@ -74,9 +68,7 @@ void send_voltage_task(void *pvParameter) {
       vTaskSuspend(NULL);
     }
 
-    // Update reading_voltage before sending
-
-    msg.value = readVoltage();
+    msg.value = readingVolt;
 
     send_num_message(msg, NUM_TYPE_ID);
 

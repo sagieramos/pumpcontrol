@@ -3,6 +3,11 @@
 #include "sensors.h"
 #include "type_id.h"
 
+TaskHandle_t powerControlTask = NULL;
+
+#define POWER_ON 1
+#define POWER_OFF 0
+
 constexpr unsigned long MS_TO_S = 1000;
 constexpr unsigned long PUMP_DELAY_MS = 10000;
 
@@ -25,40 +30,7 @@ void update_and_send_power_status(uint32_t key, float value) {
 
 // Timer callback to handle pump ON
 void power_on_cb(TimerHandle_t xTimer) {
-  LOG_LN("Pump is ON");
-
-  current_pump_data.is_running = true;
-  last_change_time_ms = getCurrentTimeMs();
-  update_and_send_power_status(
-      static_cast<uint32_t>(PowerStatus::POWER_RUNNING),
-      static_cast<float>(current_pump_data.time_range.running / MS_TO_S));
-
-  digitalWrite(PUMP_RELAY_PIN, HIGH);
-}
-
-void power_off() {
-  LOG_LN("Pump is OFF");
-
-  current_pump_data.is_running = false;
-  unsigned long current_time_ms = getCurrentTimeMs();
-  unsigned long run_rest_time =
-      current_time_ms - last_change_time_ms + PUMP_DELAY_MS;
-
-  if (current_pump_data.mode == pump_MachineMode_POWER_OFF) {
-    update_and_send_power_status(
-        static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
-  } else if (run_rest_time >= current_pump_data.time_range.running) {
-    update_and_send_power_status(
-        static_cast<uint32_t>(PowerStatus::POWER_RESTING),
-        static_cast<float>(current_pump_data.time_range.resting / MS_TO_S));
-  } else if (current_pump_data.mode == pump_MachineMode_AUTO &&
-             !automate_mode_signal) {
-    update_and_send_power_status(
-        static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
-  }
-  last_change_time_ms = current_time_ms;
-
-  digitalWrite(PUMP_RELAY_PIN, LOW);
+  xTaskNotify(powerControlTask, POWER_ON, eSetValueWithOverwrite);
 }
 
 // Start a timer to turn on the pump
@@ -113,7 +85,7 @@ void switch_pump(bool state) {
     startPumpDelayTimer();
   } else {
     stopAndCleanupTimer();
-    power_off();
+    xTaskNotify(powerControlTask, POWER_OFF, eSetValueWithOverwrite);
   }
 }
 
@@ -158,5 +130,57 @@ void send_all_power_status_and_type(AsyncWebSocketClient *client) {
     send_num_message(power, POWER_TYPE_ID);
   } else {
     send_num_message_to_a_client(power, POWER_TYPE_ID, client);
+  }
+}
+
+inline void power_off() {
+  LOG_LN("Pump is OFF");
+
+  current_pump_data.is_running = false;
+  unsigned long current_time_ms = getCurrentTimeMs();
+  unsigned long run_rest_time =
+      current_time_ms - last_change_time_ms + PUMP_DELAY_MS;
+
+  if (current_pump_data.mode == pump_MachineMode_POWER_OFF) {
+    update_and_send_power_status(
+        static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
+  } else if (run_rest_time >= current_pump_data.time_range.running) {
+    update_and_send_power_status(
+        static_cast<uint32_t>(PowerStatus::POWER_RESTING),
+        static_cast<float>(current_pump_data.time_range.resting / MS_TO_S));
+  } else if (current_pump_data.mode == pump_MachineMode_AUTO &&
+             !automate_mode_signal) {
+    update_and_send_power_status(
+        static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
+  }
+  last_change_time_ms = current_time_ms;
+
+  digitalWrite(PUMP_RELAY_PIN, LOW);
+}
+
+void powerControl(void *pvParameters) {
+  (void)pvParameters;
+  uint32_t notificationValue;
+
+  for (;;) {
+    if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, portMAX_DELAY) ==
+        pdTRUE) {
+
+      if (notificationValue == POWER_OFF) {
+        power_off();
+      } else if (notificationValue == POWER_ON) {
+        LOG_LN("Pump is ON");
+
+        current_pump_data.is_running = true;
+        last_change_time_ms = getCurrentTimeMs();
+        update_and_send_power_status(
+            static_cast<uint32_t>(PowerStatus::POWER_RUNNING),
+            static_cast<float>(current_pump_data.time_range.running / MS_TO_S));
+
+        digitalWrite(PUMP_RELAY_PIN, HIGH);
+      } else {
+        LOG_LN("Invalid notification value");
+      }
+    }
   }
 }

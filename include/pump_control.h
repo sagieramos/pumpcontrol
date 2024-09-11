@@ -27,6 +27,7 @@ constexpr size_t EEPROM_SIZE_CTL = MIN_VOLTAGE_ADDRESS + MIN_VOLT_SIZE;
 
 extern TaskHandle_t runMachineTask;
 extern TaskHandle_t checkSignalTask;
+extern TaskHandle_t powerControlTask;
 extern float min_voltage;
 extern pump_ControlData current_pump_data;
 extern float readingVolt;
@@ -42,6 +43,7 @@ void switch_pump(bool state);
 
 void runMachine(void *parameter);
 void checkSignal(void *parameter);
+void powerControl(void *pvParameters);
 
 void send_all_power_status_and_type(AsyncWebSocketClient *client = nullptr);
 

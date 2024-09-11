@@ -2,19 +2,8 @@
 #include "network.h"
 #include "pump_control.h"
 #include "sensors.h"
-/* #include "esp_task_wdt.h" */
 
-/* #define SLEEP_WAKE_PIN GPIO_NUM_15
-
-void IRAM_ATTR handleSleepInterrupt() {
-  LOG_LN("Pin went Low, preparing to enter sleep");
-
-  esp_sleep_enable_ext0_wakeup(SLEEP_WAKE_PIN, HIGH);
-  delay(100);
-
-  esp_light_sleep_start();
-};
- */
+#define WAKE_PIN GPIO_NUM_4
 
 struct StaticFile {
   const char *path;
@@ -41,11 +30,22 @@ const StaticFile staticFiles[] = {
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
+// Interrupt service routine for the wake pin
+void IRAM_ATTR handleSleepWake() {
+  LOG_LN("Going to sleep");
+  esp_sleep_enable_ext0_wakeup(WAKE_PIN, ESP_EXT1_WAKEUP_ANY_HIGH);
+  esp_light_sleep_start();
+}
+
+#define FLOAT_SWITCH 1
+
+void IRAM_ATTR handleFloatSwitch() {
+  LOG_LN("Float switch triggered");
+  xTaskNotify(runMachineTask, FLOAT_SWITCH, eSetValueWithOverwrite);
+}
 void setup() {
   LOG_BEGIN(115200);
-  /*   pinMode(SLEEP_WAKE_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(SLEEP_WAKE_PIN), handleSleepInterrupt,
-                    FALLING); */
+
   if (!SPIFFS.begin()) {
     LOG_LN("Failed to mount SPIFFS");
     return;
@@ -66,6 +66,9 @@ void setup() {
   }
 
   LOG_LN();
+
+  pinMode(WAKE_PIN, INPUT_PULLUP);
+  attachInterrupt(WAKE_PIN, handleSleepWake, FALLING);
 
   pinMode(LED_BUILTIN, OUTPUT);
   if (xTaskCreatePinnedToCore(send_voltage_task, "SendVoltageTask", 4096, NULL,
@@ -89,17 +92,16 @@ void setup() {
     LOG_LN("Check signal task created successfully");
   }
 
+  if (xTaskCreatePinnedToCore(powerControl, "Power Task", 4096, NULL, 1,
+                              &powerControlTask, 1) != pdPASS) {
+    LOG_LN("Failed to create power task");
+  } else {
+    LOG_LN("Power task created successfully");
+  }
+
   // Setup WiFi AP and DNS
   setupWifiAP();
 
-  /*  if (xTaskCreatePinnedToCore(stackMonitor, "Stack monitor", 2560, NULL, 4,
-                               NULL, 1) != pdPASS) {
-     LOG_LN("Failed to create Stack Monitor task");
-   } else {
-     LOG_LN("Stack Monitor task created successfully");
-   } */
-
-  /*   IPAddress apIP = WiFi.softAPIP(); */
   LOG_F("Access Point IP Address: %s\n", local_IP.toString().c_str());
 
   dnsServer.start(DNS_PORT, "*", local_IP);
@@ -127,7 +129,6 @@ void setup() {
               });
   }
 
-  // Handle other requests including login, logout, and default routes
   server.on("*", HTTP_ANY,
             [](AsyncWebServerRequest *request) { handleRequest(request); });
 
