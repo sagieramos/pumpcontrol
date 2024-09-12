@@ -28,7 +28,7 @@
 </head>
 
 <body>
-    <header id="header" class="header-default">
+    <header id="header" class="header">
         <nav>
             <div id="logo">
                 <img src="../logo.svg" alt="logo">
@@ -67,23 +67,23 @@
                             <h4>Energy Consumed:</h4>
                         </div>
                         <div>
-                            <h4><span>30</span> minutes</h4>
-                            <h4><span>150</span> Wh</h4>
+                            <h4><span id="l-r-d">0</span> minutes</h4>
+                            <h4><span id="e-c">0</span> Wh</h4>
                         </div>
                     </div>
                 </div>
 
                 <canvas class="hidden" id="voltageChart"></canvas>
                 <div class="mg-t operation-window">
-                    <h3>Power: <span>900 W</span> | PF: <span>0.9</span></h3>
+                    <h3>Power: <span id="p-p">0 W</span> | PF: <span id="p-f">0</span></h3>
                     <div class="operation-detail">
                         <div>
                             <h4>Total Energy Consumed</h4>
                             <h4>Days in Operation:</h4>
                         </div>
                         <div>
-                            <h4><span>120</span> kWh</h4>
-                            <h4><span>10</span> days</h4>
+                            <h4><span id="t-e-c">0</span> kWh</h4>
+                            <h4><span id="d-i-op">10</span> days</h4>
                         </div>
                     </div>
                 </div>

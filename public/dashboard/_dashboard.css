@@ -46,7 +46,7 @@ span#logo-text {
   text-align: end;
 }
 
-header.header-default {
+header.header {
   position: fixed;
   top: 0;
   width: 100%;
@@ -197,7 +197,7 @@ header.header-default {
 }
 
 .bg-config {
-  position: absolute;
+  position: fixed;
   top: 0;
   width: 100vw;
   z-index: 99;
@@ -207,7 +207,7 @@ header.header-default {
   align-items: center;
   background-color: rgba(0, 0, 0, 0.5);
   transition: background-color 0.5s ease, opacity 0.5s ease;
-  height: 100vh;
+  height: 100%;
 }
 
 .bg-config-inner {
@@ -635,8 +635,7 @@ tr {
 }
 
 @supports (width: 100dvw) {
-  body,
-  .bg-config {
+  body {
     height: 100dvh;
     width: 100dvw;
   }
