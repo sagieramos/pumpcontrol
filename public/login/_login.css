@@ -12,10 +12,10 @@
   outline: none;
   user-select: none;
   text-decoration: none;
-  z-index: auto;
+  overflow-x: hidden;
 
   /* white-space: nowrap; */
-/*   vertical-align: middle;
+  /*   vertical-align: middle;
   line-height: normal;
   list-style: none;
   letter-spacing: inherit;
@@ -42,7 +42,7 @@ nav {
 
 #logo {
   display: flex;
-  justify-content:flex-start;
+  justify-content: flex-start;
   gap: 12px;
   align-items: center;
 }
@@ -118,14 +118,14 @@ header {
   transition: 0.5s;
 }
 
-.login-box .user-box input:focus ~ label {
+.login-box .user-box input:focus~label {
   top: 40px;
   left: 0;
   color: #F28C28;
   font-size: 12px;
 }
 
-.login-box .user-box input:valid ~ label {
+.login-box .user-box input:valid~label {
   top: 40px;
   left: 0;
   color: #66FF00;
@@ -133,9 +133,9 @@ header {
 }
 
 .login-box form {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .login-box form button {
@@ -161,17 +161,31 @@ header {
   color: #fff;
   border-radius: 5px;
   box-shadow: 0 0 5px #03e9f4,
-              0 0 25px #03e9f4,
-              0 0 50px #03e9f4,
-              0 0 100px #03e9f4;
+    0 0 25px #03e9f4,
+    0 0 50px #03e9f4,
+    0 0 100px #03e9f4;
 }
 
 @keyframes shake {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  50% { transform: translateX(5px); }
-  75% { transform: translateX(-5px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+
+  75% {
+    transform: translateX(-5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .login-box button span {
@@ -293,26 +307,27 @@ header {
   font-size: 0.8rem;
 }
 
-.footer-content {
+footer {
   position: absolute;
   bottom: 0;
   width: 100%;
   padding: 8px 24px;
   border-top: 1px solid #03e8f42d;
-  color: #fff;
+}
+
+.social-icons {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 24px;
 }
 
-.footer-content img {
-  width: 24px;
-  height: 24px;
-  margin-right: 8px;
+footer img {
+  width: 20px;
 }
 
 @media screen and (max-width: 768px) {
-  .footer-content {
+  footer {
     font-size: 0.8rem;
   }
 }

@@ -72,7 +72,8 @@ export class Countdown {
     drawTime(formattedTime) {
         let ctx = this.dateSelectors.timer;
         ctx.font = "0.85rem 'Roboto', sans-serif";
-        ctx.fillStyle = "#243b55";
+        /* ctx.fillStyle = "#243b55"; */
+        ctx.fillStyle = "#666";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillText(formattedTime, ctx.canvas.width / 2, ctx.canvas.height / 2); // Center text

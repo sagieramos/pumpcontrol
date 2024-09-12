@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleKeyAction = (key, value) => {
         switch (key) {
             case VOLT_RECEIVE_FROM_SERVER.VOLTAGE:
-                voltageElement.textContent = value;
+                voltageElement.textContent = value.toFixed(1);
                 updateChartFunction(value);
                 const f = value < minValueStorage
                 if (flagP !== f) {
@@ -232,6 +232,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    let lastScrollTop = 0;
+    const header = document.getElementById('header');
+
+    window.addEventListener('scroll', function () {
+        let scrollTop = window.scrollY || document.documentElement.scrollB;
+
+        if (scrollTop < lastScrollTop) {
+            header.style.top = '-80px'; 
+        } else {
+            header.style.top = '0';
+        }
+
+        lastScrollTop = scrollTop;
+    });
+
+
+
     const audio = new Audio(notificationSound);
 
     audio.addEventListener('canplaythrough', () => {
@@ -277,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 runRestState.textContent = 'Ready...';
                 break;
             case PowerStatus.POWER_RUNNING:
-                pumpPowerIndicator.style.backgroundColor = '#32CD32'; 
+                pumpPowerIndicator.style.backgroundColor = '#32CD32';
                 runRestState.textContent = 'Running...';
                 break;
             case PowerStatus.POWER_RESTING:
@@ -285,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 runRestState.textContent = 'Resting...';
                 break;
             case PowerStatus.POWER_VOLTAGE_LOW:
-                pumpPowerIndicator.style.backgroundColor = '#FF0000'; 
+                pumpPowerIndicator.style.backgroundColor = '#FF0000';
                 runRestState.textContent = 'Voltage Low';
                 visibility = 'none';
                 valueToNumber = 1;

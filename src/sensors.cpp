@@ -4,8 +4,8 @@
 #include "pump_control.h"
 #include "type_id.h"
 #include <EEPROM.h>
-#include <str_num_msg_transcode.h>
 #include <PZEM004Tv30.h>
+#include <str_num_msg_transcode.h>
 
 TaskHandle_t sendVoltageTask = NULL;
 
@@ -16,8 +16,10 @@ float min_voltage = 0.0f;
 float readVoltage() {
 #ifdef FAKE_VOLTAGE_READING
   return random(209, 215);
-#endif  
- float voltage = pzem.voltage();
+#endif
+  float voltage = pzem.voltage();
+
+  LOG_F("Voltage: %f\n", voltage);
   return (isnan(voltage) ? 0.0f : voltage);
 }
 

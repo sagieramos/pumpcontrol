@@ -11,10 +11,10 @@
 #endif // TESTING
 
 #ifdef LOG_ENABLED
-#define LOG_BEGIN(baud) Serial1.begin(baud)
-#define LOG_(...) Serial1.print(__VA_ARGS__)
-#define LOG_LN(...) Serial1.println(__VA_ARGS__)
-#define LOG_F(...) Serial1.printf(__VA_ARGS__)
+#define LOG_BEGIN(baud) Serial.begin(baud)
+#define LOG_(...) Serial.print(__VA_ARGS__)
+#define LOG_LN(...) Serial.println(__VA_ARGS__)
+#define LOG_F(...) Serial.printf(__VA_ARGS__)
 #else
 #define LOG_BEGIN(baud) ((void)0)
 #define LOG_(...) ((void)0)

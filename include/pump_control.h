@@ -25,9 +25,10 @@ constexpr int MIN_VOLTAGE_ADDRESS =
 // Total EEPROM size required
 constexpr size_t EEPROM_SIZE_CTL = MIN_VOLTAGE_ADDRESS + MIN_VOLT_SIZE;
 
-extern TaskHandle_t runMachineTask;
-extern TaskHandle_t checkSignalTask;
+extern TaskHandle_t runMachineTaskHandle;
+extern TaskHandle_t checkSignalHandle;
 extern TaskHandle_t powerControlTask;
+extern TaskHandle_t readPzemTaskHandle;
 extern float min_voltage;
 extern pump_ControlData current_pump_data;
 extern float readingVolt;
@@ -41,9 +42,10 @@ bool is_valid_time_range(const pump_TimeRange &time_range);
 void update_and_send_power_status(uint32_t key, float value);
 void switch_pump(bool state);
 
-void runMachine(void *parameter);
-void checkSignal(void *parameter);
+void runMachineTask(void *parameter);
+void checkSignalTask(void *parameter);
 void powerControl(void *pvParameters);
+void readPzemTask(void *parameter);
 
 void send_all_power_status_and_type(AsyncWebSocketClient *client = nullptr);
 

@@ -26,7 +26,11 @@ const StaticFile staticFiles[] = {
     {"/828._dbundle.js", APP_JS},   {"/939._dbundle.js", APP_JS},
     {"/680._dbundle.js", APP_JS},   {"/27._dbundle.js", APP_JS},
     {"/notify.mp3", AUDIO_MP3},     {"/next-gray.svg", IMAGE_SVG},
-    {"/next-white.svg", IMAGE_SVG}, {"/cancel.svg", IMAGE_SVG}};
+    {"/next-white.svg", IMAGE_SVG}, {"/cancel.svg", IMAGE_SVG},
+    {"/fb.svg", IMAGE_SVG},         {"/ig.svg", IMAGE_SVG},
+    {"/in.svg", IMAGE_SVG},         {"/tiktok.svg", IMAGE_SVG},
+    {"/x.svg", IMAGE_SVG}
+};
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
@@ -41,7 +45,7 @@ void IRAM_ATTR handleSleepWake() {
 
 void IRAM_ATTR handleFloatSwitch() {
   LOG_LN("Float switch triggered");
-  xTaskNotify(runMachineTask, FLOAT_SWITCH, eSetValueWithOverwrite);
+  xTaskNotify(runMachineTaskHandle, FLOAT_SWITCH, eSetValueWithOverwrite);
 }
 void setup() {
   LOG_BEGIN(115200);
@@ -78,15 +82,15 @@ void setup() {
     LOG_LN("Send voltage task created successfully");
   }
 
-  if (xTaskCreatePinnedToCore(runMachine, "Pump Controller", 4096, NULL, 1,
-                              &runMachineTask, 1) != pdPASS) {
+  if (xTaskCreatePinnedToCore(runMachineTask, "Pump Controller", 4096, NULL, 1,
+                              &runMachineTaskHandle, 1) != pdPASS) {
     LOG_LN("Failed to create pump controller task");
   } else {
     LOG_LN("Pump controller task created successfully");
   }
 
-  if (xTaskCreatePinnedToCore(checkSignal, "Check Signal", 4096, NULL, 1,
-                              &checkSignalTask, 1) != pdPASS) {
+  if (xTaskCreatePinnedToCore(checkSignalTask, "Check Signal", 4096, NULL, 1,
+                              &checkSignalHandle, 1) != pdPASS) {
     LOG_LN("Failed to create check signal task");
   } else {
     LOG_LN("Check signal task created successfully");
@@ -99,7 +103,21 @@ void setup() {
     LOG_LN("Power task created successfully");
   }
 
-  // Setup WiFi AP and DNS
+  if (xTaskCreatePinnedToCore(readPzemTask, "readPzem Task", 4096, NULL, 3,
+                              &readPzemTaskHandle, 1) != pdPASS) {
+    LOG_LN("Failed to readPzem Task");
+  } else {
+    LOG_LN("readPzem Task created successfully");
+  }
+  /*
+    if (xTaskCreatePinnedToCore(stackMonitor, "stack Monitor", 4096, NULL, 3,
+                                &readPzemTaskHandle, 1) != pdPASS) {
+      LOG_LN("Failed to stack Monitor Task");
+    } else {
+      LOG_LN("stack Monitor Task created successfully");
+    }
+   */
+
   setupWifiAP();
 
   LOG_F("Access Point IP Address: %s\n", local_IP.toString().c_str());

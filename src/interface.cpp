@@ -197,6 +197,7 @@ void handle_control_data_update(Num &msg, bool &dataChanged) {
 void send_data_if_changed(bool dataChanged, Num &msg, uint8_t *data,
                           size_t len) {
   if (dataChanged) {
+    xTaskNotifyGive(runMachineTaskHandle);
     if (ws.count() > 0) {
       ws.binaryAll(data, len);
     }

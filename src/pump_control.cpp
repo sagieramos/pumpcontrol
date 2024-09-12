@@ -8,8 +8,9 @@
 const int SIGNAL_READ_COUNT = 5;
 const int SIGNAL_READ_DELAY_MS = 500;
 
-TaskHandle_t runMachineTask = NULL;
-TaskHandle_t checkSignalTask = NULL;
+TaskHandle_t runMachineTaskHandle = NULL;
+TaskHandle_t checkSignalHandle = NULL;
+TaskHandle_t readPzemTaskHandle = NULL;
 
 unsigned long lastChangeTimeMs = 0;
 float readingVolt = 0.0f;
@@ -201,8 +202,6 @@ void logAutoSignal() {
 #endif
 
 void controlPumpState() {
-  readingVolt = readVoltage();
-
   static bool log_voltage_low = true;
 
   if (readingVolt < min_voltage) {
@@ -277,7 +276,7 @@ void controlPumpState() {
 }
 
 // Task to run the machine
-void runMachine(void *parameter) {
+void runMachineTask(void *parameter) {
   (void)parameter;
   pinMode(FLOAT_SIGNAL_PIN, INPUT);
   pinMode(PUMP_RELAY_PIN, OUTPUT);
@@ -286,13 +285,15 @@ void runMachine(void *parameter) {
   init_EEPROM_pump_controller();
 
   for (;;) {
-    controlPumpState();
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    uint32_t notificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    if (notificationValue > 0) {
+      controlPumpState();
+    }
   }
 }
 
 // Task that checks signal state
-void checkSignal(void *parameter) {
+void checkSignalTask(void *parameter) {
   (void)parameter;
   for (;;) {
     int signal = 0;
@@ -311,7 +312,15 @@ void checkSignal(void *parameter) {
     logPumpMode();
     logAutoSignal();
 #endif
-
     vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
+  }
+}
+
+void readPzemTask(void *parameter) {
+  (void)parameter;
+  for (;;) {
+    readingVolt = readVoltage();
+    xTaskNotifyGive(runMachineTaskHandle);
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
 }
