@@ -1,5 +1,5 @@
 #include "./transcode_pump_control.h"
-#include "dev_or_prod.h"
+/* #include "dev_or_prod.h" */
 #include <pb_decode.h>
 #include <pb_encode.h>
 
@@ -85,9 +85,9 @@ bool deserialize_time_range(pump_TimeRange &time_range, const uint8_t *buffer,
     cb((void *)buffer, buffer_size);
   }
 
-  if (!status) {
+/*   if (!status) {
     LOG_F("Decoding failed: %s\n", PB_GET_ERROR(&istream));
-  }
+  } */
 
   return status;
 }

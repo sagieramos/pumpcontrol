@@ -1,5 +1,24 @@
 #!/bin/bash
 
+# Check if protoc (protobuf-compiler) is installed
+if ! command -v protoc &> /dev/null
+then
+    echo "protoc (protobuf-compiler) is not installed. Installing now..."
+    sudo apt update
+    sudo apt install -y protobuf-compiler
+
+    # Verify installation success
+    if ! command -v protoc &> /dev/null
+    then
+        echo "Failed to install protoc."
+        exit 1
+    else
+        echo "protoc installed successfully."
+    fi
+else
+    echo "protoc is already installed."
+fi
+
 # Check if a .proto file was provided as an argument
 if [ -z "$1" ]; then
     echo "Usage: $0 path/to/yourfile.proto [output_directory]"

@@ -179,6 +179,23 @@ constexpr uint8_t AUTH_TYPE_ID = 0x06;
 constexpr uint8_t VOLTAGE_TYPE_ID = 0x07;
 
 /**
+ * @def PZEM1_TYPE_ID
+ * @brief Type ID for PZEM-004T messages.
+ * 
+ * This constant represents the type ID used for messages that contain PZEM-004T
+ * data. It is used to identify messages that contain PZEM-004T information during
+ * serialization and deserialization.
+ * 
+ * usage:
+ * - This type ID should be used when serializing messages that contain PZEM-004T
+ * data.
+ * - It helps in routing the messages to appropriate handlers based on their
+ * type.
+ */
+
+constexpr uint8_t PZEM1_TYPE_ID = 0x09;
+
+/**
  * @def POWER_TYPE_ID
  * @brief Type ID for power control messages.
  *

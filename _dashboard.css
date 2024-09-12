@@ -19,6 +19,7 @@
   overflow-y: auto;
   margin: 0 12px;
   margin-top: 76px;
+  padding-bottom: 24px;
 }
 
 body {
@@ -38,13 +39,14 @@ body {
 }
 
 span#logo-text {
-  color: #f28c28;
+  color: #F28C28;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 3px;
   font-size: 1rem;
   text-align: end;
 }
+
 
 header.header-default {
   position: fixed;
@@ -109,6 +111,7 @@ header.header-default {
   font-size: 0.9rem;
   display: flex;
   flex-direction: column;
+
 }
 
 .bg-primary {
@@ -128,6 +131,7 @@ header.header-default {
 
 .lds-ellipsis {
   color: #f28c28;
+  display: inline-block;
   position: relative;
   width: 35px;
   height: 16px;
@@ -303,7 +307,7 @@ header.header-default {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
 }
 
 .indicator {
@@ -334,6 +338,7 @@ header.header-default {
   display: flex;
   align-items: center;
   margin-bottom: 4px;
+
 }
 
 .res-server svg {
@@ -351,11 +356,6 @@ header.header-default {
 
 .ok-btn {
   background-image: url('./next-gray.svg');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center left;
-  width: 16px;
-  height: 16px;
 }
 
 .open-config-1 {
@@ -364,6 +364,14 @@ header.header-default {
 
 .st-btn {
   background-image: url('./cancel.svg');
+}
+
+.ok-btn {
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center left;
+  width: 16px;
+  height: 16px;
 }
 
 #logout {
@@ -394,12 +402,21 @@ select {
   outline: 0;
   box-shadow: none;
   border: 0 !important;
+  background: #5c6664;
+  background-image: none;
   flex: 1;
-  padding: 0 0.5em;
+  padding: 0 .5em;
   color: #333;
   cursor: pointer;
   font-size: 1em;
   font-family: sans-serif, 'Open Sans';
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+select {
   position: relative;
   display: flex;
   width: 250px;
@@ -407,11 +424,7 @@ select {
   line-height: 3;
   background: var(--white);
   overflow: hidden;
-  border-radius: 0.25em;
-}
-
-select::-ms-expand {
-  display: none;
+  border-radius: .25em;
 }
 
 select::after {
@@ -423,11 +436,11 @@ select::after {
   background: #2b2e2e;
   cursor: pointer;
   pointer-events: none;
-  transition: 0.25s all ease;
+  transition: .25s all ease;
 }
 
 select:hover::after {
-  color: #f28c28;
+  color: #F28C28;
 }
 
 #config-group {
@@ -492,6 +505,7 @@ select:hover::after {
   margin-bottom: 15px;
 }
 
+
 label {
   font-weight: bold;
   display: block;
@@ -510,7 +524,7 @@ input[type="number"] {
   border: 1px solid #aaa;
   text-align: center;
   line-height: 35px;
-  border-radius: var(--border-radius);
+  border: var(--border-radius);
   font-size: 1.1rem;
   padding: 10px;
 }
@@ -532,15 +546,15 @@ tr {
 
 @keyframes blink {
   0% {
-    background-color: #ffd700;
+    background-color: #FFD700;
   }
 
   50% {
-    background-color: #ffa500;
+    background-color: #FFA500;
   }
 
   100% {
-    background-color: #ffd700;
+    background-color: #FFD700;
   }
 }
 
@@ -586,6 +600,7 @@ tr {
 }
 
 @media screen and (min-width: 1111px) {
+
   /*   .footer {
       font-size: 0.8rem;
     } */
@@ -603,38 +618,41 @@ tr {
   .indicator:nth-child(3) {
     border-radius: 0 0 var(--border-radius) var(--border-radius);
   }
-
+  
   .indicator:nth-child(2) {
     border-radius: 0;
   }
-
+  
   .indicator:nth-child(1) {
     border-radius: var(--border-radius) var(--border-radius) 0 0;
   }
 }
 
 @media screen and (max-width: 1110px) {
-  .indicator:nth-child(1),
-  .indicator:nth-child(2) {
-    flex: 1 1 50%;
-  }
 
-  .indicator:nth-child(3) {
-    flex: 1 1 100%;
-    border-radius: 0 0 var(--border-radius) var(--border-radius);
-  }
+.indicator:nth-child(1),
+.indicator:nth-child(2) {
+  flex: 1 1 50%;
+}
 
-  .indicator:nth-child(2) {
-    border-radius: 0 var(--border-radius) 0 0;
-    color: #666;
-  }
+.indicator:nth-child(3) {
+  flex: 1 1 100%;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
 
-  .indicator:nth-child(1) {
-    border-radius: var(--border-radius) 0 0 0;
-  }
+.indicator:nth-child(2) {
+  border-radius: 0 var(--border-radius) 0 0;
+  color: #666;
+}
+
+.indicator:nth-child(1) {
+  border-radius: var(--border-radius) 0 0 0;
+}
+  
 }
 
 @supports (width: 100dvw) {
+
   body,
   .bg-config {
     height: 100dvh;

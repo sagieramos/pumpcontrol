@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/sagie/Documents/PlatformIO/Projects/pumpcontrol"
+set -gx VIRTUAL_ENV "/home/stanley/Documents/PlatformIO/Projects/pumpcontrol"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+message Msg1 {
+    float f1 = 1;
+    float f2 = 2;
+    float f3 = 3;
+    float f4 = 4;
+    float f5 = 5;
+    float f6 = 6;
+    float f7 = 7;
+}
