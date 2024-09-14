@@ -313,22 +313,20 @@ header.header {
   justify-content: center;
   gap: 24px;
   padding: 12px;
+  color: #666;
 }
 
 .indicator:nth-child(3) {
   background-color: #c3cfe2;
   border-radius: 0 0 var(--border-radius) var(--border-radius);
-  color: #666;
 }
 
 .indicator:nth-child(2) {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  color: #666;
 }
 
 .indicator:nth-child(1) {
-  background: linear-gradient(135deg, #808080, #606060);
-  color: var(--white);
+  background: linear-gradient(20deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .res-server {
@@ -357,10 +355,6 @@ header.header {
   background-position: center left;
   width: 16px;
   height: 16px;
-}
-
-.open-config-1 {
-  background-image: url('./next-white.svg');
 }
 
 .st-btn {
@@ -582,6 +576,10 @@ tr {
   gap: 4px;
 }
 
+#mode-bg {
+  border-top: 2px solid transparent;
+}
+
 .mg-t {
   margin-top: 12px;
 }
@@ -641,3 +639,4 @@ tr {
     width: 100dvw;
   }
 }
+

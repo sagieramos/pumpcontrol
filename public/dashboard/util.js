@@ -128,39 +128,40 @@ const getModeString = (intValue) => {
 };
 
 const setColorFromMode = (mode, parentElement) => {
-    let gradient;
+    let borderColor;
 
     switch (mode) {
         case POWER_OFF:
-            gradient = 'linear-gradient(135deg, #808080, #606060)';  // Gray gradient
+            borderColor = 'transparent';  // Gray gradient
             break;
         case POWER_ON:
-            gradient = 'linear-gradient(135deg, #32CD32, #228B22)';  // Green gradient
+            borderColor = '#32CD32';  // Green gradient
             break;
         case AUTO:
-            gradient = 'linear-gradient(135deg, #FFA500, #FF8C00)';  // Orange gradient
+            borderColor = ' #FFA500';  // Orange gradient
             break;
         default:
-            gradient = 'linear-gradient(135deg, black, gray)';
+            borderColor = 'transparent';
             break;
     }
 
+    const bordertopcolor = `2px solid ${borderColor}`
+
     // Apply the gradient with a transition to the parent element
     if (parentElement) {
-        parentElement.style.transition = 'background 0.5s ease, color 0.5s ease';
-        parentElement.style.backgroundImage = gradient;
-        parentElement.style.color = mode === AUTO ? '#00274D' : '#FFFFFF';  
+        parentElement.style.transition = 'border-top-color 0.5s ease';
+        parentElement.style.borderTop = bordertopcolor;
 
         setTimeout(() => {
-            parentElement.style.transition = 'background 2s ease';
-            parentElement.style.backgroundImage = `linear-gradient(135deg, ${gradient.split(', ')[1]}, ${gradient.split(', ')[0]})`;
+            parentElement.style.transition = 'border-top-color 2s ease';
+            parentElement.style.borderTop = bordertopcolor; // Revert to original gradient
             setTimeout(() => {
-                parentElement.style.backgroundImage = gradient; // Revert to original gradient
+                parentElement.style.borderTop = bordertopcolor; // Revert to original gradient
             }, 2000);
         }, 500); 
     }
 
-    return gradient;
+    return bordertopcolor;
 };
 
 
@@ -246,6 +247,21 @@ const updateVisibility = (elements, displayValue) => {
     });
 };
 
+const formatTimeFromHours = (hours) => {
+    const totalMinutes = Math.floor(hours * 60);
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const remainingHours = Math.floor((totalMinutes % (60 * 24)) / 60);
+    const minutes = totalMinutes % 60;
+    return `${days > 0 ? `${days}d ` : ''}${remainingHours > 0 ? `${remainingHours}h ` : ''}${minutes}m`;
+  };
+
+  const formatTimeFromMinutes = (totalMinutes) => {
+    const days = Math.floor(totalMinutes / (60 * 24));
+    const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+    const minutes = totalMinutes % 60;
+    return `${days > 0 ? `${days}d ` : ''}${hours > 0 ? `${hours}h ` : ''}${minutes}m`;
+  };
+
 export {
     handleVoltageChange,
     handleModeChange,
@@ -256,6 +272,8 @@ export {
     setColorFromMode,
     handleTimeRangeChange,
     updateVisibility,
+    formatTimeFromHours,
+    formatTimeFromMinutes,
     KEY_CONFIG,
     TYPE_IDS, VOLT_RECEIVE_FROM_SERVER
 };

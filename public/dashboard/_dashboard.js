@@ -7,12 +7,14 @@ import {
   handleModeChange,
   getModeString, setColorFromMode,
   updateVisibility,
+  formatTimeFromMinutes,
   KEY_CONFIG,
   VOLT_RECEIVE_FROM_SERVER,
 } from './util.js';
 import { Countdown } from './countDown.js';
 import { ControlData, TimeRange } from '../protoc/js/pump_control_data.js';
 import { Num } from '../protoc/js/str_num_msg.js';
+import { Msg1 } from '../protoc/js/msg1.js';
 import 'tui-time-picker/dist/tui-time-picker.css';
 import notificationSound from './notify.mp3';
 
@@ -65,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const timeRangeBegin = { hour: 0, minute: 4 };
   const timeRangeEnd = { hour: 23, minute: 59 };
-  const timeRangeEndRunning = { hour: 2, minute: 0 };
+  const timeRangeEndRunning = { hour: 1, minute: 59 };
 
   const timePickerRunning = new TimePicker('#running-time', timePickerObj);
   timePickerRunning.setRange(timeRangeBegin, timeRangeEndRunning);
@@ -117,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modeConfig.value = value;
         break;
       default:
-            // console.log(`Unexpected key: ${key}`);
+      // console.log(`Unexpected key: ${key}`);
     }
   };
 
@@ -265,6 +267,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notifyUser();
   };
+  //store document Id in an array
+
+  const pzemDocId = [
+    document.getElementById('t-e-c'), // Total Energy Consumed
+    document.getElementById('t-i-op'), // Hours in Operation
+    document.getElementById('l-r-d'), // Last Run Duration
+    document.getElementById('e-c'),   // Energy Consumed
+  ];
+
+  const handlePzemData = (buffer) => {
+    try {
+      const msg1 = Msg1.decode(buffer.slice(1));
+      console.log('msg1:', msg1);
+      const { f0, f1, f2, f3 } = msg1;
+      pzemDocId[0].textContent = f0.toFixed(2);
+
+      pzemDocId[1].textContent = formatTimeFromMinutes(f1);
+      pzemDocId[2].textContent = formatTimeFromMinutes(f2);
+      pzemDocId[3].textContent = f3.toFixed(1);
+    } catch (error) {
+      console.error('Failed to deserialize Msg1:', error);
+    }
+  };
 
   const handlers = [
     voidHandler, // Index 0
@@ -276,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     voidHandler, // Index 6
     voidHandler, // Index 7
     handlePowerStatus, // Index 8
+    handlePzemData // Index 9
   ];
 
   /**

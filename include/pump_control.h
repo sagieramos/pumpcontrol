@@ -54,6 +54,7 @@ void store_pump_mode(bool check_changed = true);
 bool is_valid_time_range(const pump_TimeRange &time_range);
 void update_and_send_power_status(uint32_t key, float value);
 void switch_pump(bool state);
+void send_pzem_data();
 void reset_energy();
 
 void runMachineTask(void *parameter);

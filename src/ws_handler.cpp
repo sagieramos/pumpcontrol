@@ -56,6 +56,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
 
     check_and_resume_task(sendVoltageTask, ws.count() > 0);
 
+    send_pzem_data();
+
     LOG_F("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_DISCONNECT) {
     check_and_resume_task(sendVoltageTask, ws.count() > 0);

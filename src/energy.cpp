@@ -26,10 +26,11 @@ void update_pzem_data(unsigned long durationMS) {
   float energy = pzem.energy();
   pzem_data.f0 += energy; // Total energy consumed
 
-  pzem_data.f1 +=
-      durationMS / 3600000;          // Accumulated operation time in raw hours
-  pzem_data.f2 = durationMS / 60000; // Last run duration in minutes
-  pzem_data.f3 = energy * 1000;      // Last run energy
+  float runtime = durationMS / 60000;
+  
+  pzem_data.f1 += runtime;        // Accumulated operation time in minutes
+  pzem_data.f2 = runtime;         // Last run duration in minutes
+  pzem_data.f3 = energy * 1000;   // Last run energy
 
   update_eeprom_data();
 
@@ -58,4 +59,11 @@ void init_pzem_data() {
   }
 
   EEPROM.end();
+
+  pzem_data.f2 = 0.0f;
+  pzem_data.f3 = 0.0f;
+}
+
+void send_pzem_data() {
+  enqueueMessage(msg1);
 }

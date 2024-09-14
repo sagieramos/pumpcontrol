@@ -1,2 +1,2 @@
-npx protocol-buffers protoc/pump_control_data.proto -o  public/pump_control_data.js
+npx protocol-buffers protoc/msg1.proto -o  public/protoc/js/msg1.js
 
