@@ -1,10 +1,6 @@
 #include "sensors.h"
 #include "main.h"
-#include "network.h"
 #include "pump_control.h"
-#include "type_id.h"
-#include <EEPROM.h>
-#include <PZEM004Tv30.h>
 #include <str_num_msg_transcode.h>
 
 TaskHandle_t sendVoltageTask = NULL;
@@ -19,7 +15,7 @@ float readVoltage() {
 #endif
   float voltage = pzem.voltage();
 
-  LOG_F("Voltage: %f\n", voltage);
+  /*   LOG_F("Voltage: %f\n", voltage); */
   return (isnan(voltage) ? 0.0f : voltage);
 }
 
@@ -33,6 +29,7 @@ bool store_min_voltage(float voltage) {
 
   min_voltage = voltage;
   LOG_F("Min voltage: %f\n", min_voltage);
+
   EEPROM.begin(EEPROM_SIZE_CTL);
   EEPROM.put(MIN_VOLTAGE_ADDRESS, voltage);
   EEPROM.commit();
@@ -75,5 +72,13 @@ void send_voltage_task(void *pvParameter) {
     send_num_message(msg, NUM_TYPE_ID);
 
     vTaskDelay(pdMS_TO_TICKS(1000));
+  }
+}
+
+void reset_energy() {
+  if (pzem.resetEnergy()) {
+    LOG_LN("Energy reset successful");
+  } else {
+    LOG_LN("Energy reset failed");
   }
 }

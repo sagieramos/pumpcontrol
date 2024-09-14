@@ -105,9 +105,6 @@ enum AuthStatus {
 
 enum authAction { LOGIN, LOGOUT, CHECK };
 
-ClientSession *getSessionFromRequest(const String &cookieHeader,
-                                     ClientSession *authClients);
-
 AuthStatus authSession(ClientSession *authClients,
                        AsyncWebServerRequest *request, ClientSession &session,
                        authAction action);

@@ -5,7 +5,7 @@ constexpr const char *PIN = "1234";
 const char CHARSET[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-void generateSessionToken(char *token, size_t length) {
+static void generateSessionToken(char *token, size_t length) {
   size_t charset_size = sizeof(CHARSET) - 1;
 
   static int seeded = 0;
@@ -38,8 +38,8 @@ ClientSession *findClientSessionByIndex(ClientSession *authClients,
   return &authClients[index];
 }
 
-bool extractCookieAttribute(const char *cookie, const char *attribute,
-                            char *value, size_t value_size) {
+static bool extractCookieAttribute(const char *cookie, const char *attribute,
+                                   char *value, size_t value_size) {
   // Create a temporary buffer to hold the attribute with the "="
   char attribute_with_equal[strlen(attribute) +
                             2]; // +1 for '=' and +1 for null terminator
@@ -72,8 +72,8 @@ bool extractCookieAttribute(const char *cookie, const char *attribute,
   return true;
 }
 
-ClientSession *getSessionFromRequest(const String &cookieHeader,
-                                     ClientSession *authClients) {
+static ClientSession *getSessionFromRequest(const String &cookieHeader,
+                                            ClientSession *authClients) {
   if (cookieHeader.length() == 0) {
     return NULL;
   }
@@ -118,7 +118,8 @@ AuthStatus removeSession(ClientSession *authClients,
   return UNAUTHORIZED;
 }
 
-AuthStatus createSession(ClientSession *authClients, ClientSession &session) {
+static AuthStatus createSession(ClientSession *authClients,
+                                ClientSession &session) {
   unsigned long now = getCurrentTimeMs();
 
   for (int i = 0; i < MAX_CLIENTS; i++) {
@@ -141,7 +142,7 @@ AuthStatus createSession(ClientSession *authClients, ClientSession &session) {
   return SESSION_IS_FULL;
 }
 
-AuthStatus checkAuth(ClientSession &session) {
+static AuthStatus checkAuth(ClientSession &session) {
   if (&session == NULL) {
     return NOT_ACTIVE;
   }

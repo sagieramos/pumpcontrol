@@ -181,6 +181,20 @@ void handleRequest(AsyncWebServerRequest *request) {
     } else {
       request->redirect("/");
     }
+  } else if (strcmp(urlPath, "/config/wipe") == 0 && method == HTTP_GET) {
+    int auth = authSession(authClients, request, CHECK);
+    if (auth == ACTIVE) {
+      // clear all stored data
+      clearEEPROM();
+      request->send(200, "text/plain",
+                    "All stored data cleared successful, "
+                    "Device restarting...");
+
+      delay(1000);
+      ESP.restart();
+    } else {
+      request->redirect("/");
+    }
   }
 #ifdef FAKE_VOLTAGE_READING
   else if (strcmp(urlPath, "/readtest") == 0 && method == HTTP_GET) {

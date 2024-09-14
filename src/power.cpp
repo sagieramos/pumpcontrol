@@ -13,11 +13,13 @@ constexpr unsigned long PUMP_DELAY_MS = 10000;
 
 Num power = Num_init_default;
 
+static MessageData msg1(&power, POWER_TYPE_ID);
+
 bool pumpState = false;
 
-unsigned long last_change_time_ms = 0;
+static unsigned long last_change_time_ms = 0;
 
-// Helper function to update and send power status
+// Helper function to update and enqueue Message
 void update_and_send_power_status(uint32_t key, float value) {
   if (power.key == key && power.value == value) {
     return;
@@ -25,7 +27,11 @@ void update_and_send_power_status(uint32_t key, float value) {
   power.key = key;
   power.value = value;
 
-  send_num_message(power, POWER_TYPE_ID);
+  msg1.data.num = &power;
+
+  enqueueMessage(msg1);
+
+  /* send_num_message(power, POWER_TYPE_ID); */
 }
 
 // Timer callback to handle pump ON
@@ -153,6 +159,9 @@ inline void power_off() {
     update_and_send_power_status(
         static_cast<uint32_t>(PowerStatus::POWER_INACTIVE), 0.0f);
   }
+
+  update_pzem_data(run_rest_time);
+
   last_change_time_ms = current_time_ms;
 
   digitalWrite(PUMP_RELAY_PIN, LOW);
@@ -161,6 +170,7 @@ inline void power_off() {
 void powerControl(void *pvParameters) {
   (void)pvParameters;
   uint32_t notificationValue;
+  PzemData data;
 
   for (;;) {
     if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, portMAX_DELAY) ==

@@ -7,12 +7,12 @@
 #define SEMAPHORE_TIMEOUT_MS 1000
 
 void send_num_message(Num &value, uint8_t type_id) {
-  uint8_t buffer[NUM_BUFFER_SIZE];
-  size_t buffer_size = NUM_BUFFER_SIZE;
+  uint8_t buffer[Num_size];
+  size_t buffer_size = Num_size;
   if (serialize_num(value, buffer, &buffer_size, type_id, send_binary_data)) {
-    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
-          "Buffer size: %d\n",
-          value.key, value.value, type_id, buffer_size);
+    /*     LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
+              "Buffer size: %d\n",
+              value.key, value.value, type_id, buffer_size); */
   } else {
     LOG_F("Failed to serialize power message\n");
   }
@@ -20,8 +20,8 @@ void send_num_message(Num &value, uint8_t type_id) {
 
 void send_num_message_to_a_client(Num value, uint8_t type_id,
                                   AsyncWebSocketClient *client) {
-  uint8_t buffer[NUM_BUFFER_SIZE];
-  size_t buffer_size = NUM_BUFFER_SIZE;
+  uint8_t buffer[Num_size];
+  size_t buffer_size = Num_size;
   if (serialize_num(value, buffer, &buffer_size, type_id)) {
     LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
           "Buffer size: %d\n",

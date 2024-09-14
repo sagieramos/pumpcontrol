@@ -14,6 +14,17 @@ void send_binary_data(void *data, size_t len) {
   }
 }
 
+void send_binary_data(AsyncWebSocketClient *client, uint8_t *buffer,
+                      size_t buffer_size) {
+  if (client == nullptr || client->status() != WS_CONNECTED) {
+    if (ws.count() > 0) {
+      ws.binaryAll(buffer, buffer_size);
+    }
+  } else {
+    client->binary(buffer, buffer_size);
+  }
+}
+
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
   size_t client_id = client->id();

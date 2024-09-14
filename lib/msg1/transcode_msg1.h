@@ -19,8 +19,8 @@ typedef void (*msg1_codec_callback_t)(void *data, size_t len);
  * @param buffer_size A pointer to the size of the buffer. On entry, it should
  * contain the maximum size of the buffer. On exit, it will contain the size of
  * the serialized data including the type ID.
- * @param type_id A type identifier that will be written as the first byte of the
- * buffer.
+ * @param type_id A type identifier that will be written as the first byte of
+ * the buffer.
  * @param cb Optional callback function to call with the serialized data.
  *
  * @return `true` if serialization is successful, `false` otherwise.
@@ -44,6 +44,7 @@ bool serialize_msg1(const Msg1 &msg1, uint8_t *buffer, size_t *buffer_size,
  * @return `true` if deserialization is successful, `false` otherwise.
  */
 
-bool deserialize_msg1(const uint8_t *buffer, size_t buffer_size, Msg1 &msg1, msg1_codec_callback_t cb = nullptr);
+bool deserialize_msg1(const uint8_t *buffer, size_t buffer_size, Msg1 &msg1,
+                      msg1_codec_callback_t cb = nullptr);
 
 #endif // TRANSCODE_MSG1_H

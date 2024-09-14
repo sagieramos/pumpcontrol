@@ -29,8 +29,7 @@ const StaticFile staticFiles[] = {
     {"/next-white.svg", IMAGE_SVG}, {"/cancel.svg", IMAGE_SVG},
     {"/fb.svg", IMAGE_SVG},         {"/ig.svg", IMAGE_SVG},
     {"/in.svg", IMAGE_SVG},         {"/tiktok.svg", IMAGE_SVG},
-    {"/x.svg", IMAGE_SVG}
-};
+    {"/x.svg", IMAGE_SVG}};
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
@@ -96,18 +95,25 @@ void setup() {
     LOG_LN("Check signal task created successfully");
   }
 
-  if (xTaskCreatePinnedToCore(powerControl, "Power Task", 4096, NULL, 1,
+  if (xTaskCreatePinnedToCore(powerControl, "Power Task", 4096, NULL, 3,
                               &powerControlTask, 1) != pdPASS) {
     LOG_LN("Failed to create power task");
   } else {
     LOG_LN("Power task created successfully");
   }
 
-  if (xTaskCreatePinnedToCore(readPzemTask, "readPzem Task", 4096, NULL, 3,
+  if (xTaskCreatePinnedToCore(readPzemTask, "readPzem Task", 4096, NULL, 4,
                               &readPzemTaskHandle, 1) != pdPASS) {
     LOG_LN("Failed to readPzem Task");
   } else {
     LOG_LN("readPzem Task created successfully");
+  }
+
+  if (xTaskCreatePinnedToCore(msgGatewayTask, "Message Gateway Task", 4096,
+                              NULL, 2, &msgGatewayTaskHandle, 1) != pdPASS) {
+    LOG_LN("Failed to create Message Gateway Task");
+  } else {
+    LOG_LN("Message Gateway Task created successfully");
   }
   /*
     if (xTaskCreatePinnedToCore(stackMonitor, "stack Monitor", 4096, NULL, 3,

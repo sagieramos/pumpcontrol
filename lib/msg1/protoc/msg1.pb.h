@@ -11,42 +11,37 @@
 
 /* Struct definitions */
 typedef struct _Msg1 {
-    float f1;
-    float f2;
-    float f3;
-    float f4;
-    float f5;
-    float f6;
-    float f7;
+  float f0;
+  float f1;
+  float f2;
+  float f3;
+  float f4;
 } Msg1;
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Msg1_init_default                        {0, 0, 0, 0, 0, 0, 0}
-#define Msg1_init_zero                           {0, 0, 0, 0, 0, 0, 0}
+#define Msg1_init_default                                                      \
+  { 0, 0, 0, 0, 0 }
+#define Msg1_init_zero                                                         \
+  { 0, 0, 0, 0, 0 }
 
 /* Field tags (for use in manual encoding/decoding) */
-#define Msg1_f1_tag                              1
-#define Msg1_f2_tag                              2
-#define Msg1_f3_tag                              3
-#define Msg1_f4_tag                              4
-#define Msg1_f5_tag                              5
-#define Msg1_f6_tag                              6
-#define Msg1_f7_tag                              7
+#define Msg1_f0_tag 1
+#define Msg1_f1_tag 2
+#define Msg1_f2_tag 3
+#define Msg1_f3_tag 4
+#define Msg1_f4_tag 5
 
 /* Struct field encoding specification for nanopb */
-#define Msg1_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, FLOAT,    f1,                1) \
-X(a, STATIC,   SINGULAR, FLOAT,    f2,                2) \
-X(a, STATIC,   SINGULAR, FLOAT,    f3,                3) \
-X(a, STATIC,   SINGULAR, FLOAT,    f4,                4) \
-X(a, STATIC,   SINGULAR, FLOAT,    f5,                5) \
-X(a, STATIC,   SINGULAR, FLOAT,    f6,                6) \
-X(a, STATIC,   SINGULAR, FLOAT,    f7,                7)
+#define Msg1_FIELDLIST(X, a)                                                   \
+  X(a, STATIC, SINGULAR, FLOAT, f0, 1)                                         \
+  X(a, STATIC, SINGULAR, FLOAT, f1, 2)                                         \
+  X(a, STATIC, SINGULAR, FLOAT, f2, 3)                                         \
+  X(a, STATIC, SINGULAR, FLOAT, f3, 4)                                         \
+  X(a, STATIC, SINGULAR, FLOAT, f4, 5)
 #define Msg1_CALLBACK NULL
 #define Msg1_DEFAULT NULL
 
@@ -56,8 +51,8 @@ extern const pb_msgdesc_t Msg1_msg;
 #define Msg1_fields &Msg1_msg
 
 /* Maximum encoded size of messages (where known) */
-#define Msg1_size                                35
-#define PROTOC_MSG1_PB_H_MAX_SIZE                Msg1_size
+#define Msg1_size 25
+#define PROTOC_MSG1_PB_H_MAX_SIZE Msg1_size
 
 #ifdef __cplusplus
 } /* extern "C" */

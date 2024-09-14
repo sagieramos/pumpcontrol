@@ -22,6 +22,15 @@ pump_ControlData current_pump_data = pump_ControlData_init_default;
 
 TimerHandle_t delayTimer = NULL;
 
+void clearEEPROM() {
+  EEPROM.begin(EEPROM_SIZE_CTL);
+  for (int i = 0; i < EEPROM_SIZE_CTL; i++) {
+    EEPROM.write(i, 0);
+  }
+  EEPROM.commit();
+  EEPROM.end();
+}
+
 // Store time range in EEPROM
 void store_time_range(bool check_changed) {
   EEPROM.begin(EEPROM_SIZE_CTL);
@@ -283,6 +292,7 @@ void runMachineTask(void *parameter) {
   digitalWrite(PUMP_RELAY_PIN, LOW);
 
   init_EEPROM_pump_controller();
+  init_pzem_data();
 
   for (;;) {
     uint32_t notificationValue = ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
