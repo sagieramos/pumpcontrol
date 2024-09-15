@@ -10,11 +10,13 @@ void send_num_message(Num &value, uint8_t type_id) {
   uint8_t buffer[Num_size];
   size_t buffer_size = Num_size;
   if (serialize_num(value, buffer, &buffer_size, type_id, send_binary_data)) {
-    /*     LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
-              "Buffer size: %d\n",
-              value.key, value.value, type_id, buffer_size); */
+#ifdef DEBUG_ITERATION
+    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
+          "Buffer size: %d\n",
+          value.key, value.value, type_id, buffer_size);
   } else {
     LOG_F("Failed to serialize power message\n");
+#endif
   }
 }
 
@@ -194,8 +196,7 @@ void handle_control_data_update(Num &msg, bool &dataChanged) {
   }
 }
 
-void send_data_if_changed(bool dataChanged, Num &msg, uint8_t *data,
-                          size_t len) {
+static void send_data_if_changed(bool dataChanged, uint8_t *data, size_t len) {
   if (dataChanged) {
     xTaskNotifyGive(runMachineTaskHandle);
     if (ws.count() > 0) {
@@ -224,7 +225,7 @@ void receive_single_config(uint8_t *data, size_t len) {
     break;
   }
 
-  send_data_if_changed(dataChanged, msg, data, len);
+  send_data_if_changed(dataChanged, data, len);
 }
 
 void receive_pump_time_range(uint8_t *data, size_t len) {
@@ -260,7 +261,7 @@ void receive_pump_time_range(uint8_t *data, size_t len) {
     ws.binaryAll(data, len);
   }
 
-  send_all_power_status_and_type();
+  sendCurrentMachineState();
 
   store_time_range(false);
 }

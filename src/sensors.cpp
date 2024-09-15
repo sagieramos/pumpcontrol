@@ -9,6 +9,16 @@ PZEM004Tv30 pzem(Serial2, 16, 17);
 
 float min_voltage = 0.0f;
 
+/*
+ * Voltage reading from PZEM004Tv30
+ * Voltage reading from PZEM004Tv30 is stored in Msg1::f0
+ * Power reading from PZEM004Tv30 is stored in Msg1::f1
+ * Power factor reading from PZEM004Tv30 is stored in Msg1::f2
+ */
+Msg1 pzemTwoData = Msg1_init_zero;
+
+Num msg = {VoltageKey::MIN_VOLTAGE, 0};
+
 float readVoltage() {
 #ifdef FAKE_VOLTAGE_READING
   return random(209, 215);
@@ -52,10 +62,69 @@ void get_min_voltage(float &voltage) {
   LOG_F("Min voltage: %f\n", voltage);
 }
 
+void send_min_voltage(AsyncWebSocketClient *client) {
+  msg.value = min_voltage;
+  uint8_t buffer[Num_size];
+  size_t buffer_size = 0;
+  if (!serialize_num(msg, buffer, &buffer_size, NUM_TYPE_ID)) {
+    LOG_LN("Failed to serialize min voltage message");
+  } else {
+    if (client) {
+      client->binary(buffer, buffer_size);
+    } else {
+      send_binary_data(buffer, buffer_size);
+    }
+  }
+  LOG_F("Sent min voltage: %f | key: %d | typeId: %d\n", msg.value, msg.key,
+        NUM_TYPE_ID);
+}
+
+static void send_pzemTwo_data() {
+  uint8_t buffer[Msg1_size];
+  size_t buffer_size = 0;
+
+  if (!serialize_msg1(pzemTwoData, buffer, &buffer_size, PZEM2_TYPE_ID)) {
+    LOG_LN("Failed to serialize pzemTwo data message");
+  } else {
+    ws.binaryAll(buffer, buffer_size);
+
+    LOG_F("Sent pzemTwoData voltage(f0): %f | power(f1): %f | power "
+          "factor(f2): %f | typeId: %d | Buffer size: %d\n",
+          pzemTwoData.f0, pzemTwoData.f1, pzemTwoData.f2, PZEM2_TYPE_ID,
+          buffer_size);
+  }
+}
+
+/* static void send_voltage_data() {
+  Num msg = {VoltageKey::VOLTAGE, 0.0f};
+  msg.value = pzemTwoData.f0;
+
+  uint8_t buffer[Num_size];
+  size_t buffer_size = 0;
+  if (!serialize_num(msg, buffer, &buffer_size, PZEM2_TYPE_ID)) {
+    LOG_LN("Failed to serialize voltage message");
+  } else {
+    ws.binaryAll(buffer, buffer_size);
+
+    LOG_F("Sent pzemTwoData voltage(f0): %f | power(f1): %f | power "
+          "factor(f2): %f | typeId: %d | Buffer size: %d\n",
+          pzemTwoData.f0, pzemTwoData.f1, pzemTwoData.f2, PZEM2_TYPE_ID,
+          buffer_size);
+  }
+} */
+
+void reset_energy() {
+  if (pzem.resetEnergy()) {
+    LOG_LN("Energy reset successful");
+  } else {
+    LOG_LN("Energy reset failed");
+  }
+}
+
 void send_voltage_task(void *pvParameter) {
   (void)pvParameter;
-  Num msg = Num_init_zero;
-  msg.key = VoltageKey::VOLTAGE;
+
+  Num msg = {VoltageKey::VOLTAGE, 0.0f};
 
   get_min_voltage(min_voltage);
 
@@ -63,22 +132,34 @@ void send_voltage_task(void *pvParameter) {
     ws.cleanupClients();
 
     if (ws.count() == 0) {
-      LOG_LN("Suspending sendVoltageTask");
+      LOG_LN("No WebSocket clients connected, suspending sendVoltageTask.");
       vTaskSuspend(NULL);
+    } else {
+      if (!ws.availableForWriteAll()) {
+        LOG_LN("WebSocket write not available, suspending sendVoltageTask.");
+        vTaskSuspend(NULL);
+      }
+
+      send_pzemTwo_data();
+
+      vTaskDelay(pdMS_TO_TICKS(1000));
     }
-
-    msg.value = readingVolt;
-
-    send_num_message(msg, NUM_TYPE_ID);
-
-    vTaskDelay(pdMS_TO_TICKS(1000));
   }
 }
 
-void reset_energy() {
-  if (pzem.resetEnergy()) {
-    LOG_LN("Energy reset successful");
-  } else {
-    LOG_LN("Energy reset failed");
+void readPzemTask(void *parameter) {
+  (void)parameter;
+  for (;;) {
+    pzemTwoData.f0 = readVoltage();
+
+    if (!current_pump_data.is_running) {
+      pzemTwoData.f1 = 0.0f;
+      pzemTwoData.f2 = 0.0f;
+    } else {
+      pzemTwoData.f1 = 2.9; // pzem.power();
+      pzemTwoData.f2 = 5.7; // pzem.pf();
+    }
+    xTaskNotifyGive(runMachineTaskHandle);
+    vTaskDelay(pdMS_TO_TICKS(500));
   }
 }

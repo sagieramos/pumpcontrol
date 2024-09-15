@@ -25,6 +25,33 @@ void send_binary_data(AsyncWebSocketClient *client, uint8_t *buffer,
   }
 }
 
+void send_num_message(Num &value, uint8_t type_id,
+                      AsyncWebSocketClient *client) {
+  uint8_t buffer[Num_size];
+  size_t buffer_size = Num_size;
+  if (serialize_num(value, buffer, &buffer_size, type_id)) {
+    LOG_F("Sent Num message. key: %d, value: %f | Type ID: %d | "
+          "Buffer size: %d\n",
+          value.key, value.value, type_id, buffer_size);
+    send_binary_data(client, buffer, buffer_size);
+  } else {
+    LOG_F("Failed to serialize power message\n");
+  }
+}
+
+void send_msg1_data(Msg1 &msg1, uint8_t type_id, AsyncWebSocketClient *client) {
+  uint8_t buffer[Msg1_size];
+  size_t buffer_size = Msg1_size;
+  if (serialize_msg1(msg1, buffer, &buffer_size, type_id)) {
+    LOG_F("Sent Msg1 message. f0: %f, f1: %f, f2: %f | Type ID: %d | "
+          "Buffer size: %d\n",
+          msg1.f0, msg1.f1, msg1.f2, type_id, buffer_size);
+    send_binary_data(client, buffer, buffer_size);
+  } else {
+    LOG_F("Failed to serialize power message\n");
+  }
+}
+
 void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
                AwsEventType type, void *arg, uint8_t *data, size_t len) {
   size_t client_id = client->id();
@@ -33,8 +60,8 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     ws.cleanupClients();
     LOG_F("Websocket client connection received: %u\n", client_id);
 
-    uint8_t buff[56];
-    size_t buff_size = sizeof(buff);
+    uint8_t buff[pump_ControlData_size];
+    size_t buff_size = pump_ControlData_size;
 
     if (serialize_control_data(current_pump_data, buff, &buff_size,
                                CONTROL_DATA_TYPE_ID)) {
@@ -46,17 +73,13 @@ void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client,
     }
     client->binary(buff, buff_size);
 
-    // send min voltage
-    Num msg = Num_init_zero;
-    msg.key = VoltageKey::MIN_VOLTAGE;
-    msg.value = min_voltage;
-    send_num_message_to_a_client(msg, NUM_TYPE_ID, client);
+    send_min_voltage(client);
 
-    send_all_power_status_and_type(client);
+    sendCurrentMachineState(client);
 
     check_and_resume_task(sendVoltageTask, ws.count() > 0);
 
-    send_pzem_data();
+    send_pzem_data(client);
 
     LOG_F("Clients online: %d\n", ws.count());
   } else if (type == WS_EVT_DISCONNECT) {

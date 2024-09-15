@@ -10,8 +10,6 @@ static Msg1 pzem_data = Msg1_init_zero;
   msg1.f3: last_run_energy;
 */
 
-static MessageData msg1(&pzem_data, PZEM1_TYPE_ID);
-
 static void update_eeprom_data() {
   EEPROM.begin(EEPROM_SIZE_CTL);
 
@@ -20,23 +18,6 @@ static void update_eeprom_data() {
   EEPROM.commit();
 
   EEPROM.end();
-}
-
-void update_pzem_data(unsigned long durationMS) {
-  float energy = pzem.energy();
-  pzem_data.f0 += energy; // Total energy consumed
-
-  float runtime = durationMS / 60000;
-  
-  pzem_data.f1 += runtime;        // Accumulated operation time in minutes
-  pzem_data.f2 = runtime;         // Last run duration in minutes
-  pzem_data.f3 = energy * 1000;   // Last run energy
-
-  update_eeprom_data();
-
-  enqueueMessage(msg1);
-
-  reset_energy();
 }
 
 void init_pzem_data() {
@@ -64,6 +45,38 @@ void init_pzem_data() {
   pzem_data.f3 = 0.0f;
 }
 
-void send_pzem_data() {
-  enqueueMessage(msg1);
+void send_pzem_data(AsyncWebSocketClient *client) {
+  uint8_t buffer[Msg1_size];
+  size_t buffer_size = 0;
+  if (!serialize_msg1(pzem_data, buffer, &buffer_size, PZEM1_TYPE_ID)) {
+    LOG_LN("Failed to serialize pzem data message");
+    return;
+  } else {
+    if (client) {
+      client->binary(buffer, buffer_size);
+    } else {
+      send_binary_data(buffer, buffer_size);
+    }
+  }
+  LOG_F("Sent pzem data | f0: %f, f1: %f, f2: %f, f3: %f | Type ID: %d | "
+        "Buffer size: %d\n",
+        pzem_data.f0, pzem_data.f1, pzem_data.f2, pzem_data.f3, PZEM1_TYPE_ID,
+        buffer_size);
+}
+
+void update_pzem_data(unsigned long durationMS) {
+  float energy = pzem.energy();
+  pzem_data.f0 += energy; // Total energy consumed
+
+  float runtime = durationMS / 60000;
+
+  pzem_data.f1 += runtime;      // Accumulated operation time in minutes
+  pzem_data.f2 = runtime;       // Last run duration in minutes
+  pzem_data.f3 = energy * 1000; // Last run energy
+
+  update_eeprom_data();
+
+  send_pzem_data();
+
+  reset_energy();
 }

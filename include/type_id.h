@@ -195,6 +195,8 @@ constexpr uint8_t VOLTAGE_TYPE_ID = 0x07;
 
 constexpr uint8_t PZEM1_TYPE_ID = 0x09;
 
+constexpr uint8_t PZEM2_TYPE_ID = 0x0A;
+
 /**
  * @def POWER_TYPE_ID
  * @brief Type ID for power control messages.

@@ -43,7 +43,6 @@ extern TaskHandle_t powerControlTask;
 extern TaskHandle_t readPzemTaskHandle;
 extern float min_voltage;
 extern pump_ControlData current_pump_data;
-extern float readingVolt;
 extern Num power;
 extern bool pumpState;
 extern bool automate_mode_signal;
@@ -54,7 +53,6 @@ void store_pump_mode(bool check_changed = true);
 bool is_valid_time_range(const pump_TimeRange &time_range);
 void update_and_send_power_status(uint32_t key, float value);
 void switch_pump(bool state);
-void send_pzem_data();
 void reset_energy();
 
 void runMachineTask(void *parameter);
@@ -62,22 +60,19 @@ void checkSignalTask(void *parameter);
 void powerControl(void *pvParameters);
 void readPzemTask(void *parameter);
 
-void send_all_power_status_and_type(AsyncWebSocketClient *client = nullptr);
-
 extern TimerHandle_t delayTimer;
 
-struct PzemData {
+/* struct PzemData {
   float total_energy_consumed_in_operation; // in kWh
   unsigned long days_in_operation;          // in days
   unsigned long last_run_duration;          // in minutes
   unsigned long last_run_energy;            // in Wh
-};
+}; */
 
 #define PzemData_size sizeof(PzemData)
 
 void update_pzem_data(unsigned long durationMS);
 void init_pzem_data();
-bool enqueueMessage(const MessageData &msg_data);
 
 /**
  * @brief Processes a message and performs an action based on the first byte of

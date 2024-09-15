@@ -109,12 +109,6 @@ void setup() {
     LOG_LN("readPzem Task created successfully");
   }
 
-  if (xTaskCreatePinnedToCore(msgGatewayTask, "Message Gateway Task", 4096,
-                              NULL, 2, &msgGatewayTaskHandle, 1) != pdPASS) {
-    LOG_LN("Failed to create Message Gateway Task");
-  } else {
-    LOG_LN("Message Gateway Task created successfully");
-  }
   /*
     if (xTaskCreatePinnedToCore(stackMonitor, "stack Monitor", 4096, NULL, 3,
                                 &readPzemTaskHandle, 1) != pdPASS) {

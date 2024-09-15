@@ -13,8 +13,6 @@ constexpr unsigned long PUMP_DELAY_MS = 10000;
 
 Num power = Num_init_default;
 
-static MessageData msg1(&power, POWER_TYPE_ID);
-
 bool pumpState = false;
 
 static unsigned long last_change_time_ms = 0;
@@ -27,11 +25,7 @@ void update_and_send_power_status(uint32_t key, float value) {
   power.key = key;
   power.value = value;
 
-  msg1.data.num = &power;
-
-  enqueueMessage(msg1);
-
-  /* send_num_message(power, POWER_TYPE_ID); */
+  send_num_message(power, POWER_TYPE_ID, nullptr);
 }
 
 // Timer callback to handle pump ON
@@ -97,7 +91,7 @@ void switch_pump(bool state) {
 
 // Function to send the current power status and remaining time to a WebSocket
 // client
-void send_all_power_status_and_type(AsyncWebSocketClient *client) {
+void sendCurrentMachineState(AsyncWebSocketClient *client) {
   PowerStatus power_status = static_cast<PowerStatus>(power.key);
   unsigned long current_time_ms = getCurrentTimeMs();
   float adjusted_time = 0.0f;
@@ -132,11 +126,8 @@ void send_all_power_status_and_type(AsyncWebSocketClient *client) {
   }
 
   power.value = adjusted_time;
-  if (client == nullptr) {
-    send_num_message(power, POWER_TYPE_ID);
-  } else {
-    send_num_message_to_a_client(power, POWER_TYPE_ID, client);
-  }
+
+  send_num_message(power, POWER_TYPE_ID, client);
 }
 
 inline void power_off() {
@@ -170,7 +161,6 @@ inline void power_off() {
 void powerControl(void *pvParameters) {
   (void)pvParameters;
   uint32_t notificationValue;
-  PzemData data;
 
   for (;;) {
     if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, portMAX_DELAY) ==

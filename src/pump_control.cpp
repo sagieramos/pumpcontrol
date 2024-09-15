@@ -13,7 +13,6 @@ TaskHandle_t checkSignalHandle = NULL;
 TaskHandle_t readPzemTaskHandle = NULL;
 
 unsigned long lastChangeTimeMs = 0;
-float readingVolt = 0.0f;
 bool powerOn = false;
 bool automate_mode_signal = false;
 uint32_t previous_power_status = 0;
@@ -164,7 +163,7 @@ void running_or_resting_and_update(unsigned long signalTimeMs,
   case PowerStatus::POWER_VOLTAGE_LOW:
     power.key = previous_power_status;
     if (power.key == PowerStatus::POWER_RESTING)
-      send_all_power_status_and_type();
+      sendCurrentMachineState();
     updatePumpState(signalTimeMs, currentTimeMs);
     break;
 
@@ -213,15 +212,15 @@ void logAutoSignal() {
 void controlPumpState() {
   static bool log_voltage_low = true;
 
-  if (readingVolt < min_voltage) {
+  if (pzemTwoData.f0 < min_voltage) {
     switch_pump(false);
     static pump_MachineMode previousMode = current_pump_data.mode;
     static bool previous_automate_auto_signal = automate_mode_signal;
 
     if (log_voltage_low || previousMode != current_pump_data.mode ||
         previous_automate_auto_signal != automate_mode_signal) {
-      LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n", readingVolt,
-            min_voltage);
+      LOG_F("Supply voltage(%fV) is below required voltage(%fV)\n",
+            pzemTwoData.f0, min_voltage);
 
       if (log_voltage_low) {
         previous_power_status = power.key;
@@ -323,14 +322,5 @@ void checkSignalTask(void *parameter) {
     logAutoSignal();
 #endif
     vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
-  }
-}
-
-void readPzemTask(void *parameter) {
-  (void)parameter;
-  for (;;) {
-    readingVolt = readVoltage();
-    xTaskNotifyGive(runMachineTaskHandle);
-    vTaskDelay(pdMS_TO_TICKS(500));
   }
 }

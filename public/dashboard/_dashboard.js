@@ -291,6 +291,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const pzemTwoDocId = [
+    document.getElementById('p-p'), // Power
+    document.getElementById('p-f'), // Power Factor
+  ];
+
+  const handlePzemTwoData = (buffer) => {
+    try {
+      const msg1 = Msg1.decode(buffer.slice(1));
+      console.log('msg2:', msg1);
+      const { f0, f1, f2 } = msg1;
+      // f0: voltage, f1: power, f2: power factor
+
+      let f = false;
+
+      voltageElement.textContent = f0.toFixed(1);
+      updateChartFunction(f0);
+      f = f0 < minValueStorage;
+      if (flagP !== f) {
+        valueHeading.style.color = f ? '#ff6384' : '#36a2eb';
+        flagP = f;
+      }
+
+      pzemTwoDocId[0].textContent = f1.toFixed(1);
+      pzemTwoDocId[1].textContent = f2.toFixed(2);
+    } catch (error) {
+      console.error('Failed to deserialize Msg1:', error);
+    }
+  };
+
   const handlers = [
     voidHandler, // Index 0
     handleSingleConfig, // Index 1
@@ -301,7 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
     voidHandler, // Index 6
     voidHandler, // Index 7
     handlePowerStatus, // Index 8
-    handlePzemData // Index 9
+    handlePzemData, // Index 9
+    handlePzemTwoData // Index 10
   ];
 
   /**
