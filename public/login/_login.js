@@ -1,6 +1,6 @@
 import './_login.css';
 
-const APname = 'Akowe_Fountain';
+const APname = 'Imuwahen_2024';
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
@@ -37,6 +37,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const authTokenElement = document.getElementById("auth-token");
+
+    const updateSessionId = (newToken) => {
+        const formattedToken = newToken.toString().padStart(9, '0');
+        const formattedString = `${formattedToken.slice(0, 4)} ${formattedToken.slice(4, 7)} ${formattedToken.slice(7)}`;
+        authTokenElement.textContent = formattedString;
+        authTokenElement.classList.add('drop');
+    };
+
     const validateAndSubmit = async () => {
         const passcode = passcodeInput.value;
         const formData = new FormData(form);
@@ -65,28 +74,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 result = await response.text();
             }
 
+            console.log(result);
+
             switch (response.status) {
                 case 200:
                     window.location.href = '/dashboard';
                     break;
                 case 401:
-                    displayError(typeof result === 'string' ? result : result.message || 'Unauthorized');
+                    displayError(result.error || 'Unauthorized');
                     passcodeInput.value = '';
                     break;
                 case 302:
-                    displayError(typeof result === 'string' ? result : result.message || 'Server Unavailable.');
+                    displayError(result.error || 'Server Unavailable.');
                     passcodeInput.value = '';
                     break;
                 case 500:
-                    displayError(typeof result === 'string' ? result : result.message || 
-                        `Connect your device WiFi to Access Point: <span style="font-style: italic;">${APname}</span> and try again.`
-                    );
+                    displayError(result.error || `Connect your device WiFi to Access Point: <span style="font-style: italic;">${APname}</span> and try again.`);
                     break;
                 default:
-                    displayError('Faulty Request. Please try again.');
+                    displayError(result.error || 'Faulty Request. Please try again.');
                     passcodeInput.value = '';
                     break;
             }
+
+            if (result.sessionId) {
+                updateSessionId(result.sessionId);
+            }
+
         } catch (error) {
             console.error('Error:', error);
             displayError('An error occurred. Please try again.');
@@ -94,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setLoadingState(false);
         }
     };
+
 
     form.addEventListener('submit', (event) => {
         if (!loadingAnim.classList.contains('loading-anim')) {
@@ -124,4 +139,34 @@ document.addEventListener('DOMContentLoaded', () => {
     passcodeInput.addEventListener('invalid', (event) => {
         event.preventDefault();
     });
+
+    authTokenElement.addEventListener('animationend', function () {
+        authTokenElement.classList.remove('drop');
+    });
+
+    setTimeout(async () => {
+        try {
+            const response = await fetch('/getsessionid', {
+                method: 'GET',
+                credentials: 'omit',
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const text = await response.text();
+
+            updateSessionId(text);
+
+            setTimeout(() => {
+                passcodeInput.focus();  
+            }, 500)
+
+            console.log('Session ID:', text);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }, 1000);
+
 });

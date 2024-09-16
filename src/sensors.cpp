@@ -156,10 +156,10 @@ void readPzemTask(void *parameter) {
       pzemTwoData.f1 = 0.0f;
       pzemTwoData.f2 = 0.0f;
     } else {
-      pzemTwoData.f1 = 2.9; // pzem.power();
-      pzemTwoData.f2 = 5.7; // pzem.pf();
+      pzemTwoData.f1 = pzem.power();
+      pzemTwoData.f2 = pzem.pf();
     }
     xTaskNotifyGive(runMachineTaskHandle);
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(100));
   }
 }

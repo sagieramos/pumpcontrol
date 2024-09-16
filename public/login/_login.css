@@ -83,6 +83,52 @@ header {
   align-items: center;
 }
 
+main {
+  padding: 0 24px;
+  margin-top: 72px;
+  color: #ffd90085;
+}
+
+main h2 {
+  font-size: 0.8rem;
+  font-weight: 300;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-style: italic;
+  color: #03e8f4c4;
+}
+
+@keyframes dropEffect {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(10px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+#auth-token {
+  display: inline-block;
+  transition: all 0.3s ease;
+  margin-left: 5px;
+}
+
+#auth-token.drop {
+  animation: dropEffect 0.5s ease-in-out;
+}
+
+
 .login-box h2 {
   margin: 0 0 30px;
   padding: 0;
@@ -282,14 +328,14 @@ header {
 
 .flash-message {
   position: absolute;
-  top: 70px;
+  top: 100px;
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
   max-width: 400px;
   min-width: 350px;
   padding: 8px 24px;
-  color: #FA5F55;
+   color: #F28C28;
   text-align: center;
   border-radius: 5px;
   display: flex;

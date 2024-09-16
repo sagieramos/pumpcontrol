@@ -2,6 +2,7 @@
 #include "network.h"
 #include "pump_control.h"
 #include "sensors.h"
+#include "session.h"
 
 #define WAKE_PIN GPIO_NUM_4
 
@@ -151,6 +152,8 @@ void setup() {
             [](AsyncWebServerRequest *request) { handleRequest(request); });
 
   server.begin();
+
+  pinGen.regenerate();
 }
 
 void loop() { vTaskDelay(portMAX_DELAY); }

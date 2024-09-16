@@ -1,6 +1,29 @@
+#include "session.h"
+#include "dev_or_prod.h"
 #include "main.h"
 
 constexpr const char *PIN = "1234";
+
+PinGen::PinGen() : gen(0) { regenerate(); }
+
+void PinGen::regenerate() {
+  srand(time(NULL));
+  gen = (rand() % (9999999999UL - 1000000000UL + 1)) + 1000000000UL;
+
+  char pin_str[11];
+
+  sprintf(pin_str, "%lu", gen);
+
+  for (int i = 0; i < 4; i++) {
+    int k = pin_str[i] - pin_str[7 - i];
+    pin[i] = static_cast<uint8_t>(abs(k));
+  }
+
+  LOG_F("Generated pin: %s\n", pin_str);
+  LOG_F("pin: %d%d%d%d\n", pin[0], pin[1], pin[2], pin[3]);
+}
+
+PinGen pinGen;
 
 const char CHARSET[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -167,7 +190,10 @@ AuthStatus authSession(ClientSession *authClients,
     if (!request->hasParam("pin", true)) {
       return UNAUTHORIZED;
     }
-    return strcmp(request->getParam("pin", true)->value().c_str(), PIN) == 0
+    char pinStr[5];
+    snprintf(pinStr, sizeof(pinStr), "%d%d%d%d", pinGen.pin[0], pinGen.pin[1],
+             pinGen.pin[2], pinGen.pin[3]);
+    return strcmp(request->getParam("pin", true)->value().c_str(), pinStr) == 0
                ? createSession(authClients, session)
                : UNAUTHORIZED;
   } else if (action == LOGOUT) {

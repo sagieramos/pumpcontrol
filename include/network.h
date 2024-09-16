@@ -8,6 +8,7 @@
 
 extern AsyncWebServer server;
 extern AsyncWebSocket ws;
+extern AsyncEventSource events;
 extern DNSServer dnsServer;
 extern IPAddress local_IP;
 extern TaskHandle_t msgGatewayTaskHandle;

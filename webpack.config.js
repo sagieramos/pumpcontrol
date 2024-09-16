@@ -8,8 +8,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//const subDir = 'login';
-const subDir = 'dashboard';
+const subDir = 'login';
+// const subDir = 'dashboard';
 
 export default {
   entry: `./public/${subDir}/_${subDir}.js`,

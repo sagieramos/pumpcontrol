@@ -6,6 +6,7 @@
 #include <str_num_msg_transcode.h>
 
 AsyncWebSocket ws("/ws");
+AsyncEventSource events("/events");
 
 void send_binary_data(void *data, size_t len) {
   uint8_t *buffer = static_cast<uint8_t *>(data);
