@@ -7,7 +7,7 @@
 #include <EEPROM.h>
 #include <PZEM004Tv30.h>
 
-constexpr int FLOAT_SIGNAL_PIN = 21; // Float signal pin
+constexpr int FLOAT_SIGNAL_PIN = 33; // Float signal pin
 constexpr int PUMP_RELAY_PIN = 12;   // Relay pin for pump
 
 constexpr uint8_t MAGIC_NUMBER = 123; // Magic number for EEPROM data validity

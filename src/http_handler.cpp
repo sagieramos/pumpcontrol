@@ -2,7 +2,7 @@
 #include "network.h"
 #include "session.h"
 
-const char *domainName = "akowe.org";
+const char *domainName = "imuwahen.org";
 
 #ifdef FAKE_VOLTAGE_READING
 bool test_auto_mode = false;
@@ -72,6 +72,9 @@ static void sendJsonResponse(AsyncWebServerRequest *request, int statusCode,
   sprintf(response, "{\"error\": \"%s\", \"sessionId\": %lu}", errorMessage,
           pinGen.gen);
   request->send(statusCode, "application/json", response);
+
+  events.send(String(pinGen.gen).c_str(), "sessionId", getCurrentTimeMs(),
+              1000);
 }
 
 void handleLogin(AsyncWebServerRequest *request) {
@@ -112,6 +115,11 @@ void handleLogin(AsyncWebServerRequest *request) {
 
       request->send(response);
 
+      pinGen.regenerate();
+
+      events.send(String(pinGen.gen).c_str(), "sessionId", getCurrentTimeMs(),
+                  1000);
+
       LOG_LN("Login successful");
       break;
     }
@@ -121,9 +129,12 @@ void handleLogin(AsyncWebServerRequest *request) {
       sendJsonResponse(request, 500, "Session is full");
       break;
     case UNAUTHORIZED:
+      sendJsonResponse(request, 401, "PIN is incorrect");
+      LOG_LN("PIN is incorrect");
+      break;
     default:
-      sendJsonResponse(request, 401, "PIN is incorrect or unauthorized");
-      LOG_LN("PIN is incorrect or unauthorized");
+      sendJsonResponse(request, 401, "unauthorized");
+      LOG_LN("unauthorized");
       break;
     }
   } else {
@@ -209,12 +220,11 @@ void handleRequest(AsyncWebServerRequest *request) {
       request->redirect("/");
     }
   } else if (strcmp(urlPath, "/getsessionid") == 0 && method == HTTP_GET) {
-    //convert pinGen.gen - unsigned long to string
+    // convert pinGen.gen - unsigned long to string
 
     char sessionId[20];
     sprintf(sessionId, "%lu", pinGen.gen);
     request->send(200, "text/plain", sessionId);
-    LOG_F("Session ID____________________________: %s\n", sessionId);
   }
 #ifdef FAKE_VOLTAGE_READING
   else if (strcmp(urlPath, "/readtest") == 0 && method == HTTP_GET) {

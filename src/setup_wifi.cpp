@@ -17,20 +17,6 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
   switch (event) {
   case ARDUINO_EVENT_WIFI_AP_START:
     LOG_LN("SoftAP started");
-    if (xTaskCreatePinnedToCore(dnsTask, "DNS", 4086, NULL, 2, &dnsTaskHandle,
-                                1) != pdPASS) {
-      LOG_LN("Failed to create DNS Task");
-    } else {
-      LOG_LN("DNS Task created");
-      vTaskSuspend(dnsTaskHandle); // Suspend task initially
-      LOG_LN("DNS Task suspended initially");
-    }
-    if (xTaskCreatePinnedToCore(taskBlink, "Blink", 2048, NULL, 3,
-                                &blinkTaskHandle, 1) != pdPASS) {
-      LOG_LN("Failed to create Blink Task");
-    } else {
-      LOG_LN("Blink Task created on core 1");
-    }
     break;
 
   case ARDUINO_EVENT_WIFI_AP_STOP:
@@ -78,4 +64,9 @@ void setupWifiAP() {
   LOG_LN("Access Point started");
   LOG_("AP IP address: ");
   LOG_LN(WiFi.softAPIP());
+}
+
+void restartWifiAP() {
+  WiFi.softAPdisconnect(true);
+  setupWifiAP();
 }

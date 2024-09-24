@@ -4,8 +4,6 @@
 #include "sensors.h"
 #include "session.h"
 
-#define WAKE_PIN GPIO_NUM_4
-
 struct StaticFile {
   const char *path;
   const char *contentType;
@@ -30,23 +28,10 @@ const StaticFile staticFiles[] = {
     {"/next-white.svg", IMAGE_SVG}, {"/cancel.svg", IMAGE_SVG},
     {"/fb.svg", IMAGE_SVG},         {"/ig.svg", IMAGE_SVG},
     {"/in.svg", IMAGE_SVG},         {"/tiktok.svg", IMAGE_SVG},
-    {"/x.svg", IMAGE_SVG}};
+    {"/x.svg", IMAGE_SVG},          {"/glob.svg", IMAGE_SVG}};
 
 const int numPaths = sizeof(staticFiles) / sizeof(staticFiles[0]);
 
-// Interrupt service routine for the wake pin
-void IRAM_ATTR handleSleepWake() {
-  LOG_LN("Going to sleep");
-  esp_sleep_enable_ext0_wakeup(WAKE_PIN, ESP_EXT1_WAKEUP_ANY_HIGH);
-  esp_light_sleep_start();
-}
-
-#define FLOAT_SWITCH 1
-
-void IRAM_ATTR handleFloatSwitch() {
-  LOG_LN("Float switch triggered");
-  xTaskNotify(runMachineTaskHandle, FLOAT_SWITCH, eSetValueWithOverwrite);
-}
 void setup() {
   LOG_BEGIN(115200);
 
@@ -70,9 +55,6 @@ void setup() {
   }
 
   LOG_LN();
-
-  pinMode(WAKE_PIN, INPUT_PULLUP);
-  attachInterrupt(WAKE_PIN, handleSleepWake, FALLING);
 
   pinMode(LED_BUILTIN, OUTPUT);
   if (xTaskCreatePinnedToCore(send_voltage_task, "SendVoltageTask", 4096, NULL,
@@ -121,11 +103,37 @@ void setup() {
 
   setupWifiAP();
 
+  if (xTaskCreatePinnedToCore(dnsTask, "DNS", 4086, NULL, 2, &dnsTaskHandle,
+                              1) != pdPASS) {
+    LOG_LN("Failed to create DNS Task");
+  } else {
+    LOG_LN("DNS Task created");
+    vTaskSuspend(dnsTaskHandle); // Suspend task initially
+    LOG_LN("DNS Task suspended initially");
+  }
+  if (xTaskCreatePinnedToCore(taskBlink, "Blink", 2048, NULL, 3,
+                              &blinkTaskHandle, 1) != pdPASS) {
+    LOG_LN("Failed to create Blink Task");
+  } else {
+    LOG_LN("Blink Task created on core 1");
+  }
+
   LOG_F("Access Point IP Address: %s\n", local_IP.toString().c_str());
 
   dnsServer.start(DNS_PORT, "*", local_IP);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.setTTL(604800);
+
+  events.onConnect([](AsyncEventSourceClient *client) {
+    if (client->lastId()) {
+      LOG_F("Client reconnected! Last message ID that it gat is: %u\n",
+            client->lastId());
+    }
+
+    client->send("hello!", NULL, millis(), 1000);
+  });
+
+  server.addHandler(&events);
 
   // Handle WebSocket events
   ws.onEvent(onWsEvent);
@@ -151,9 +159,9 @@ void setup() {
   server.on("*", HTTP_ANY,
             [](AsyncWebServerRequest *request) { handleRequest(request); });
 
-  server.begin();
-
   pinGen.regenerate();
+
+  server.begin();
 }
 
 void loop() { vTaskDelay(portMAX_DELAY); }

@@ -66,7 +66,7 @@ void send_pzem_data(AsyncWebSocketClient *client) {
 
 void update_pzem_data(unsigned long durationMS) {
   float energy = pzem.energy();
-  pzem_data.f0 += energy; // Total energy consumed
+  pzem_data.f0 += isnan(energy) ? 0.0f : energy;
 
   float runtime = durationMS / 60000;
 

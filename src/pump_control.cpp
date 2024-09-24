@@ -286,7 +286,7 @@ void controlPumpState() {
 // Task to run the machine
 void runMachineTask(void *parameter) {
   (void)parameter;
-  pinMode(FLOAT_SIGNAL_PIN, INPUT);
+  pinMode(FLOAT_SIGNAL_PIN, INPUT_PULLUP);
   pinMode(PUMP_RELAY_PIN, OUTPUT);
   digitalWrite(PUMP_RELAY_PIN, LOW);
 
@@ -301,26 +301,50 @@ void runMachineTask(void *parameter) {
   }
 }
 
-// Task that checks signal state
 void checkSignalTask(void *parameter) {
+
   (void)parameter;
+  pinMode(GPIO_NUM_26, INPUT_PULLUP);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_26, ESP_EXT1_WAKEUP_ALL_LOW);
+
   for (;;) {
     int signal = 0;
+
+    // Read the signal multiple times for debouncing
     for (int i = 0; i < SIGNAL_READ_COUNT; i++) {
-      signal += digitalRead(FLOAT_SIGNAL_PIN) == HIGH ? 1 : 0;
+      signal += digitalRead(FLOAT_SIGNAL_PIN) == LOW ? 1 : 0;
       vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
     }
 
 #ifdef FAKE_VOLTAGE_READING
     automate_mode_signal = test_auto_mode;
 #else
-    automate_mode_signal = signal >= 3;
+    automate_mode_signal = signal >= 3; // 3 or more LOW readings to trigger
 #endif
 
 #ifndef PRODUCTION
     logPumpMode();
     logAutoSignal();
 #endif
+
+    if (digitalRead(GPIO_NUM_26) == HIGH) {
+      LOG_LN("Going to sleep...");
+
+      vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
+
+      if (digitalRead(LED_BUILTIN) == HIGH)
+        digitalWrite(LED_BUILTIN, LOW);
+
+      esp_light_sleep_start();
+
+      LOG_LN("Woke up from light sleep");
+
+      restartWifiAP();
+
+      vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
+    }
+
+    // Delay before next check
     vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
   }
 }

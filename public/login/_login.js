@@ -1,6 +1,7 @@
 import './_login.css';
 
 const APname = 'Imuwahen_2024';
+let envSupportSSE = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
@@ -97,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
 
-            if (result.sessionId) {
+            if (result.sessionId && envSupportSSE) {
                 updateSessionId(result.sessionId);
             }
 
@@ -160,13 +161,30 @@ document.addEventListener('DOMContentLoaded', () => {
             updateSessionId(text);
 
             setTimeout(() => {
-                passcodeInput.focus();  
+                passcodeInput.focus();
             }, 500)
 
-            console.log('Session ID:', text);
         } catch (error) {
             console.error('Error:', error);
         }
     }, 1000);
 
+
+    if (!!window.EventSource) {
+        const source = new EventSource('/events');
+
+        source.addEventListener('open', () => {
+            envSupportSSE = false;
+        }, false);
+
+        source.addEventListener('error', (e) => {
+            if (e.target.readyState != EventSource.OPEN) {
+                envSupportSSE = true;
+            }
+        }, false);
+
+        source.addEventListener('sessionId', (e) => {
+            updateSessionId(e.data);
+        }, false);
+    }
 });

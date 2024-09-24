@@ -12,6 +12,8 @@ extern AsyncEventSource events;
 extern DNSServer dnsServer;
 extern IPAddress local_IP;
 extern TaskHandle_t msgGatewayTaskHandle;
+extern TaskHandle_t blinkTaskHandle;
+extern TaskHandle_t dnsTaskHandle;
 /* extern const char* domainName; */
 
 #ifdef FAKE_VOLTAGE_READING
@@ -19,6 +21,8 @@ extern bool test_auto_mode;
 #endif
 
 void clearEEPROM();
+
+void restartWifiAP();
 
 void send_min_voltage(AsyncWebSocketClient *client = nullptr);
 void send_pzem_data(AsyncWebSocketClient *client = nullptr);
