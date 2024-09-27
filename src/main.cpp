@@ -124,14 +124,14 @@ void setup() {
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.setTTL(604800);
 
-/*   events.onConnect([](AsyncEventSourceClient *client) {
-    if (client->lastId()) {
-      LOG_F("Client reconnected! Last message ID that it gat is: %u\n",
-            client->lastId());
-    }
+  /*   events.onConnect([](AsyncEventSourceClient *client) {
+      if (client->lastId()) {
+        LOG_F("Client reconnected! Last message ID that it gat is: %u\n",
+              client->lastId());
+      }
 
-    client->send("hello!", NULL, millis(), 1000);
-  }); */
+      client->send("hello!", NULL, millis(), 1000);
+    }); */
 
   server.addHandler(&events);
 

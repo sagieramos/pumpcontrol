@@ -2,7 +2,15 @@
 #include "network.h"
 #include "session.h"
 
-const char *domainName = "imuwahen.org";
+const char *ROOT_URL = "/";
+const char *LOGIN_URL = "/login";
+const char *LOGOUT_URL = "/logout";
+const char *DASHBOARD_URL = "/dashboard";
+const char *WIPE_CONFIG_URL = "/config/wipe";
+const char *SESSION_ID_URL = "/getsessionid";
+#ifdef FAKE_VOLTAGE_READING
+const char *READ_TEST_URL = "/readtest";
+#endif
 
 #ifdef FAKE_VOLTAGE_READING
 bool test_auto_mode = false;
@@ -27,19 +35,32 @@ void serveStaticFile(AsyncWebServerRequest *request, const char *path,
 
   String gzPath = String(path) + ".gz";
 
+  AsyncWebServerResponse *response;
+
   if (!isMobile && SPIFFS.exists(gzPath)) {
     LOG_F("Serving gzipped file: %s\n", gzPath.c_str());
-    AsyncWebServerResponse *response =
-        request->beginResponse(SPIFFS, gzPath, contentType);
+    response = request->beginResponse(SPIFFS, gzPath, contentType);
     response->addHeader("Content-Encoding", "gzip");
-    request->send(response);
   } else if (SPIFFS.exists(path)) {
     LOG_F("Serving file: %s\n", path);
-    request->send(SPIFFS, path, contentType);
+    response = request->beginResponse(SPIFFS, path, contentType);
   } else {
     request->send(404, "text/plain", "File Not Found");
     LOG_F("File not found: %s\n", path);
+    return;
   }
+
+  if (String(contentType).startsWith("text/css") ||
+      String(contentType).startsWith("application/javascript") ||
+      String(contentType).startsWith("image/") ||
+      String(contentType).startsWith("image/svg+xml") ||
+      String(contentType).startsWith("image/x-icon")) {
+    response->addHeader("Cache-Control", "max-age=31536000, public");
+  } else if (String(contentType).startsWith("text/html")) {
+    response->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  }
+
+  request->send(response);
 }
 
 void handleDashboard(AsyncWebServerRequest *request) {
@@ -154,73 +175,58 @@ void handleRequest(AsyncWebServerRequest *request) {
     return;
   }
 
-  char urlPath[100];
-
-  // Get the URL path
-  strcpy(urlPath, request->url().c_str());
+  const String &urlPath = request->url();
+  int auth = authSession(authClients, request, CHECK);
 
   // Debug printouts for request details
   LOG_F("Request from: %s:%d\n",
         request->client()->remoteIP().toString().c_str(),
         request->client()->remotePort());
   LOG_F("%s\thttp://%s%s\n", http_methods[method], request->host().c_str(),
-        urlPath);
+        urlPath.c_str());
 
-  if (strcmp(urlPath, "/") == 0 && method == HTTP_GET) {
-    // Handle root route (example)
-    int auth = authSession(authClients, request, CHECK);
+  if (urlPath == ROOT_URL && method == HTTP_GET) {
     if (auth == ACTIVE) {
       request->redirect("/dashboard");
       LOG_LN("Already logged in");
     } else {
       request->send(SPIFFS, "/_login.html", "text/html");
     }
-  } else if (strcmp(urlPath, "/login") == 0 && method == HTTP_POST) {
-    // Handle login route
+  } else if (urlPath == LOGIN_URL && method == HTTP_POST) {
     handleLogin(request);
-  } else if (strcmp(urlPath, "/logout") == 0 && method == HTTP_GET) {
-    // Handle logout route
+  } else if (urlPath == LOGOUT_URL && method == HTTP_GET) {
     handleLogout(request);
-  } else if (strcmp(urlPath, "/dashboard") == 0 && method == HTTP_GET) {
-    // Handle dashboard route
-    int auth = authSession(authClients, request, CHECK);
+  } else if (urlPath == DASHBOARD_URL && method == HTTP_GET) {
     if (auth == ACTIVE) {
       request->send(SPIFFS, "/_dashboard.html", "text/html");
       LOG_LN("Dashboard");
     } else {
       request->redirect("/");
     }
-  } else if (strcmp(urlPath, "/config/wipe") == 0 && method == HTTP_GET) {
-    int auth = authSession(authClients, request, CHECK);
+  } else if (urlPath == WIPE_CONFIG_URL && method == HTTP_GET) {
     if (auth == ACTIVE) {
-      // clear all stored data
       clearEEPROM();
-      request->send(200, "text/plain",
-                    "All stored data cleared successful, "
-                    "Device restarting...");
-
+      request->send(
+          200, "text/plain",
+          "All stored data cleared successfully. Device restarting...");
       delay(1000);
       ESP.restart();
     } else {
       request->redirect("/");
     }
-  } else if (strcmp(urlPath, "/getsessionid") == 0 && method == HTTP_GET) {
-    // convert pinGen.gen - unsigned long to string
-
+  } else if (urlPath == SESSION_ID_URL && method == HTTP_GET) {
     char sessionId[20];
-    sprintf(sessionId, "%lu", pinGen.gen);
+    ultoa(pinGen.gen, sessionId, 10);
     request->send(200, "text/plain", sessionId);
   }
 #ifdef FAKE_VOLTAGE_READING
-  else if (strcmp(urlPath, "/readtest") == 0 && method == HTTP_GET) {
-    // Handle test route
+  else if (urlPath == READ_TEST_URL && method == HTTP_GET) {
     test_auto_mode = !test_auto_mode;
     request->send(200, "text/plain", test_auto_mode ? "true" : "false");
     LOG_F("Test auto mode: %s\n", test_auto_mode ? "true" : "false");
   }
 #endif
   else {
-    // Handle other routes (404 Not Found)
     request->send(404, "text/plain", "Not found");
     LOG_LN("Not found");
   }

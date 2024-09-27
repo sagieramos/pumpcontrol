@@ -630,35 +630,14 @@ tr {
   }
 }
 
+.b-tx {
+  color: #fff;
+}
+
+
 @supports (width: 100dvw) {
   body {
     height: 100dvh;
     width: 100dvw;
   }
 }
-
-/* 
-footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  padding: 8px 24px;
-  border-top: 1px solid #03e8f42d;
-}
-
-.social-icons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-}
-
-footer img {
-  width: 20px;
-}
-
-@media screen and (max-width: 768px) {
-  footer {
-    font-size: 0.8rem;
-  }
-} */
