@@ -313,7 +313,7 @@ void checkSignalTask(void *parameter) {
     // Read the signal multiple times for debouncing
     for (int i = 0; i < SIGNAL_READ_COUNT; i++) {
       signal += digitalRead(FLOAT_SIGNAL_PIN) == LOW ? 1 : 0;
-      vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
+      vTaskDelay(pdMS_TO_TICKS(200));
     }
 
 #ifdef FAKE_VOLTAGE_READING

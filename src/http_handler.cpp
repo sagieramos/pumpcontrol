@@ -154,21 +154,6 @@ void handleRequest(AsyncWebServerRequest *request) {
     return;
   }
 
-  const char *host = request->host().c_str();
-  const char *localIPCStr = local_IP.toString().c_str();
-
-  if (strcmp(host, domainName) != 0 && strcmp(host, localIPCStr) != 0) {
-    static const char *jsContentPrefix =
-        "<script>window.location.href = 'http://";
-    static const char *jsContentSuffix = "';</script>";
-
-    char jsContent[128];
-    snprintf(jsContent, sizeof(jsContent), "%s%s%s", jsContentPrefix,
-             domainName, jsContentSuffix);
-    request->send(200, "text/html", jsContent);
-    return;
-  }
-
   char urlPath[100];
 
   // Get the URL path

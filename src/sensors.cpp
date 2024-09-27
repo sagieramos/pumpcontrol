@@ -95,24 +95,6 @@ static void send_pzemTwo_data() {
   }
 }
 
-/* static void send_voltage_data() {
-  Num msg = {VoltageKey::VOLTAGE, 0.0f};
-  msg.value = pzemTwoData.f0;
-
-  uint8_t buffer[Num_size];
-  size_t buffer_size = 0;
-  if (!serialize_num(msg, buffer, &buffer_size, PZEM2_TYPE_ID)) {
-    LOG_LN("Failed to serialize voltage message");
-  } else {
-    ws.binaryAll(buffer, buffer_size);
-
-    LOG_F("Sent pzemTwoData voltage(f0): %f | power(f1): %f | power "
-          "factor(f2): %f | typeId: %d | Buffer size: %d\n",
-          pzemTwoData.f0, pzemTwoData.f1, pzemTwoData.f2, PZEM2_TYPE_ID,
-          buffer_size);
-  }
-} */
-
 void reset_energy() {
   if (pzem.resetEnergy()) {
     LOG_LN("Energy reset successful");

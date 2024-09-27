@@ -120,18 +120,18 @@ void setup() {
 
   LOG_F("Access Point IP Address: %s\n", local_IP.toString().c_str());
 
-  dnsServer.start(DNS_PORT, "*", local_IP);
+  dnsServer.start(DNS_PORT, "imuwahen.org", local_IP);
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.setTTL(604800);
 
-  events.onConnect([](AsyncEventSourceClient *client) {
+/*   events.onConnect([](AsyncEventSourceClient *client) {
     if (client->lastId()) {
       LOG_F("Client reconnected! Last message ID that it gat is: %u\n",
             client->lastId());
     }
 
     client->send("hello!", NULL, millis(), 1000);
-  });
+  }); */
 
   server.addHandler(&events);
 
