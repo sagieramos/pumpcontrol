@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const timeRangeBegin = { hour: 0, minute: 4 };
   const timeRangeEnd = { hour: 24, minute: 1 };
-  const timeRangeEndRunning = { hour: 2, minute: 1 };
+  const timeRangeEndRunning = { hour: 2, minute: 0 };
 
   const timePickerRunning = new TimePicker('#running-time', timePickerObj);
   timePickerRunning.setRange(timeRangeBegin, timeRangeEndRunning);

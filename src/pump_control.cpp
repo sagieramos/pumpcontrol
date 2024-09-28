@@ -339,6 +339,11 @@ void checkSignalTask(void *parameter) {
 
       LOG_LN("Woke up from light sleep");
 
+      if (power.key == PowerStatus::POWER_INACTIVE) {
+        vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
+        esp_restart();
+      }
+
       restartWifiAP();
 
       vTaskDelay(pdMS_TO_TICKS(SIGNAL_READ_DELAY_MS));
